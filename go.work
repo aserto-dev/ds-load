@@ -3,5 +3,6 @@ go 1.19
 use (
 	.
 	./magefiles
-	./pkg/plugins/auth0
+	./plugins/auth0
+	./cli
 )

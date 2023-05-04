@@ -1,6 +1,6 @@
 builds:
   - id: ds-load
-    main: ./cmd/ds-load
+    main: ./cli/cmd/ds-load
     binary: ds-load
     goos:
       - darwin
@@ -22,7 +22,7 @@ builds:
       - -X github.com/aserto-dev/ds-load/pkg/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
   - id: ds-load-auth0
-    main: ./cmd/ds-load-auth0
+    main: ./plugins/auth0/cmd/ds-load-auth0
     binary: ds-load-auth0
     goos:
       - darwin
