@@ -3,5 +3,5 @@ go 1.19
 use (
 	.
 	./magefiles
-	./pkg/providers/auth0
+	./pkg/plugins/auth0
 )
