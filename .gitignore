@@ -7,3 +7,6 @@
 # goreleaser build directory
 /dist/
 /bin/
+
+# IDE speciffic
+/.idea/
