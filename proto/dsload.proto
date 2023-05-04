@@ -21,6 +21,7 @@ message ConfigElement {
     string name             = 2;
     string description      = 3;
     string usage            = 4;
+    bool optional           = 5;
   }
 
 message Info {    

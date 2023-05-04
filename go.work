@@ -2,7 +2,8 @@ go 1.19
 
 use (
 	.
+	./cli
 	./magefiles
 	./plugins/auth0
-	./cli
+	./common
 )
