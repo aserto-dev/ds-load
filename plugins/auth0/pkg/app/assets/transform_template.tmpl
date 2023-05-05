@@ -1,0 +1,25 @@
+{
+  "objects": [
+    {
+      "key": "{{ $.user_id }}",
+      "type": "user",
+      "displayName": "{{ $.nickname }}"
+    },
+    {{ range $index, $element := $.identities }}
+    {
+      "key": "{{$element.user_id}}",
+      "type": "identity"
+    },
+   
+    {{ end }}
+    {{ range $i, $element := $.roles }}
+    {
+      "key": "{{$element.name}}",
+      "type": "group"
+    }
+    {{if last $i $.roles | not}}, {{end}}
+    {{ end }}
+  ]
+  "relations":[
+  ]
+}
