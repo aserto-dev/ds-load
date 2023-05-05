@@ -21,3 +21,6 @@ go:
   goreleaser:
     importPath: github.com/goreleaser/goreleaser
     version: "v1.15.2"
+  golangci-lint:
+    importPath: "github.com/golangci/golangci-lint/cmd/golangci-lint"
+    version: "v1.52.2"

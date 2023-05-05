@@ -21,6 +21,11 @@ func Deps() {
 	deps.GetAllDeps()
 }
 
+// Lint runs linting for the entire project.
+func Lint() error {
+	return common.Lint()
+}
+
 func BuildAll() error {
 	if err := BufBuild(); err != nil {
 		return err
