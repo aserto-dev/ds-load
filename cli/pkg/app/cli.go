@@ -6,9 +6,9 @@ import (
 )
 
 type Context struct {
-	Config   string
-	LogLevel string
-	Insecure bool
+	Config    string
+	Verbosity int
+	Insecure  bool
 }
 
 type CLI struct {
@@ -18,9 +18,9 @@ type CLI struct {
 	ListPlugins      ListPluginsCmd      `cmd:"" help:"list available plugins"`
 	Version          VersionCmd          `cmd:"" help:"version information"`
 
-	Config   string `short:"c" help:"Path to the config file. Any argument provided to the CLI will take precedence."`
-	LogLevel string `short:"l" help:"Specify log level."`
-	Insecure bool   `short:"i" help:"Disable TLS verification"`
+	Config    string `short:"c" help:"Path to the config file. Any argument provided to the CLI will take precedence."`
+	Verbosity int    `short:"v" type:"counter" help:"Use to increase output verbosity."`
+	Insecure  bool   `short:"i" help:"Disable TLS verification"`
 }
 
 type ExecCmd struct{}

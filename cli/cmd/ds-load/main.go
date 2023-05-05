@@ -29,9 +29,9 @@ func main() {
 
 	ctx := kong.Parse(&cli, options...)
 	context := &app.Context{
-		Config:   cli.Config,
-		Insecure: cli.Insecure,
-		LogLevel: cli.LogLevel,
+		Config:    cli.Config,
+		Insecure:  cli.Insecure,
+		Verbosity: cli.Verbosity,
 	}
 
 	err := ctx.Run(context)
