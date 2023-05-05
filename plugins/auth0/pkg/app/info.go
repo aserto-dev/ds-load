@@ -25,32 +25,25 @@ func (cmd *InfoCmd) Run(context *kong.Context) error {
 		Description: AppDescription,
 		Configs: []*msg.ConfigElement{
 			{
-				Name:        "auth0-domain",
+				Name:        "domain",
 				Type:        msg.ConfigElementType_CONFIG_ELEMENT_TYPE_STRING,
 				Description: "auth0 domain name",
-				Usage:       "--auth0-domain=yourdomain.auth0.com",
+				Usage:       "--domain=yourdomain.auth0.com",
 				Optional:    false,
 			},
 			{
-				Name:        "auth0-client-id",
+				Name:        "client-id",
 				Type:        msg.ConfigElementType_CONFIG_ELEMENT_TYPE_STRING,
 				Description: "auth0 client id",
-				Usage:       "--auth0-client-id=yourclientid",
+				Usage:       "--client-id=yourclientid",
 				Optional:    false,
 			},
 			{
-				Name:        "auth0-client-secret",
+				Name:        "client-secret",
 				Type:        msg.ConfigElementType_CONFIG_ELEMENT_TYPE_STRING,
 				Description: "auth0 client secret",
-				Usage:       "--auth0-client-secret=yourclientsecret",
+				Usage:       "--client-secret=yourclientsecret",
 				Optional:    false,
-			},
-			{
-				Name:        "auth0-connection-name",
-				Type:        msg.ConfigElementType_CONFIG_ELEMENT_TYPE_STRING,
-				Description: "auth0 connection name - defaults to Username-Password-Authentication",
-				Usage:       "--auth0-connection-name=yourconnectionname",
-				Optional:    true,
 			},
 		},
 	}

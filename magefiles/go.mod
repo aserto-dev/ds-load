@@ -6,7 +6,7 @@ require github.com/aserto-dev/mage-loot v0.8.9
 
 require (
 	github.com/allegro/bigcache/v3 v3.0.1 // indirect
-	github.com/aserto-dev/clui v0.8.0 // indirect
+	github.com/aserto-dev/clui v0.8.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gitleaks/go-gitdiff v0.7.4 // indirect

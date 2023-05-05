@@ -40,8 +40,7 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/allegro/bigcache/v3 v3.0.1 h1:Q4Xl3chywXuJNOw7NV+MeySd3zGQDj4KCpkCg0te8mc=
 github.com/allegro/bigcache/v3 v3.0.1/go.mod h1:aPyh7jEvrog9zAwx5N7+JUQX5dZTSGpxF1LAR4dr35I=
-github.com/aserto-dev/clui v0.8.0 h1:6naBp7djFHl0frhdU1aO1SxQ1+onE/pPCYr04Xo4kT4=
-github.com/aserto-dev/clui v0.8.0/go.mod h1:XpJxwNzSQaGN6rqXONZJEaeez4MUaCPikM2lKSngrXM=
+github.com/aserto-dev/clui v0.8.1 h1:5IW9OnFZoIWjvnmTE4FNTXrjP1wnMzd39qKAcRnRHt8=
 github.com/aserto-dev/mage-loot v0.8.9 h1:gwr9zB2CrFPH4gkqtNE/+JmpdeYlUbgI0egFpMcIUio=
 github.com/aserto-dev/mage-loot v0.8.9/go.mod h1:16Q5Iq1e+W8J0DuCJx2LI0u7Bf7C3Z1r8ywnJZbhBGQ=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
