@@ -2,19 +2,18 @@ package app
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
 	"github.com/alecthomas/assert"
 )
 
 func TestTransform(t *testing.T) {
-	content, err := os.ReadFile(AssetDefaultPeoplefinderExample())
+	content, err := Assets().ReadFile("assets/peoplefinder.json")
 	assert.NoError(t, err)
 	input := make(map[string]interface{})
 	err = json.Unmarshal(content, &input)
 	assert.NoError(t, err)
-	template, err := os.ReadFile(AssetDefaultTemplate())
+	template, err := Assets().ReadFile("assets/transform_template.tmpl")
 	assert.NoError(t, err)
 	output, err := Transform(input, string(template))
 	assert.NoError(t, err)

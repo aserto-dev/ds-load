@@ -3,7 +3,13 @@
     {
       "key": "{{ $.user_id }}",
       "type": "user",
-      "displayName": "{{ $.nickname }}"
+      "displayName": "{{ $.nickname }}",
+      "updatedAt": "{{ $.updated_at }}"
+      "properties":{
+        "email": "{{ $.email }}",
+        "picture": "{{ $.picture }}",
+        "aserto-allow-tenant-creation": "{{ index $.user_metadata "aserto-allow-tenant-creation" }}"
+      }
     },
     {{ range $index, $element := $.identities }}
     {
@@ -21,5 +27,30 @@
     {{ end }}
   ]
   "relations":[
+    {
+    "relation": "manager",
+            "subject": {
+                "type": "user",
+                "key": "{{$.user_id}}"
+            },
+            "object": {
+                "type": "user",
+                "key": "{{$.user_metadata.manager_id}}"
+            }
+    },
+    {{ range $i,$element := $.identities }} 
+    {
+    "relation": "identifier",
+            "subject": {
+                "type": "user",
+                "key": "{{$.user_id}}"
+            },
+            "object": {
+                "type": "identity",
+                "key": "{{$element.user_id}}"
+            }
+    }
+    {{if last $i $.identities | not}}, {{end}}
+    {{ end }}
   ]
 }

@@ -4,7 +4,6 @@ package app
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -15,13 +14,23 @@ import (
 )
 
 type TransformCmd struct {
+	TemplateFile string `cmd:""`
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
+	var template []byte
+	var err error
 
-	template, err := os.ReadFile(AssetDefaultTemplate())
-	if err != nil {
-		return err
+	if t.TemplateFile == "" {
+		template, err = Assets().ReadFile("assets/transform_template.tmpl")
+		if err != nil {
+			return err
+		}
+	} else {
+		template, err = os.ReadFile(t.TemplateFile)
+		if err != nil {
+			return err
+		}
 	}
 	inputText, err := io.ReadAll(os.Stdin)
 	if err != nil {
@@ -33,7 +42,6 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(input)
 	output, err := Transform(input, string(template))
 	if err != nil {
 		return err
