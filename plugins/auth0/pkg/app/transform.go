@@ -3,7 +3,10 @@ package app
 
 import (
 	"bytes"
-	"errors"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
 	"reflect"
 
 	"text/template"
@@ -16,7 +19,28 @@ type TransformCmd struct {
 
 func (t *TransformCmd) Run(context *kong.Context) error {
 
-	return errors.New("not implemented")
+	template, err := os.ReadFile(AssetDefaultTemplate())
+	if err != nil {
+		return err
+	}
+	inputText, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return err
+	}
+	input := make(map[string]interface{})
+
+	err = json.Unmarshal(inputText, &input)
+	if err != nil {
+		return err
+	}
+	fmt.Println(input)
+	output, err := Transform(input, string(template))
+	if err != nil {
+		return err
+	}
+	os.Stdout.WriteString(output)
+
+	return nil
 }
 
 var fns = template.FuncMap{
