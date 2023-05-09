@@ -1,0 +1,51 @@
+builds:
+  - id: ds-load
+    main: ./cli/cmd/ds-load
+    binary: ds-load
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: ds-load-auth0
+    main: ./plugins/auth0/cmd/ds-load-auth0
+    binary: ds-load-auth0
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  name_template: "{{ .Tag }}"

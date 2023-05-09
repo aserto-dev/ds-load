@@ -1,0 +1,13 @@
+version: v1
+
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/aserto-dev/aserto
+  - buf.build/aserto-dev/directory
+
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT

@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option go_package = "github.com/aserto-dev/ds-load/pkg/msg;msg";
+
+package aserto.dsload;
+
+import "google/rpc/status.proto";
+
+import "aserto/common/info/v1/info.proto";
+import "aserto/directory/common/v2/common.proto";
+
+enum ConfigElementType {
+    CONFIG_ELEMENT_TYPE_UNKNOWN     = 0; // Unknown configuration element type
+    CONFIG_ELEMENT_TYPE_STRING      = 1; // String configuration element type
+    CONFIG_ELEMENT_TYPE_INTEGER     = 2; // Integer configuration element type
+    CONFIG_ELEMENT_TYPE_BOOLEAN     = 3; // Boolean configuration element type
+  }
+
+message ConfigElement {
+    ConfigElementType type  = 1;
+    string name             = 2;
+    string description      = 3;
+    string usage            = 4;
+    bool optional           = 5;
+  }
+
+message Info {    
+    aserto.common.info.v1.BuildInfo build       = 1;
+    string description                          = 2;
+    repeated ConfigElement configs              = 3;
+}
+
+message Batch {
+    oneof data {
+        bool begin  = 1;
+        bool end    = 2;
+    }
+}
+
+message PluginMessage{
+    oneof data {
+        aserto.directory.common.v2.Object object        = 1;
+        aserto.directory.common.v2.Relation relation    = 2;
+        Batch batch                                     = 3;
+        google.rpc.Status error                         = 4;
+    }
+}

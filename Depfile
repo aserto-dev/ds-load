@@ -1,0 +1,26 @@
+---
+go:
+  sver:
+    importPath: "github.com/aserto-dev/sver/cmd/sver"
+    version: "v1.3.11"
+  buf:
+    importPath: "github.com/bufbuild/buf/cmd/buf"
+    version: "v1.9.0"
+  protoc-gen-buf-breaking:
+    importPath: "github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking"
+    version: "v1.9.0"
+  protoc-gen-buf-lint:
+    importPath: "github.com/bufbuild/buf/cmd/protoc-gen-buf-lint"
+    version: "v1.9.0"
+  protoc-gen-go:
+    importPath: google.golang.org/protobuf/cmd/protoc-gen-go
+    version: "v1.28.1"
+  protoc-gen-go-grpc:
+    importPath: google.golang.org/grpc/cmd/protoc-gen-go-grpc
+    version: "latest"
+  goreleaser:
+    importPath: github.com/goreleaser/goreleaser
+    version: "v1.15.2"
+  golangci-lint:
+    importPath: "github.com/golangci/golangci-lint/cmd/golangci-lint"
+    version: "v1.52.2"

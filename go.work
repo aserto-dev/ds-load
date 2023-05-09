@@ -1,0 +1,8 @@
+go 1.19
+
+use (
+	./cli
+	./common
+	./magefiles
+	./plugins/auth0
+)
