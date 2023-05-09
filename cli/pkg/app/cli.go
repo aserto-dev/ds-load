@@ -28,6 +28,7 @@ type ExecCmd struct{}
 
 func (exec *ExecCmd) Run(ctx *Context) error {
 	fmt.Println("not implemented")
+	LaunchCommands()
 	return nil
 }
 
