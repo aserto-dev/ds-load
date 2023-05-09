@@ -7,10 +7,11 @@ import (
 )
 
 type CLI struct {
-	Info      InfoCmd      `cmd:"" help:""`
-	Version   VersionCmd   `cmd:"" help:"version information"`
-	Fetch     FetchCmd     `cmd:"" help:"fetch auth0 data"`
-	Transform TransformCmd `cmd:"" help:"transform auth0 data"`
+	Info            InfoCmd            `cmd:"" help:""`
+	Version         VersionCmd         `cmd:"" help:"version information"`
+	Fetch           FetchCmd           `cmd:"" help:"fetch auth0 data"`
+	Transform       TransformCmd       `cmd:"" help:"transform auth0 data"`
+	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
 }
 
 type VersionCmd struct {
