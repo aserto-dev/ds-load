@@ -2,9 +2,9 @@
 package app
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
-	"io"
 	"os"
 	"reflect"
 
@@ -15,6 +15,7 @@ import (
 
 type TransformCmd struct {
 	TemplateFile string `cmd:""`
+	MaxChunkSize int    `cmd:""`
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
@@ -32,21 +33,25 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 			return err
 		}
 	}
-	inputText, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return err
-	}
-	input := make(map[string]interface{})
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		inputText := scanner.Bytes()
 
-	err = json.Unmarshal(inputText, &input)
-	if err != nil {
-		return err
+		input := make(map[string]interface{})
+
+		err = json.Unmarshal(inputText, &input)
+		if err != nil {
+			return err
+		}
+		output, err := Transform(input, string(template))
+		if err != nil {
+			return err
+		}
+		os.Stdout.WriteString(output)
 	}
-	output, err := Transform(input, string(template))
-	if err != nil {
-		return err
-	}
-	os.Stdout.WriteString(output)
+
+	//TODO: Chunk (configurable size) and parse to proto
+	// unmarshal output to struct with objects and relations
 
 	return nil
 }
