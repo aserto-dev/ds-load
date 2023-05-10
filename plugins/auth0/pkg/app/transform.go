@@ -12,7 +12,9 @@ import (
 	"text/template"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/common/msg"
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type TransformCmd struct {
@@ -60,12 +62,15 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 			return err
 		}
 		var directoryObject transformObject
+
 		err = json.Unmarshal([]byte(output), &directoryObject)
 		if err != nil {
 			return err
 		}
 
-		err = t.writeObjects(os.Stdout, directoryObject)
+		objectChunks, relationChunks := t.prepareChunks(directoryObject)
+
+		err = writeResponse(os.Stdout, objectChunks, relationChunks)
 		if err != nil {
 			return err
 		}
@@ -75,29 +80,78 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	return nil
 }
 
-func (t *TransformCmd) writeObjects(writer io.Writer, directoryObject transformObject) error {
+func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks [][]v2.Relation) error {
+	start := msg.PluginMessage{
+		Data: &msg.PluginMessage_Batch{
+			Batch: &msg.Batch{
+				Data: &msg.Batch_Begin{Begin: true},
+			},
+		},
+	}
+	end := msg.PluginMessage{
+		Data: &msg.PluginMessage_Batch{
+			Batch: &msg.Batch{
+				Data: &msg.Batch_End{End: true},
+			},
+		},
+	}
+	writeProtoMessage(writer, &start)
+
+	for _, chunk := range objectChunks {
+		for index := range chunk {
+			message := msg.PluginMessage{
+				Data: &msg.PluginMessage_Object{
+					Object: &chunk[index],
+				},
+			}
+			err := writeProtoMessage(writer, &message)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	writeProtoMessage(writer, &end)
+	writeProtoMessage(writer, &start)
+	for _, chunk := range relationChunks {
+		for index := range chunk {
+			message := msg.PluginMessage{
+				Data: &msg.PluginMessage_Relation{
+					Relation: &chunk[index],
+				},
+			}
+			err := writeProtoMessage(writer, &message)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	writeProtoMessage(writer, &end)
+	return nil
+}
+
+func writeProtoMessage(writer io.Writer, message *msg.PluginMessage) error {
+	messageBytes, err := protojson.Marshal(message)
+	if err != nil {
+		return err
+	}
+	writer.Write(messageBytes)
+	writer.Write([]byte("\n"))
+	return nil
+}
+
+func (t *TransformCmd) prepareChunks(directoryObject transformObject) ([][]v2.Object, [][]v2.Relation) {
+	var objectChunks [][]v2.Object
+	var relationChunks [][]v2.Relation
 	if len(directoryObject.Objects) > t.MaxChunkSize {
 		for i := 0; i < len(directoryObject.Objects); i += t.MaxChunkSize {
 			end := i + t.MaxChunkSize
 			if end > len(directoryObject.Objects) {
 				end = len(directoryObject.Objects)
 			}
-			chunk := directoryObject.Objects[i:end]
-			chunkBytes, err := json.Marshal(chunk)
-			if err != nil {
-				return err
-			}
-			writer.Write(chunkBytes)
-			writer.Write([]byte("\n"))
+			objectChunks = append(objectChunks, directoryObject.Objects[i:end])
 		}
 	} else {
-		chunk, err := json.Marshal(directoryObject.Objects)
-		if err != nil {
-			return err
-		}
-		writer.Write(chunk)
-		writer.Write([]byte("\n"))
-
+		objectChunks = append(objectChunks, directoryObject.Objects)
 	}
 	if len(directoryObject.Relations) > t.MaxChunkSize {
 		for i := 0; i < len(directoryObject.Relations); i += t.MaxChunkSize {
@@ -105,23 +159,12 @@ func (t *TransformCmd) writeObjects(writer io.Writer, directoryObject transformO
 			if end > len(directoryObject.Relations) {
 				end = len(directoryObject.Relations)
 			}
-			chunk := directoryObject.Relations[i:end]
-			chunkBytes, err := json.Marshal(chunk)
-			if err != nil {
-				return err
-			}
-			writer.Write(chunkBytes)
-			writer.Write([]byte("\n"))
+			relationChunks = append(relationChunks, directoryObject.Relations[i:end])
 		}
 	} else {
-		chunk, err := json.Marshal(directoryObject.Relations)
-		if err != nil {
-			return err
-		}
-		writer.Write(chunk)
-		writer.Write([]byte("\n"))
+		relationChunks = append(relationChunks, directoryObject.Relations)
 	}
-	return nil
+	return objectChunks, relationChunks
 }
 
 var fns = template.FuncMap{

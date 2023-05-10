@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/alecthomas/assert"
@@ -30,9 +29,8 @@ func TestTransform(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestTransformWriteObject(t *testing.T) {
+func TestTransformChunking(t *testing.T) {
 	var directoryObjects transformObject
-	var output bytes.Buffer
 	for i := 0; i < 30; i++ {
 		key := fmt.Sprintf("%d", i)
 		testType := "test_object"
@@ -56,11 +54,39 @@ func TestTransformWriteObject(t *testing.T) {
 	}
 	trans := TransformCmd{}
 	trans.MaxChunkSize = 10
-	err := trans.writeObjects(&output, directoryObjects)
+	objectChunks, relationChunks := trans.prepareChunks(directoryObjects)
+	assert.Equal(t, len(objectChunks), 3)
+	assert.Equal(t, len(relationChunks), 3)
+}
+
+func TestTransformWriter(t *testing.T) {
+	var directoryObjects transformObject
+	for i := 0; i < 30; i++ {
+		key := fmt.Sprintf("%d", i)
+		testType := "test_object"
+
+		directoryObjects.Objects = append(directoryObjects.Objects, common.Object{
+			Key:  key,
+			Type: testType,
+		})
+
+		directoryObjects.Relations = append(directoryObjects.Relations, common.Relation{
+			Subject: &common.ObjectIdentifier{
+				Key:  &key,
+				Type: &testType,
+			},
+			Object: &common.ObjectIdentifier{
+				Key:  &key,
+				Type: &testType,
+			},
+			Relation: "test",
+		})
+	}
+	trans := TransformCmd{}
+	trans.MaxChunkSize = 10
+	objectChunks, relationChunks := trans.prepareChunks(directoryObjects)
+	var output bytes.Buffer
+	err := writeResponse(&output, objectChunks, relationChunks)
 	assert.NoError(t, err)
-	outputString := output.String()
-	t.Log(outputString)
-	// chunking adds new line after each chunk
-	splits := strings.Split(outputString, "\n")
-	assert.Equal(t, len(splits), 7)
+	t.Log(output.String())
 }
