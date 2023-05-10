@@ -5,42 +5,56 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/config"
 	"gopkg.in/auth0.v5/management"
 )
 
 type FetchCmd struct {
-	Config       string `short:"c" type:"path" help:"Path to the config file. Any argument provided to the CLI will take precedence."`
-	Domain       string `cmd:""`
-	ClientID     string `cmd:""`
-	ClientSecret string `cmd:""`
+	Domain       string `cmd:"" env:"DS_AUTH0_DOMAIN"`
+	ClientID     string `cmd:"" env:"DS_AUTH0_CLIENT_ID"`
+	ClientSecret string `cmd:"" env:"DS_AUTH0_CLIENT_SECRET"`
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
-	cfg, err := config.NewConfig(cmd.Config)
-	if err != nil {
-		return err
-	}
-	if cmd.Domain != "" {
-		cfg.Domain = cmd.Domain
-	}
-	if cmd.ClientID != "" {
-		cfg.ClientID = cmd.ClientID
-	}
-	if cmd.ClientSecret != "" {
-		cfg.ClientSecret = cmd.ClientSecret
-	}
-
 	mgmt, err := management.New(
-		cfg.Domain,
+		cmd.Domain,
 		management.WithClientCredentials(
-			cfg.ClientID,
-			cfg.ClientSecret,
+			cmd.ClientID,
+			cmd.ClientSecret,
 		))
 	if err != nil {
 		return err
 	}
 
+	results := make(chan map[string]interface{}, 1)
+	errors := make(chan error, 1)
+	go func() {
+		Fetch(mgmt, results, errors)
+		close(results)
+		close(errors)
+	}()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		for err := range errors {
+			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString("\n")
+		}
+	}()
+
+	for o := range results {
+		res, err := json.Marshal(o)
+		if err != nil {
+			return err
+		}
+		os.Stdout.Write(res)
+		os.Stdout.WriteString("\n")
+	}
+	return nil
+}
+
+func Fetch(mgmt *management.Management, results chan map[string]interface{}, errors chan error) {
 	page := 0
 	finished := false
 
@@ -52,21 +66,25 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 		opts := management.Page(page)
 		ul, err := mgmt.User.List(opts)
 		if err != nil {
-			return err
+			errors <- err
+			return
 		}
 
 		for _, u := range ul.Users {
-			res, err := json.Marshal(u)
+			res, err := u.MarshalJSON()
 			if err != nil {
-				return err
+				errors <- err
 			}
-			os.Stdout.Write(res)
-			os.Stdout.WriteString("\n")
+			var obj map[string]interface{}
+			err = json.Unmarshal(res, &obj)
+			if err != nil {
+				errors <- err
+			}
+			results <- obj
 		}
 		if !ul.HasNext() {
 			finished = true
 		}
 		page++
 	}
-	return nil
 }
