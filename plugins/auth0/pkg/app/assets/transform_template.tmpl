@@ -4,11 +4,11 @@
       "key": "{{ $.user_id }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
-      "updatedAt": "{{ $.updated_at }}"
       "properties":{
         "email": "{{ $.email }}",
-        "picture": "{{ $.picture }}",
+        "picture": "{{ $.picture }}"
         {{ if $.user_metadata }}
+        ,
         "aserto-allow-tenant-creation": "{{ index $.user_metadata "aserto-allow-tenant-creation" }}"
         {{ end }}
       }
@@ -17,7 +17,8 @@
     {
       "key": "{{$element.user_id}}",
       "type": "identity"
-    },
+    }
+    {{ if $.roles }}, {{ end }}
    
     {{ end }}
     {{ range $i, $element := $.roles }}
@@ -27,7 +28,7 @@
     }
     {{if last $i $.roles | not}}, {{end}}
     {{ end }}
-  ]
+  ],
   "relations":[
     {
     "relation": "manager",
