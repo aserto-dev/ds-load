@@ -83,8 +83,10 @@ func TestTransformWriter(t *testing.T) {
 		})
 	}
 	trans := TransformCmd{}
-	trans.MaxChunkSize = 10
+	trans.MaxChunkSize = 5
 	objectChunks, relationChunks := trans.prepareChunks(directoryObjects)
+	assert.Equal(t, len(objectChunks), 6)
+	assert.Equal(t, len(relationChunks), 6)
 	var output bytes.Buffer
 	err := writeResponse(&output, objectChunks, relationChunks)
 	assert.NoError(t, err)

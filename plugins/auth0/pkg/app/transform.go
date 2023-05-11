@@ -14,6 +14,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/common/msg"
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
+	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -55,26 +56,25 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 
 		err = json.Unmarshal(inputText, &input)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to unmarshal input into map[string]interface{}")
 		}
 		output, err := Transform(input, string(template))
 		if err != nil {
-			return err
+			return errors.Wrap(err, "transform template execute failed")
 		}
 		var directoryObject transformObject
 
 		err = json.Unmarshal([]byte(output), &directoryObject)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
 		}
 
 		objectChunks, relationChunks := t.prepareChunks(directoryObject)
 
 		err = writeResponse(os.Stdout, objectChunks, relationChunks)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to write chunks to output")
 		}
-
 	}
 
 	return nil
@@ -95,9 +95,9 @@ func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks 
 			},
 		},
 	}
-	writeProtoMessage(writer, &start)
 
 	for _, chunk := range objectChunks {
+		writeProtoMessage(writer, &start)
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Object{
@@ -109,10 +109,11 @@ func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks 
 				return err
 			}
 		}
+		writeProtoMessage(writer, &end)
 	}
-	writeProtoMessage(writer, &end)
-	writeProtoMessage(writer, &start)
+
 	for _, chunk := range relationChunks {
+		writeProtoMessage(writer, &start)
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Relation{
@@ -124,8 +125,9 @@ func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks 
 				return err
 			}
 		}
+		writeProtoMessage(writer, &end)
 	}
-	writeProtoMessage(writer, &end)
+
 	return nil
 }
 
