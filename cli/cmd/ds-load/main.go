@@ -30,8 +30,7 @@ func main() {
 
 	ctx := kong.Parse(&cli, options...)
 	context := &app.Context{
-		Config:    cli.Config,
-		Insecure:  cli.Insecure,
+		Config:    string(cli.Config),
 		Verbosity: cli.Verbosity,
 	}
 

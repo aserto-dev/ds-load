@@ -1,4 +1,7 @@
 package app
 
-const AppName = "ds-load"
-const AppDescription = "directory loader"
+const (
+	AppName               = "ds-load"
+	AppDescription        = "directory loader"
+	DefaultPluginLocation = "~/.ds-load/plugins"
+)

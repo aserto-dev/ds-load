@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 
+	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/common/version"
 )
 
@@ -19,17 +20,8 @@ type CLI struct {
 	ListPlugins      ListPluginsCmd      `cmd:"" help:"list available plugins"`
 	Version          VersionCmd          `cmd:"" help:"version information"`
 
-	Config    string `short:"c" help:"Path to the config file. Any argument provided to the CLI will take precedence."`
-	Verbosity int    `short:"v" type:"counter" help:"Use to increase output verbosity."`
-	Insecure  bool   `short:"i" help:"Disable TLS verification"`
-}
-
-type ExecCmd struct{}
-
-func (exec *ExecCmd) Run(ctx *Context) error {
-	fmt.Println("not implemented")
-	LaunchCommands()
-	return nil
+	Config    kong.ConfigFlag `short:"c" help:"Path to the config file. Any argument provided to the CLI will take precedence."`
+	Verbosity int             `short:"v" type:"counter" help:"Use to increase output verbosity."`
 }
 
 type GetPluginCmd struct{}
