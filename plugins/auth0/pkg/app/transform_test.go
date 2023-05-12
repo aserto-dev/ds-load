@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"runtime"
 	"testing"
 
 	"github.com/alecthomas/assert"
@@ -29,8 +30,59 @@ func TestTransform(t *testing.T) {
 	var directoryObject msg.Transform
 	err = protojson.Unmarshal(out.Bytes(), &directoryObject)
 	assert.NoError(t, err)
-	assert.Equal(t, len(directoryObject.Objects), 5)
+	objectCount := len(directoryObject.Objects)
+	assert.Equal(t, objectCount, 5)
 	assert.Equal(t, len(directoryObject.Relations), 2)
+}
+
+func TestTransformWithManyObjects(t *testing.T) {
+	var m1, m2 runtime.MemStats
+	runtime.GC()
+	runtime.ReadMemStats(&m1)
+	numberOfObject := 100000
+
+	t.Log(fmt.Sprintf("before: %v Kb", bToKb(m1.TotalAlloc)))
+	content, err := Assets().ReadFile("assets/peoplefinder.json")
+	assert.NoError(t, err)
+	input := make(map[string]interface{})
+	err = json.Unmarshal(content, &input)
+	assert.NoError(t, err)
+	template, err := Assets().ReadFile("assets/transform_template.tmpl")
+	assert.NoError(t, err)
+
+	t.Log(fmt.Sprintf("Attaching %d roles to peoplefinder", numberOfObject))
+	// Increase number of objects
+	for i := 0; i < numberOfObject; i++ {
+		input["roles"] = append(input["roles"].([]interface{}), map[string]interface{}{
+			"id":   fmt.Sprintf("%d", i),
+			"name": fmt.Sprintf("role%d", i),
+		})
+	}
+
+	output, err := Transform(input, string(template))
+	assert.NoError(t, err)
+	var out bytes.Buffer
+	err = json.Indent(&out, []byte(output), "", "\t")
+	assert.NoError(t, err)
+	var directoryObject msg.Transform
+	err = protojson.Unmarshal(out.Bytes(), &directoryObject)
+	assert.NoError(t, err)
+	assert.Equal(t, len(directoryObject.Relations), 2)
+
+	trans := TransformCmd{}
+	trans.MaxChunkSize = 10
+	t.Log("Chunking")
+	objectChunks, relationChunks := trans.prepareChunks(&directoryObject)
+	t.Log("Object chunks", len(objectChunks))
+	assert.NotNil(t, objectChunks)
+	assert.NotNil(t, relationChunks)
+	runtime.ReadMemStats(&m2)
+	t.Log(fmt.Sprintf("after: %v Kb", bToKb(m2.TotalAlloc)))
+	t.Log(fmt.Sprintf("total diff: %v Kb", bToKb(m2.TotalAlloc-m1.TotalAlloc)))
+}
+
+func bToKb(b uint64) uint64 {
+	return b / 1024
 }
 
 func TestTransformChunking(t *testing.T) {
