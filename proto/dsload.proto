@@ -45,3 +45,8 @@ message PluginMessage{
         google.rpc.Status error                         = 4;
     }
 }
+
+message Transform {
+    repeated aserto.directory.common.v2.Object objects     = 1;
+    repeated aserto.directory.common.v2.Relation relations = 2;
+}

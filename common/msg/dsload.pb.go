@@ -407,6 +407,61 @@ func (*PluginMessage_Batch) isPluginMessage_Data() {}
 
 func (*PluginMessage_Error) isPluginMessage_Data() {}
 
+type Transform struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Objects   []*v2.Object   `protobuf:"bytes,1,rep,name=objects,proto3" json:"objects,omitempty"`
+	Relations []*v2.Relation `protobuf:"bytes,2,rep,name=relations,proto3" json:"relations,omitempty"`
+}
+
+func (x *Transform) Reset() {
+	*x = Transform{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dsload_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Transform) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Transform) ProtoMessage() {}
+
+func (x *Transform) ProtoReflect() protoreflect.Message {
+	mi := &file_dsload_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Transform.ProtoReflect.Descriptor instead.
+func (*Transform) Descriptor() ([]byte, []int) {
+	return file_dsload_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *Transform) GetObjects() []*v2.Object {
+	if x != nil {
+		return x.Objects
+	}
+	return nil
+}
+
+func (x *Transform) GetRelations() []*v2.Relation {
+	if x != nil {
+		return x.Relations
+	}
+	return nil
+}
+
 var File_dsload_proto protoreflect.FileDescriptor
 
 var file_dsload_proto_rawDesc = []byte{
@@ -457,7 +512,16 @@ var file_dsload_proto_rawDesc = []byte{
 	0x63, 0x68, 0x48, 0x00, 0x52, 0x05, 0x62, 0x61, 0x74, 0x63, 0x68, 0x12, 0x2a, 0x0a, 0x05, 0x65,
 	0x72, 0x72, 0x6f, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x67, 0x6f, 0x6f,
 	0x67, 0x6c, 0x65, 0x2e, 0x72, 0x70, 0x63, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x48, 0x00,
-	0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x42, 0x06, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x2a,
+	0x52, 0x05, 0x65, 0x72, 0x72, 0x6f, 0x72, 0x42, 0x06, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22,
+	0x8d, 0x01, 0x0a, 0x09, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x66, 0x6f, 0x72, 0x6d, 0x12, 0x3c, 0x0a,
+	0x07, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
+	0x2e, 0x61, 0x73, 0x65, 0x72, 0x74, 0x6f, 0x2e, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x32, 0x2e, 0x4f, 0x62, 0x6a, 0x65,
+	0x63, 0x74, 0x52, 0x07, 0x6f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x12, 0x42, 0x0a, 0x09, 0x72,
+	0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24,
+	0x2e, 0x61, 0x73, 0x65, 0x72, 0x74, 0x6f, 0x2e, 0x64, 0x69, 0x72, 0x65, 0x63, 0x74, 0x6f, 0x72,
+	0x79, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x32, 0x2e, 0x52, 0x65, 0x6c, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x09, 0x72, 0x65, 0x6c, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2a,
 	0x96, 0x01, 0x0a, 0x11, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x45, 0x6c, 0x65, 0x6d, 0x65, 0x6e,
 	0x74, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1f, 0x0a, 0x1b, 0x43, 0x4f, 0x4e, 0x46, 0x49, 0x47, 0x5f,
 	0x45, 0x4c, 0x45, 0x4d, 0x45, 0x4e, 0x54, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x55, 0x4e, 0x4b,
@@ -486,31 +550,34 @@ func file_dsload_proto_rawDescGZIP() []byte {
 }
 
 var file_dsload_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dsload_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_dsload_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_dsload_proto_goTypes = []interface{}{
 	(ConfigElementType)(0), // 0: aserto.dsload.ConfigElementType
 	(*ConfigElement)(nil),  // 1: aserto.dsload.ConfigElement
 	(*Info)(nil),           // 2: aserto.dsload.Info
 	(*Batch)(nil),          // 3: aserto.dsload.Batch
 	(*PluginMessage)(nil),  // 4: aserto.dsload.PluginMessage
-	(*v1.BuildInfo)(nil),   // 5: aserto.common.info.v1.BuildInfo
-	(*v2.Object)(nil),      // 6: aserto.directory.common.v2.Object
-	(*v2.Relation)(nil),    // 7: aserto.directory.common.v2.Relation
-	(*status.Status)(nil),  // 8: google.rpc.Status
+	(*Transform)(nil),      // 5: aserto.dsload.Transform
+	(*v1.BuildInfo)(nil),   // 6: aserto.common.info.v1.BuildInfo
+	(*v2.Object)(nil),      // 7: aserto.directory.common.v2.Object
+	(*v2.Relation)(nil),    // 8: aserto.directory.common.v2.Relation
+	(*status.Status)(nil),  // 9: google.rpc.Status
 }
 var file_dsload_proto_depIdxs = []int32{
 	0, // 0: aserto.dsload.ConfigElement.type:type_name -> aserto.dsload.ConfigElementType
-	5, // 1: aserto.dsload.Info.build:type_name -> aserto.common.info.v1.BuildInfo
+	6, // 1: aserto.dsload.Info.build:type_name -> aserto.common.info.v1.BuildInfo
 	1, // 2: aserto.dsload.Info.configs:type_name -> aserto.dsload.ConfigElement
-	6, // 3: aserto.dsload.PluginMessage.object:type_name -> aserto.directory.common.v2.Object
-	7, // 4: aserto.dsload.PluginMessage.relation:type_name -> aserto.directory.common.v2.Relation
+	7, // 3: aserto.dsload.PluginMessage.object:type_name -> aserto.directory.common.v2.Object
+	8, // 4: aserto.dsload.PluginMessage.relation:type_name -> aserto.directory.common.v2.Relation
 	3, // 5: aserto.dsload.PluginMessage.batch:type_name -> aserto.dsload.Batch
-	8, // 6: aserto.dsload.PluginMessage.error:type_name -> google.rpc.Status
-	7, // [7:7] is the sub-list for method output_type
-	7, // [7:7] is the sub-list for method input_type
-	7, // [7:7] is the sub-list for extension type_name
-	7, // [7:7] is the sub-list for extension extendee
-	0, // [0:7] is the sub-list for field type_name
+	9, // 6: aserto.dsload.PluginMessage.error:type_name -> google.rpc.Status
+	7, // 7: aserto.dsload.Transform.objects:type_name -> aserto.directory.common.v2.Object
+	8, // 8: aserto.dsload.Transform.relations:type_name -> aserto.directory.common.v2.Relation
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_dsload_proto_init() }
@@ -567,6 +634,18 @@ func file_dsload_proto_init() {
 				return nil
 			}
 		}
+		file_dsload_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Transform); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_dsload_proto_msgTypes[2].OneofWrappers = []interface{}{
 		(*Batch_Begin)(nil),
@@ -584,7 +663,7 @@ func file_dsload_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_dsload_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

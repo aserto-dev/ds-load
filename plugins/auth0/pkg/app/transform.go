@@ -23,11 +23,6 @@ type TransformCmd struct {
 	MaxChunkSize int    `cmd:""`
 }
 
-type transformObject struct {
-	Objects   []v2.Object   `json:"objects"`
-	Relations []v2.Relation `json:"relations"`
-}
-
 func (t *TransformCmd) Run(context *kong.Context) error {
 	var template []byte
 	var err error
@@ -62,14 +57,14 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "transform template execute failed")
 		}
-		var directoryObject transformObject
+		var directoryObject msg.Transform
 
-		err = json.Unmarshal([]byte(output), &directoryObject)
+		err = protojson.Unmarshal([]byte(output), &directoryObject)
 		if err != nil {
 			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
 		}
 
-		objectChunks, relationChunks := t.prepareChunks(directoryObject)
+		objectChunks, relationChunks := t.prepareChunks(&directoryObject)
 
 		err = writeResponse(os.Stdout, objectChunks, relationChunks)
 		if err != nil {
@@ -80,7 +75,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	return nil
 }
 
-func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks [][]v2.Relation) error {
+func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks [][]*v2.Relation) error {
 	start := msg.PluginMessage{
 		Data: &msg.PluginMessage_Batch{
 			Batch: &msg.Batch{
@@ -101,7 +96,7 @@ func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks 
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Object{
-					Object: &chunk[index],
+					Object: chunk[index],
 				},
 			}
 			err := writeProtoMessage(writer, &message)
@@ -117,7 +112,7 @@ func writeResponse(writer io.Writer, objectChunks [][]v2.Object, relationChunks 
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Relation{
-					Relation: &chunk[index],
+					Relation: chunk[index],
 				},
 			}
 			err := writeProtoMessage(writer, &message)
@@ -141,9 +136,9 @@ func writeProtoMessage(writer io.Writer, message *msg.PluginMessage) error {
 	return nil
 }
 
-func (t *TransformCmd) prepareChunks(directoryObject transformObject) ([][]v2.Object, [][]v2.Relation) {
-	var objectChunks [][]v2.Object
-	var relationChunks [][]v2.Relation
+func (t *TransformCmd) prepareChunks(directoryObject *msg.Transform) ([][]*v2.Object, [][]*v2.Relation) {
+	var objectChunks [][]*v2.Object
+	var relationChunks [][]*v2.Relation
 	if len(directoryObject.Objects) > t.MaxChunkSize {
 		for i := 0; i < len(directoryObject.Objects); i += t.MaxChunkSize {
 			end := i + t.MaxChunkSize
