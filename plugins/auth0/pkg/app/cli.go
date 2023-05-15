@@ -8,7 +8,7 @@ import (
 )
 
 type CLI struct {
-	Config          kong.ConfigFlag    `help:"Configuration file path"`
+	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`
 	Info            InfoCmd            `cmd:"" help:""`
 	Version         VersionCmd         `cmd:"" help:"version information"`
 	Fetch           FetchCmd           `cmd:"" help:"fetch auth0 data"`

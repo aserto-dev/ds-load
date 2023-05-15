@@ -8,8 +8,9 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"runtime"
+	"sync"
 
 	"github.com/aserto-dev/ds-load/common/msg"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -28,40 +29,71 @@ func (e *ExecCmd) Run(ctx *Context) error {
 	if e.Plugin != "auth0" {
 		return errors.New("plugin not supported")
 	}
-	e.LaunchCommands()
-	return nil
+	return e.LaunchCommands()
 }
 
-func (e *ExecCmd) LaunchCommands() {
+func (e *ExecCmd) LaunchCommands() error {
 	fetchCmd := exec.Command(getPluginExecPath(e.Plugin), "fetch", "-c", e.PluginConfig)
 	transformCmd := exec.Command(getPluginExecPath(e.Plugin), "transform", "-c", e.PluginConfig)
 
-	r, w, _ := os.Pipe()
-	transformCmd.Stdin = w
-	fetchCmd.Stdout = r
+	var wg sync.WaitGroup
 
-	stdout, err := transformCmd.StdoutPipe()
+	fStdout, err := fetchCmd.StdoutPipe()
 	if err != nil {
-		log.Println(err)
+		return err
+	}
+	defer fStdout.Close()
+
+	tStdin, err := transformCmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+	defer tStdin.Close()
+
+	tStdout, err := transformCmd.StdoutPipe()
+	if err != nil {
+		return err
 	}
 
 	stderr, err := transformCmd.StderrPipe()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	go listenOnStderr(stderr)
 
-	err = fetchCmd.Run()
+	err = fetchCmd.Start()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
-	err = transformCmd.Run()
+	err = transformCmd.Start()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
+	wg.Add(2)
 
-	listenOnStdout(stdout)
+	go func() {
+		scanner := bufio.NewScanner(fStdout)
+		for scanner.Scan() {
+			line := scanner.Bytes()
+			tStdin.Write(line)
+			tStdin.Write([]byte("\n"))
+		}
+
+		wg.Done()
+		tStdin.Close()
+	}()
+
+	go func() {
+		listenOnStdout(tStdout)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	fetchCmd.Wait()
+	transformCmd.Wait()
+
+	return nil
 }
 
 func listenOnStdout(stdout io.ReadCloser) {
@@ -113,9 +145,14 @@ func listenOnStderr(stderr io.ReadCloser) {
 }
 
 func getPluginExecPath(pluginName string) string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	ext := ""
 	if runtime.GOOS == "windows" {
 		ext = ".exe"
 	}
-	return path.Join(DefaultPluginLocation, "ds-load-"+pluginName+ext)
+	return filepath.Join(homeDir, ".ds-load", "plugins", "ds-load-"+pluginName+ext)
 }
