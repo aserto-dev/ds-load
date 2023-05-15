@@ -14,7 +14,7 @@ type InfoCmd struct{}
 
 func (cmd *InfoCmd) Run(context *kong.Context) error {
 	ver := version.GetInfo()
-	info := &msg.Info{
+	infoMsg := &msg.Info{
 		Build: &info.BuildInfo{
 			Version: ver.Version,
 			Commit:  ver.Commit,
@@ -48,7 +48,7 @@ func (cmd *InfoCmd) Run(context *kong.Context) error {
 		},
 	}
 
-	message, err := protojson.Marshal(info)
+	message, err := protojson.Marshal(infoMsg)
 	if err != nil {
 		return err
 	}

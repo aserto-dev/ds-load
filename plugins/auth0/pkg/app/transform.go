@@ -24,16 +24,16 @@ type TransformCmd struct {
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
-	var template []byte
+	var templateContent []byte
 	var err error
 
 	if t.TemplateFile == "" {
-		template, err = Assets().ReadFile("assets/transform_template.tmpl")
+		templateContent, err = Assets().ReadFile("assets/transform_template.tmpl")
 		if err != nil {
 			return err
 		}
 	} else {
-		template, err = os.ReadFile(t.TemplateFile)
+		templateContent, err = os.ReadFile(t.TemplateFile)
 		if err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "failed to unmarshal input into map[string]interface{}")
 		}
-		output, err := Transform(input, string(template))
+		output, err := Transform(input, string(templateContent))
 		if err != nil {
 			return errors.Wrap(err, "transform template execute failed")
 		}
@@ -92,7 +92,10 @@ func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks
 	}
 
 	for _, chunk := range objectChunks {
-		writeProtoMessage(writer, &start)
+		err := writeProtoMessage(writer, &start)
+		if err != nil {
+			return err
+		}
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Object{
@@ -104,11 +107,17 @@ func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks
 				return err
 			}
 		}
-		writeProtoMessage(writer, &end)
+		err = writeProtoMessage(writer, &end)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, chunk := range relationChunks {
-		writeProtoMessage(writer, &start)
+		err := writeProtoMessage(writer, &start)
+		if err != nil {
+			return err
+		}
 		for index := range chunk {
 			message := msg.PluginMessage{
 				Data: &msg.PluginMessage_Relation{
@@ -120,7 +129,10 @@ func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks
 				return err
 			}
 		}
-		writeProtoMessage(writer, &end)
+		err = writeProtoMessage(writer, &end)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -131,8 +143,14 @@ func writeProtoMessage(writer io.Writer, message *msg.PluginMessage) error {
 	if err != nil {
 		return err
 	}
-	writer.Write(messageBytes)
-	writer.Write([]byte("\n"))
+	_, err = writer.Write(messageBytes)
+	if err != nil {
+		return err
+	}
+	_, err = writer.Write([]byte("\n"))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

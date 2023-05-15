@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/app"
-	"os"
 )
 
 func main() {
