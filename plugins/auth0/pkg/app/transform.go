@@ -40,7 +40,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	}
 
 	if t.MaxChunkSize == 0 {
-		t.MaxChunkSize = 10
+		t.MaxChunkSize = 1 // By default do not write begin and end batches
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -66,7 +66,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 
 		objectChunks, relationChunks := t.prepareChunks(&directoryObject)
 
-		err = writeResponse(os.Stdout, objectChunks, relationChunks)
+		err = t.writeResponse(os.Stdout, objectChunks, relationChunks)
 		if err != nil {
 			return errors.Wrap(err, "failed to write chunks to output")
 		}
@@ -75,26 +75,28 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	return nil
 }
 
-func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks [][]*v2.Relation) error {
+func (t *TransformCmd) writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks [][]*v2.Relation) error {
 	start := msg.PluginMessage{
 		Data: &msg.PluginMessage_Batch{
 			Batch: &msg.Batch{
-				Data: &msg.Batch_Begin{Begin: true},
+				Type: msg.BatchType_BEGIN,
 			},
 		},
 	}
 	end := msg.PluginMessage{
 		Data: &msg.PluginMessage_Batch{
 			Batch: &msg.Batch{
-				Data: &msg.Batch_End{End: true},
+				Type: msg.BatchType_END,
 			},
 		},
 	}
 
 	for _, chunk := range objectChunks {
-		err := writeProtoMessage(writer, &start)
-		if err != nil {
-			return err
+		if t.MaxChunkSize > 1 {
+			err := writeProtoMessage(writer, &start)
+			if err != nil {
+				return err
+			}
 		}
 		for index := range chunk {
 			message := msg.PluginMessage{
@@ -107,16 +109,20 @@ func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks
 				return err
 			}
 		}
-		err = writeProtoMessage(writer, &end)
-		if err != nil {
-			return err
+		if t.MaxChunkSize > 1 {
+			err := writeProtoMessage(writer, &end)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	for _, chunk := range relationChunks {
-		err := writeProtoMessage(writer, &start)
-		if err != nil {
-			return err
+		if t.MaxChunkSize > 1 {
+			err := writeProtoMessage(writer, &start)
+			if err != nil {
+				return err
+			}
 		}
 		for index := range chunk {
 			message := msg.PluginMessage{
@@ -129,9 +135,11 @@ func writeResponse(writer io.Writer, objectChunks [][]*v2.Object, relationChunks
 				return err
 			}
 		}
-		err = writeProtoMessage(writer, &end)
-		if err != nil {
-			return err
+		if t.MaxChunkSize > 1 {
+			err := writeProtoMessage(writer, &end)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

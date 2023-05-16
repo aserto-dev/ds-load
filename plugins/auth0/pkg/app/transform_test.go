@@ -144,7 +144,7 @@ func TestTransformWriter(t *testing.T) {
 	assert.Equal(t, len(objectChunks), 6)
 	assert.Equal(t, len(relationChunks), 6)
 	var output bytes.Buffer
-	err := writeResponse(&output, objectChunks, relationChunks)
+	err := trans.writeResponse(&output, objectChunks, relationChunks)
 	assert.NoError(t, err)
 	t.Log(output.String())
 }
