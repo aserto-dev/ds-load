@@ -1,8 +1,9 @@
 package app_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type testSetup struct {
@@ -18,5 +19,5 @@ func setupTest(t *testing.T) *testSetup {
 }
 
 func TestExec(t *testing.T) {
-
+	setupTest(t)
 }

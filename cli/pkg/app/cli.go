@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/common/version"
 )
 
@@ -26,28 +27,28 @@ type CLI struct {
 
 type GetPluginCmd struct{}
 
-func (getPlugin *GetPluginCmd) Run() error {
+func (getPlugin *GetPluginCmd) Run(c *cc.CommonCtx) error {
 	fmt.Println("not implemented")
 	return nil
 }
 
 type SetDefaultPluginCmd struct{}
 
-func (defaultPlugin *SetDefaultPluginCmd) Run() error {
+func (defaultPlugin *SetDefaultPluginCmd) Run(c *cc.CommonCtx) error {
 	fmt.Println("not implemented")
 	return nil
 }
 
 type ListPluginsCmd struct{}
 
-func (listPlugins *ListPluginsCmd) Run() error {
+func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	fmt.Println("not implemented")
 	return nil
 }
 
 type VersionCmd struct{}
 
-func (cmd *VersionCmd) Run() error {
+func (cmd *VersionCmd) Run(c *cc.CommonCtx) error {
 	fmt.Printf("%s - %s\n",
 		AppName,
 		version.GetInfo().String(),
