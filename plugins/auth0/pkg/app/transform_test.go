@@ -1,4 +1,4 @@
-package app
+package app //nolint
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ func TestTransformWithManyObjects(t *testing.T) {
 	runtime.ReadMemStats(&m1)
 	numberOfObject := 100000
 
-	t.Log(fmt.Sprintf("before: %v Kb", bToKb(m1.TotalAlloc)))
+	t.Logf("before: %v Kb", bToKb(m1.TotalAlloc))
 	content, err := Assets().ReadFile("assets/peoplefinder.json")
 	assert.NoError(t, err)
 	input := make(map[string]interface{})
@@ -50,7 +50,7 @@ func TestTransformWithManyObjects(t *testing.T) {
 	template, err := Assets().ReadFile("assets/transform_template.tmpl")
 	assert.NoError(t, err)
 
-	t.Log(fmt.Sprintf("Attaching %d roles to peoplefinder", numberOfObject))
+	t.Logf("Attaching %d roles to peoplefinder", numberOfObject)
 	// Increase number of objects
 	for i := 0; i < numberOfObject; i++ {
 		input["roles"] = append(input["roles"].([]interface{}), map[string]interface{}{
@@ -77,8 +77,8 @@ func TestTransformWithManyObjects(t *testing.T) {
 	assert.NotNil(t, objectChunks)
 	assert.NotNil(t, relationChunks)
 	runtime.ReadMemStats(&m2)
-	t.Log(fmt.Sprintf("after: %v Kb", bToKb(m2.TotalAlloc)))
-	t.Log(fmt.Sprintf("total diff: %v Kb", bToKb(m2.TotalAlloc-m1.TotalAlloc)))
+	t.Logf("after: %v Kb", bToKb(m2.TotalAlloc))
+	t.Logf("total diff: %v Kb", bToKb(m2.TotalAlloc-m1.TotalAlloc))
 }
 
 func bToKb(b uint64) uint64 {
@@ -89,7 +89,7 @@ func TestTransformChunking(t *testing.T) {
 	var directoryObjects msg.Transform
 	for i := 0; i < 30; i++ {
 		key := fmt.Sprintf("%d", i)
-		testType := "test_object"
+		testType := "test_object" //nolint:goconst
 
 		directoryObjects.Objects = append(directoryObjects.Objects, &common.Object{
 			Key:  key,
