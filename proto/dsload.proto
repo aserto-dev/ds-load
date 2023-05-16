@@ -30,11 +30,14 @@ message Info {
     repeated ConfigElement configs              = 3;
 }
 
+enum BatchType {
+    NONE  = 0;
+    BEGIN = 1;
+    END   = 2;
+}
+
 message Batch {
-    oneof data {
-        bool begin  = 1;
-        bool end    = 2;
-    }
+   BatchType type = 1;
 }
 
 message PluginMessage{
