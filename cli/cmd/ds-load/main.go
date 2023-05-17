@@ -4,10 +4,14 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	kongyaml "github.com/alecthomas/kong-yaml"
 	"github.com/aserto-dev/ds-load/cli/pkg/app"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 )
 
 func main() {
+	defaultConfigPath := "~/.config/ds-load/cfg/config.yaml"
+
 	cli := app.CLI{}
 	options := []kong.Option{
 		kong.Name(app.AppName),
@@ -16,26 +20,21 @@ func main() {
 		}),
 		kong.Description(app.AppDescription),
 		kong.UsageOnError(),
-
+		kong.Configuration(kongyaml.Loader, defaultConfigPath),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,
 			Summary:             false,
 			Compact:             true,
-			Tree:                true,
+			Tree:                false,
 			FlagsLast:           true,
 			Indenter:            kong.SpaceIndenter,
 			NoExpandSubcommands: false,
 		}),
 	}
 
-	ctx := kong.Parse(&cli, options...)
-	context := &app.Context{
-		Config:    cli.Config,
-		Insecure:  cli.Insecure,
-		Verbosity: cli.Verbosity,
-	}
-
-	err := ctx.Run(context)
+	kongCtx := kong.Parse(&cli, options...)
+	ctx := cc.NewCommonContext(cli.Verbosity)
+	err := kongCtx.Run(ctx)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
