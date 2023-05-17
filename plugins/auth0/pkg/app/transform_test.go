@@ -32,7 +32,7 @@ func TestTransform(t *testing.T) {
 	assert.NoError(t, err)
 	objectCount := len(directoryObject.Objects)
 	assert.Equal(t, objectCount, 5)
-	assert.Equal(t, len(directoryObject.Relations), 2)
+	assert.Equal(t, len(directoryObject.Relations), 1)
 }
 
 func TestTransformWithManyObjects(t *testing.T) {
@@ -67,7 +67,7 @@ func TestTransformWithManyObjects(t *testing.T) {
 	var directoryObject msg.Transform
 	err = protojson.Unmarshal(out.Bytes(), &directoryObject)
 	assert.NoError(t, err)
-	assert.Equal(t, len(directoryObject.Relations), 2)
+	assert.Equal(t, len(directoryObject.Relations), 1)
 
 	trans := TransformCmd{}
 	trans.MaxChunkSize = 10
