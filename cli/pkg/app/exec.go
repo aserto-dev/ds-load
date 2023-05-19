@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
-	"sync"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
@@ -38,89 +37,35 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 		return err
 	}
 	e.dirClient = cli
-	return e.LaunchCommands(c)
+	return e.LaunchPlugin(c)
 }
 
-func (e *ExecCmd) LaunchCommands(c *cc.CommonCtx) error {
-	fetchCmd := exec.Command(getPluginExecPath(e.Plugin), "fetch", "-c", e.PluginConfig)         //nolint:gosec
-	transformCmd := exec.Command(getPluginExecPath(e.Plugin), "transform", "-c", e.PluginConfig) //nolint:gosec
+func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
+	pluginCmd := exec.Command(getPluginExecPath(e.Plugin), "exec", "-c", e.PluginConfig) //nolint:gosec
 
-	var wg sync.WaitGroup
-
-	fStdout, err := fetchCmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	defer fStdout.Close()
-
-	fStderr, err := fetchCmd.StderrPipe()
-	if err != nil {
-		return err
-	}
-	defer fStderr.Close()
-
-	tStdin, err := transformCmd.StdinPipe()
-	if err != nil {
-		return err
-	}
-	defer tStdin.Close()
-
-	tStdout, err := transformCmd.StdoutPipe()
+	pStdout, err := pluginCmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
 
-	stderr, err := transformCmd.StderrPipe()
+	pStderr, err := pluginCmd.StderrPipe()
 	if err != nil {
 		return err
 	}
 
-	go listenOnStderr(stderr)
-	go listenOnStderr(fStderr)
+	go listenOnStderr(pStderr)
 
-	err = fetchCmd.Start()
+	err = pluginCmd.Start()
 	if err != nil {
 		return err
 	}
 
-	err = transformCmd.Start()
-	if err != nil {
-		return err
-	}
-	wg.Add(1)
-
-	go func() {
-		scanner := bufio.NewScanner(fStdout)
-		for scanner.Scan() {
-			line := scanner.Bytes()
-			_, err = tStdin.Write(line)
-			if err != nil {
-				c.UI.Problem().Msg(err.Error())
-			}
-			_, err = tStdin.Write([]byte("\n"))
-			if err != nil {
-				c.UI.Problem().Msg(err.Error())
-			}
-		}
-
-		wg.Done()
-		err = tStdin.Close()
-		if err != nil {
-			c.UI.Problem().Msg(err.Error())
-		}
-	}()
-
-	err = e.handleMessages(c, tStdout)
+	err = e.handleMessages(c, pStdout)
 	if err != nil {
 		return err
 	}
 
-	wg.Wait()
-	err = fetchCmd.Wait()
-	if err != nil {
-		c.UI.Problem().Msg(err.Error())
-	}
-	return transformCmd.Wait()
+	return pluginCmd.Wait()
 }
 
 func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {

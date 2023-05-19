@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-	defaultConfigPath := "~/.config/ds-load/cfg/config.yaml"
 
 	cli := app.CLI{}
 	options := []kong.Option{
@@ -20,7 +19,7 @@ func main() {
 		}),
 		kong.Description(app.AppDescription),
 		kong.UsageOnError(),
-		kong.Configuration(kongyaml.Loader, defaultConfigPath),
+		kong.Configuration(kongyaml.Loader, app.DefaultConfigPath),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,
 			Summary:             false,
@@ -39,5 +38,4 @@ func main() {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
-
 }
