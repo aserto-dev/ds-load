@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"strings"
 
 	"text/template"
 
@@ -193,6 +194,20 @@ func (t *TransformCmd) prepareChunks(directoryObject *msg.Transform) ([][]*v2.Ob
 var fns = template.FuncMap{
 	"last": func(x int, a interface{}) bool {
 		return x == reflect.ValueOf(a).Len()-1
+	},
+	"marshal": func(array []interface{}) string {
+		builder := strings.Builder{}
+		for i := range array {
+			content, err := json.MarshalIndent(array[i], "", "  ")
+			if err != nil {
+				return "error marshaling object"
+			}
+			builder.WriteString(string(content))
+			if i < len(array)-1 {
+				builder.WriteString(",\n")
+			}
+		}
+		return builder.String()
 	},
 }
 
