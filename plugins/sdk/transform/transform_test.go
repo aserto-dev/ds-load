@@ -1,4 +1,4 @@
-package app //nolint
+package transform_test
 
 import (
 	"bytes"
@@ -9,19 +9,24 @@ import (
 
 	"github.com/alecthomas/assert"
 	"github.com/aserto-dev/ds-load/common/msg"
+	"github.com/aserto-dev/ds-load/plugins/sdk"
+	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
 	"github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func TestTransform(t *testing.T) {
-	content, err := Assets().ReadFile("assets/peoplefinder.json")
+	content, err := sdk.Assets().ReadFile("assets/peoplefinder.json")
 	assert.NoError(t, err)
 	input := make(map[string]interface{})
 	err = json.Unmarshal(content, &input)
 	assert.NoError(t, err)
-	template, err := Assets().ReadFile("assets/transform_template.tmpl")
+	template, err := sdk.Assets().ReadFile("assets/transform_template.tmpl")
 	assert.NoError(t, err)
-	output, err := Transform(input, string(template))
+
+	transformer := transform.NewTransformer(1)
+
+	output, err := transformer.TransformToTemplate(input, string(template))
 	assert.NoError(t, err)
 	t.Log(output)
 	var out bytes.Buffer
@@ -42,12 +47,12 @@ func TestTransformWithManyObjects(t *testing.T) {
 	numberOfObject := 100000
 
 	t.Logf("before: %v Kb", bToKb(m1.TotalAlloc))
-	content, err := Assets().ReadFile("assets/peoplefinder.json")
+	content, err := sdk.Assets().ReadFile("assets/peoplefinder.json")
 	assert.NoError(t, err)
 	input := make(map[string]interface{})
 	err = json.Unmarshal(content, &input)
 	assert.NoError(t, err)
-	template, err := Assets().ReadFile("assets/transform_template.tmpl")
+	template, err := sdk.Assets().ReadFile("assets/transform_template.tmpl")
 	assert.NoError(t, err)
 
 	t.Logf("Attaching %d roles to peoplefinder", numberOfObject)
@@ -59,7 +64,9 @@ func TestTransformWithManyObjects(t *testing.T) {
 		})
 	}
 
-	output, err := Transform(input, string(template))
+	transformer := transform.NewTransformer(1)
+
+	output, err := transformer.TransformToTemplate(input, string(template))
 	assert.NoError(t, err)
 	var out bytes.Buffer
 	err = json.Indent(&out, []byte(output), "", "\t")
@@ -69,10 +76,8 @@ func TestTransformWithManyObjects(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(directoryObject.Relations), 1)
 
-	trans := TransformCmd{}
-	trans.MaxChunkSize = 10
 	t.Log("Chunking")
-	objectChunks, relationChunks := trans.prepareChunks(&directoryObject)
+	objectChunks, relationChunks := transformer.PrepareChunks(&directoryObject)
 	t.Log("Object chunks", len(objectChunks))
 	assert.NotNil(t, objectChunks)
 	assert.NotNil(t, relationChunks)
@@ -108,9 +113,10 @@ func TestTransformChunking(t *testing.T) {
 			Relation: "test",
 		})
 	}
-	trans := TransformCmd{}
-	trans.MaxChunkSize = 10
-	objectChunks, relationChunks := trans.prepareChunks(&directoryObjects)
+
+	trans := transform.NewTransformer(10)
+
+	objectChunks, relationChunks := trans.PrepareChunks(&directoryObjects)
 	assert.Equal(t, len(objectChunks), 3)
 	assert.Equal(t, len(relationChunks), 3)
 }
@@ -138,13 +144,14 @@ func TestTransformWriter(t *testing.T) {
 			Relation: "test",
 		})
 	}
-	trans := TransformCmd{}
-	trans.MaxChunkSize = 5
-	objectChunks, relationChunks := trans.prepareChunks(&directoryObjects)
+
+	trans := transform.NewTransformer(5)
+
+	objectChunks, relationChunks := trans.PrepareChunks(&directoryObjects)
 	assert.Equal(t, len(objectChunks), 6)
 	assert.Equal(t, len(relationChunks), 6)
 	var output bytes.Buffer
-	err := trans.writeResponse(&output, objectChunks, relationChunks)
+	err := trans.WriteChunks(&output, objectChunks, relationChunks)
 	assert.NoError(t, err)
 	t.Log(output.String())
 }
