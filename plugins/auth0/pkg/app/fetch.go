@@ -8,10 +8,12 @@ import (
 	"gopkg.in/auth0.v5/management"
 )
 
+var _ = kong.Must(&FetchCmd{})
+
 type FetchCmd struct {
-	Domain       string `cmd:"" env:"DS_AUTH0_DOMAIN"`
-	ClientID     string `cmd:"" env:"DS_AUTH0_CLIENT_ID"`
-	ClientSecret string `cmd:"" env:"DS_AUTH0_CLIENT_SECRET"`
+	Domain       string `name:"domain" short:"d" env:"AUTH0_DOMAIN" help:"auth0 domain" required:""`
+	ClientID     string `name:"client-id" short:"i" env:"AUTH0_CLIENT_ID" help:"auth0 client id" required:""`
+	ClientSecret string `name:"client-secret" short:"s" env:"AUTH0_CLIENT_SECRET" help:"auth0 client secret" required:""`
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
@@ -32,9 +34,6 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 		close(results)
 		close(errors)
 	}()
-	if err != nil {
-		return err
-	}
 
 	go func() {
 		for err := range errors {
