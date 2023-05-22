@@ -53,6 +53,9 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		if err != nil {
 			return errors.Wrap(err, "transform template execute failed")
 		}
+		if os.Getenv("DEBUG") != "" {
+			os.Stdout.Write([]byte(output))
+		}
 		var directoryObject msg.Transform
 
 		err = protojson.Unmarshal([]byte(output), &directoryObject)

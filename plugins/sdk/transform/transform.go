@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"reflect"
+	"strings"
 
 	"github.com/aserto-dev/ds-load/common/msg"
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
@@ -138,6 +139,7 @@ var fns = template.FuncMap{
 	"last": func(x int, a interface{}) bool {
 		return x == reflect.ValueOf(a).Len()-1
 	},
+	"contains": strings.Contains,
 }
 
 func (t *Tranformer) TransformToTemplate(input map[string]interface{}, templateString string) (string, error) {

@@ -54,7 +54,9 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 			return errors.Wrap(err, "transform template execute failed")
 		}
 		var directoryObject msg.Transform
-
+		if os.Getenv("DEBUG") != "" {
+			os.Stdout.Write([]byte(output))
+		}
 		err = protojson.Unmarshal([]byte(output), &directoryObject)
 		if err != nil {
 			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
