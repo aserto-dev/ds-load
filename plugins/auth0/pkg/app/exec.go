@@ -5,6 +5,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/common/msg"
+	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"gopkg.in/auth0.v5/management"
@@ -55,9 +56,9 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 	if cmd.MaxChunkSize == 0 {
 		cmd.MaxChunkSize = 1 // By default do not write begin and end batches
 	}
-
+	tranformer := transform.NewTransformer(cmd.MaxChunkSize)
 	for input := range results {
-		output, err := Transform(input, string(templateContent))
+		output, err := tranformer.TransformToTemplate(input, string(templateContent))
 		if err != nil {
 			return errors.Wrap(err, "transform template execute failed")
 		}
@@ -68,9 +69,9 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
 		}
 
-		objectChunks, relationChunks := cmd.prepareChunks(&directoryObject)
+		objectChunks, relationChunks := tranformer.PrepareChunks(&directoryObject)
 
-		err = cmd.writeResponse(os.Stdout, objectChunks, relationChunks)
+		err = tranformer.WriteChunks(os.Stdout, objectChunks, relationChunks)
 		if err != nil {
 			return errors.Wrap(err, "failed to write chunks to output")
 		}

@@ -55,7 +55,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		}
 		var directoryObject msg.Transform
 		if os.Getenv("DEBUG") != "" {
-			os.Stdout.Write([]byte(output))
+			os.Stdout.WriteString(output)
 		}
 		err = protojson.Unmarshal([]byte(output), &directoryObject)
 		if err != nil {

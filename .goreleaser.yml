@@ -43,6 +43,28 @@ builds:
       - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
       - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
+  - id: ds-load-okta
+    main: ./plugins/okta/cmd/ds-load-okta
+    binary: ds-load-okta
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 checksum:
   name_template: "checksums.txt"

@@ -14,11 +14,12 @@ import (
 
 type OktaClient interface {
 	CreateUser(ctx context.Context, body okta.CreateUserRequest, qp *query.Params) (*okta.User, *okta.Response, error)
-	ListUsers(ctx context.Context, qp *query.Params) ([]*okta.User, *okta.Response, error)
-	GetUser(ctx context.Context, userID string) (*okta.User, *okta.Response, error)
 	UpdateUser(ctx context.Context, userID string, body okta.User, qp *query.Params) (*okta.User, *okta.Response, error)
 	DeactivateOrDeleteUser(ctx context.Context, userID string, qp *query.Params) (*okta.Response, error)
 	DeactivateUser(ctx context.Context, userID string, qp *query.Params) (*okta.Response, error)
+
+	GetUser(ctx context.Context, userID string) (*okta.User, *okta.Response, error)
+	ListUsers(ctx context.Context, qp *query.Params) ([]*okta.User, *okta.Response, error)
 	ListUserGroups(ctx context.Context, userID string) ([]*okta.Group, *okta.Response, error)
 	ListAssignedRolesForUser(ctx context.Context, userID string, qp *query.Params) ([]*okta.Role, *okta.Response, error)
 }

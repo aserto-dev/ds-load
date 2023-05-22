@@ -11,11 +11,15 @@ import (
 	"github.com/okta/okta-sdk-golang/v2/okta"
 )
 
+// TODO: add flags to allow picking each our of users,groups and roles
 type FetchCmd struct {
 	Domain    string `cmd:"" env:"DS_OKTA_DOMAIN"`
 	APIToken  string `cmd:"" env:"DS_OKTA_TOKEN"`
 	UserPID   string `cmd:"" env:"DS_OKTA_USER_PID"`
 	UserEmail string `cmd:"" env:"DS_OKTA_USER_EMAIL"`
+	Users     bool   `cmd:"" env:"DS_OKTA_USERS"`
+	Groups    bool   `cmd:"" env:"DS_OKTA_GROUPS"`
+	Roles     bool   `cmd:"" env:"DS_OKTA_ROLES"`
 }
 
 type OktaPager func(context.Context, *okta.Response, *[]*okta.User) (*okta.Response, error)
@@ -44,7 +48,7 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		os.Stdout.Write(userBytes)
 		os.Stdout.WriteString("\n")
 
-		//Write all user groups
+		// Write all user groups
 		groups, resp, err := oktaClient.ListUserGroups(context.Background(), user.Id)
 		if err != nil {
 			return err
@@ -62,7 +66,7 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 			os.Stdout.WriteString("\n")
 		}
 
-		//Write all user roles
+		// Write all user roles
 		roles, resp, err := oktaClient.ListAssignedRolesForUser(context.Background(), user.Id, nil)
 		if err != nil {
 			return err
@@ -74,7 +78,7 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		for _, role := range roles {
 			roleBytes, err := json.Marshal(role)
 			if err != nil {
-				os.Stderr.Write([]byte(err.Error()))
+				os.Stderr.WriteString(err.Error())
 			}
 			os.Stdout.Write(roleBytes)
 			os.Stdout.WriteString("\n")

@@ -54,7 +54,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 			return errors.Wrap(err, "transform template execute failed")
 		}
 		if os.Getenv("DEBUG") != "" {
-			os.Stdout.Write([]byte(output))
+			os.Stdout.WriteString(output)
 		}
 		var directoryObject msg.Transform
 
