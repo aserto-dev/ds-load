@@ -22,6 +22,7 @@ import (
 type ExecCmd struct {
 	Plugin       string `cmd:""`
 	PluginConfig string `cmd:""`
+	PluginFolder string `cmd:""`
 	MaxChunkSize int    `cmd:""`
 	clients.Config
 	dirClient dsi.ImporterClient
@@ -32,6 +33,13 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	if e.Plugin != "auth0" {
 		return errors.New("plugin not supported")
 	}
+	if e.PluginFolder == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+		e.PluginConfig = filepath.Join(homeDir, ".ds-load", "plugins")
+	}
 	cli, err := clients.NewDirectoryImportClient(c, &e.Config)
 	if err != nil {
 		return err
@@ -41,7 +49,7 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
-	pluginCmd := exec.Command(getPluginExecPath(e.Plugin), "exec", "-c", e.PluginConfig) //nolint:gosec
+	pluginCmd := exec.Command(e.getPluginExecPath(e.Plugin), "exec", "-c", e.PluginConfig) //nolint:gosec
 
 	pStdout, err := pluginCmd.StdoutPipe()
 	if err != nil {
@@ -66,6 +74,14 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	}
 
 	return pluginCmd.Wait()
+}
+
+func (e *ExecCmd) getPluginExecPath(pluginName string) string {
+	ext := ""
+	if runtime.GOOS == "windows" {
+		ext = ".exe"
+	}
+	return filepath.Join(e.PluginFolder, "ds-load-"+pluginName+ext)
 }
 
 func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
@@ -169,19 +185,6 @@ func listenOnStderr(stderr io.ReadCloser) {
 		os.Stderr.WriteString(string(line))
 		os.Stderr.WriteString("\n")
 	}
-}
-
-func getPluginExecPath(pluginName string) string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ext := ""
-	if runtime.GOOS == "windows" {
-		ext = ".exe"
-	}
-	return filepath.Join(homeDir, ".ds-load", "plugins", "ds-load-"+pluginName+ext)
 }
 
 func receiver(stream dsi.Importer_ImportClient) func() error {
