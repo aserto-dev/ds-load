@@ -1,0 +1,45 @@
+{
+  "objects": [
+    {{ if $._links.self }}
+      {{ if contains $._links.self.href "users" }}
+       {
+        "key": "{{ $.id }}",
+        "displayName": "{{$.profile.email}}",
+        "type": "user"
+       },
+       {
+        "key": "{{$.id}}",
+        "type": "identity"
+       }
+      {{ end }}
+    {{ end }}
+
+    {{ if $._links.apps }}
+      {{ if contains $._links.apps.href "groups" }}
+       {
+        "key": "{{$.id}}",
+        "type": "group",
+        "displayName": "{{ $.profile.name }}"
+      }
+      {{ end }}
+    {{ end }}
+  ],
+  "relations":[
+    {{ if $._links.self }}
+      {{ if contains $._links.self.href "users" }}
+      {
+       "relation": "identifier",
+            "subject": {
+                "type": "user",
+                "key": "{{$.id}}"
+            },
+            "object": {
+                "type": "identity",
+                "key": "{{$.id}}"
+            }
+      }
+      {{ end }}
+    {{ end }}
+    
+  ]
+}
