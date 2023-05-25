@@ -2,63 +2,130 @@ package app
 
 import (
 	"bufio"
-	"context"
 	"io"
 	"log"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
+	"sync"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
+	"github.com/aserto-dev/ds-load/cli/pkg/finder"
+	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/common/msg"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 	"github.com/pkg/errors"
+	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ExecCmd struct {
-	Plugin       string `cmd:""`
-	PluginConfig string `cmd:""`
-	PluginFolder string `cmd:""`
-	MaxChunkSize int    `cmd:""`
 	clients.Config
-	dirClient dsi.ImporterClient
+	CommandArgs  []string `name:"command" passthrough:"" arg:"" help:"available commands are: ${plugins}"`
+	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
+	PluginFolder string   `hidden:""`
+
+	execPlugin *plugin.Plugin
+	pluginArgs []string `kong:"-"`
+	dirClient  dsi.ImporterClient
 }
 
 func (e *ExecCmd) Run(c *cc.CommonCtx) error {
-	// TODO improve plugin support check
-	if e.Plugin != "auth0" {
-		return errors.New("plugin not supported")
-	}
-	if e.PluginFolder == "" {
-		homeDir, err := os.UserHomeDir()
+	defaultPrintCmd := []string{"fetch", "version", "export-transform"}
+	var err error
+	var find finder.Finder
+	if e.PluginFolder != "" {
+		find = finder.NewCustomDir(e.PluginFolder)
+	} else {
+		find, err = finder.NewHomeDir()
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		e.PluginConfig = filepath.Join(homeDir, ".ds-load", "plugins")
 	}
-	cli, err := clients.NewDirectoryImportClient(c, &e.Config)
+	pl := e.CommandArgs[0]
+
+	plugins, err := find.Find()
 	if err != nil {
 		return err
 	}
-	e.dirClient = cli
+	for _, p := range plugins {
+		if pl == p.Name {
+			e.execPlugin = p
+			break
+		}
+	}
+	if e.execPlugin == nil {
+		return errors.Errorf("plugin [%s] not found", pl)
+	}
+
+	e.pluginArgs = e.CommandArgs[1:]
+	var pluginSubCommand string
+	if len(e.CommandArgs) > 1 {
+		pluginSubCommand = e.CommandArgs[1]
+	}
+
+	if slices.Contains(e.pluginArgs, "-h") || slices.Contains(e.pluginArgs, "--help") || slices.Contains(defaultPrintCmd, pluginSubCommand) {
+		e.Print = true
+	}
+
+	if !e.Print {
+		cli, err := clients.NewDirectoryImportClient(c, &e.Config)
+		if err != nil {
+			return err
+		}
+		e.dirClient = cli
+	}
 	return e.LaunchPlugin(c)
 }
 
 func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
-	pluginCmd := exec.Command(e.getPluginExecPath(e.Plugin), "exec", "-c", e.PluginConfig) //nolint:gosec
+	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
 
 	pStdout, err := pluginCmd.StdoutPipe()
 	if err != nil {
 		return err
 	}
+	defer pStdout.Close()
 
 	pStderr, err := pluginCmd.StderrPipe()
 	if err != nil {
 		return err
+	}
+	defer pStderr.Close()
+
+	var wg sync.WaitGroup
+
+	fi, _ := os.Stdin.Stat()
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		pStdin, err := pluginCmd.StdinPipe()
+		if err != nil {
+			return err
+		}
+		defer pStdin.Close()
+
+		// data is from pipe redirect stdin to plugin stdin
+		wg.Add(1)
+		go func() {
+			scanner := bufio.NewScanner(os.Stdin)
+			for scanner.Scan() {
+				line := scanner.Bytes()
+				_, err = pStdin.Write(line)
+				if err != nil {
+					c.UI.Problem().Msg(err.Error())
+				}
+				_, err = pStdin.Write([]byte("\n"))
+				if err != nil {
+					c.UI.Problem().Msg(err.Error())
+				}
+			}
+
+			wg.Done()
+			err = pStdin.Close()
+			if err != nil {
+				c.UI.Problem().Msg(err.Error())
+			}
+		}()
 	}
 
 	go listenOnStderr(pStderr)
@@ -68,29 +135,30 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 		return err
 	}
 
-	err = e.handleMessages(c, pStdout)
+	if e.Print {
+		err = e.printOutput(c, pStdout)
+	} else {
+		err = e.handleMessages(c, pStdout)
+	}
 	if err != nil {
 		return err
 	}
 
+	wg.Wait()
 	return pluginCmd.Wait()
-}
-
-func (e *ExecCmd) getPluginExecPath(pluginName string) string {
-	ext := ""
-	if runtime.GOOS == "windows" {
-		ext = ".exe"
-	}
-	return filepath.Join(e.PluginFolder, "ds-load-"+pluginName+ext)
 }
 
 func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 	scanner := bufio.NewReader(stdout)
 
 	var stream dsi.Importer_ImportClient
-	var errGroup *errgroup.Group
-	var iCtx context.Context
-	streamOpen := false
+	errGroup, iCtx := errgroup.WithContext(c.Context)
+	stream, err := e.dirClient.Import(iCtx)
+	if err != nil {
+		return err
+	}
+	errGroup.Go(receiver(stream))
+	streamOpen := true
 
 	for {
 		line, err := scanner.ReadBytes('\n')
@@ -103,14 +171,18 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 
 		var sErr error
 		protoMsg := convertToProto(line)
+		if protoMsg == nil {
+			continue
+		}
 		switch protoMsg.Data.(type) {
 		case *msg.PluginMessage_Batch:
 			batch := protoMsg.GetBatch()
 			switch batch.Type {
 			case msg.BatchType_BEGIN:
 				if streamOpen {
-					return errors.New("received batch begin on already open stream")
+					continue
 				}
+
 				errGroup, iCtx = errgroup.WithContext(c.Context)
 				stream, err = e.dirClient.Import(iCtx)
 				if err != nil {
@@ -120,7 +192,7 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 				streamOpen = true
 			case msg.BatchType_END:
 				if !streamOpen {
-					return errors.New("received batch end on already closed stream")
+					continue
 				}
 				err = stream.CloseSend()
 				if err != nil {
@@ -155,6 +227,24 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 		if sErr != nil {
 			return sErr
 		}
+	}
+
+	return nil
+}
+
+func (e *ExecCmd) printOutput(c *cc.CommonCtx, stdout io.ReadCloser) error {
+	scanner := bufio.NewReader(stdout)
+
+	for {
+		line, err := scanner.ReadBytes('\n')
+		if err == io.EOF {
+			// we have reached the end of the stream
+			break
+		} else if err != nil {
+			return err
+		}
+
+		os.Stdout.Write(line)
 	}
 
 	return nil

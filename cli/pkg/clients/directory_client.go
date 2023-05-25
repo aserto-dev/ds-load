@@ -18,10 +18,10 @@ import (
 const localhostDirectory = "localhost:9292"
 
 type Config struct {
-	Host     string
-	APIKey   string
-	Insecure bool `short:"i" help:"Disable TLS verification"`
-	TenantID string
+	Host     string `short:"s" env:"DIRECTORY_HOST" help:"Directory host address"`
+	APIKey   string `short:"k" env:"DIRECTORY_API_KEY" help:"Directory API Key"`
+	Insecure bool   `short:"i" help:"Disable TLS verification"`
+	TenantID string `short:"t" env:"DIRECTORY_TENANT_ID" help:"Directory Tenant ID"`
 }
 
 func NewDirectoryImportClient(c *cc.CommonCtx, cfg *Config) (dsi.ImporterClient, error) {

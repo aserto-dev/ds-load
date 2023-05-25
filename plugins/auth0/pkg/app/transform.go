@@ -14,8 +14,8 @@ import (
 )
 
 type TransformCmd struct {
-	TemplateFile string `cmd:""`
-	MaxChunkSize int    `cmd:""`
+	TemplateFile string `name:"template-file" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
+	MaxChunkSize int    `name:"max-chunk-size" env:"DS_MAX_CHUNK_SIZE" help:"maximum chunk size" default:"1" optional:""`
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
