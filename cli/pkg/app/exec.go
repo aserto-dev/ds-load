@@ -10,7 +10,6 @@ import (
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
-	"github.com/aserto-dev/ds-load/cli/pkg/finder"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/common/msg"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
@@ -34,11 +33,11 @@ type ExecCmd struct {
 func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	defaultPrintCmd := []string{"fetch", "version", "export-transform"}
 	var err error
-	var find finder.Finder
+	var find *plugin.Finder
 	if e.PluginFolder != "" {
-		find = finder.NewCustomDir(e.PluginFolder)
+		find = plugin.NewFinder(true, e.PluginFolder)
 	} else {
-		find, err = finder.NewHomeDir()
+		find, err = plugin.NewHomeDirFinder(true)
 		if err != nil {
 			return err
 		}
@@ -72,7 +71,7 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	if !e.Print {
 		cli, err := clients.NewDirectoryImportClient(c, &e.Config)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Could not connect to the directory")
 		}
 		e.dirClient = cli
 	}
@@ -136,7 +135,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	}
 
 	if e.Print {
-		err = e.printOutput(c, pStdout)
+		err = e.printOutput(pStdout)
 	} else {
 		err = e.handleMessages(c, pStdout)
 	}
@@ -232,7 +231,7 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 	return nil
 }
 
-func (e *ExecCmd) printOutput(c *cc.CommonCtx, stdout io.ReadCloser) error {
+func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	scanner := bufio.NewReader(stdout)
 
 	for {

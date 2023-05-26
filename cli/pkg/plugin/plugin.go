@@ -13,7 +13,7 @@ type Plugin struct {
 	Path string
 }
 
-func New(path string) *Plugin {
+func NewPlugin(path string) *Plugin {
 	return &Plugin{
 		Name: pluginName(path),
 		Path: path,

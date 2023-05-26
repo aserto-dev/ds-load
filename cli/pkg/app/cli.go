@@ -7,7 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
-	"github.com/aserto-dev/ds-load/cli/pkg/finder"
+	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/common/version"
 )
 
@@ -45,7 +45,7 @@ func (defaultPlugin *SetDefaultPluginCmd) Run(c *cc.CommonCtx) error {
 type ListPluginsCmd struct{}
 
 func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
-	find, err := finder.NewHomeDir()
+	find, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	for _, p := range plugins {
-		os.Stdout.WriteString(p.Name + "\n")
+		os.Stdout.WriteString(p.Name + " " + p.Path + "\n")
 	}
 	return nil
 

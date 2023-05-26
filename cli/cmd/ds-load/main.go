@@ -9,12 +9,12 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/app"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
-	"github.com/aserto-dev/ds-load/cli/pkg/finder"
+	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 )
 
 func main() {
 	pluginEnum := ""
-	find, err := finder.NewHomeDir()
+	find, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
