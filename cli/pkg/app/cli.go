@@ -2,9 +2,12 @@ package app
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cli/pkg/constants"
+	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/common/version"
 )
 
@@ -15,7 +18,7 @@ type Context struct {
 }
 
 type CLI struct {
-	Exec             ExecCmd             `cmd:"" help:"import data in directory"`
+	Exec             ExecCmd             `cmd:"" help:"import data in directory" default:"withargs"`
 	GetPlugin        GetPluginCmd        `cmd:"" help:"download plugin"`
 	SetDefaultPlugin SetDefaultPluginCmd `cmd:"" help:"sets a plugin as default"`
 	ListPlugins      ListPluginsCmd      `cmd:"" help:"list available plugins"`
@@ -42,15 +45,27 @@ func (defaultPlugin *SetDefaultPluginCmd) Run(c *cc.CommonCtx) error {
 type ListPluginsCmd struct{}
 
 func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
-	fmt.Println("not implemented")
+	find, err := plugin.NewHomeDirFinder(true)
+	if err != nil {
+		return err
+	}
+	plugins, err := find.Find()
+	if err != nil {
+		return err
+	}
+
+	for _, p := range plugins {
+		os.Stdout.WriteString(p.Name + " " + p.Path + "\n")
+	}
 	return nil
+
 }
 
 type VersionCmd struct{}
 
 func (cmd *VersionCmd) Run(c *cc.CommonCtx) error {
 	fmt.Printf("%s - %s\n",
-		AppName,
+		constants.AppName,
 		version.GetInfo().String(),
 	)
 	return nil

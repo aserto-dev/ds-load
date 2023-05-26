@@ -1,7 +1,8 @@
-package app
+package constants
 
 const (
 	AppName           = "ds-load"
-	AppDescription    = "directory loader"
+	AppDescription    = "Directory loader"
 	DefaultConfigPath = "~/.config/ds-load/cfg/config.yaml"
+	PluginPrefix      = "ds-load-"
 )

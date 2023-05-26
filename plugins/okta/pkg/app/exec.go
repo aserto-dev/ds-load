@@ -1,14 +1,15 @@
 package app
 
 import (
+	"context"
 	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/common/msg"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
-	"gopkg.in/auth0.v5/management"
 )
 
 type ExecCmd struct {
@@ -16,13 +17,8 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(context *kong.Context) error {
-	mgmt, err := management.New(
-		cmd.Domain,
-		management.WithClientCredentials(
-			cmd.ClientID,
-			cmd.ClientSecret,
-		))
+func (cmd *ExecCmd) Run(ctx *kong.Context) error {
+	oktaClient, err := oktaclient.NewOktaClient(context.Background(), cmd.Domain, cmd.APIToken)
 	if err != nil {
 		return err
 	}
@@ -30,7 +26,7 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 	results := make(chan map[string]interface{}, 1)
 	errCh := make(chan error, 1)
 	go func() {
-		Fetch(mgmt, results, errCh)
+		cmd.Fetch(oktaClient, results, errCh)
 		close(results)
 		close(errCh)
 	}()

@@ -9,12 +9,11 @@ import (
 
 type CLI struct {
 	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`
-	Info            InfoCmd            `cmd:"" help:""`
 	Version         VersionCmd         `cmd:"" help:"version information"`
 	Fetch           FetchCmd           `cmd:"" help:"fetch auth0 data"`
 	Transform       TransformCmd       `cmd:"" help:"transform auth0 data"`
 	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
-	Exec            ExecCmd            `cmd:"" help:"fetch and transform auth0 data"`
+	Exec            ExecCmd            `cmd:"" help:"fetch and transform auth0 data" default:"withargs"`
 }
 
 type VersionCmd struct {
