@@ -95,7 +95,7 @@ release:
 
 brews:
   -
-    name: aserto
+    name: ds-load
 
     tap:
       owner: aserto-dev
