@@ -102,7 +102,7 @@ brews:
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP }}"
 
-    url_template: "https://github.com/aserto-dev/ds-load/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    url_template: "https://github.com/aserto-dev/ds-load/releases/download/{{ .Tag }}/{{ .ArtifactName }}", :using => GitHubReleaseDownloadStrategy
 
     commit_author:
       name: Aserto Bot
