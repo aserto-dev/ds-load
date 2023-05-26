@@ -103,7 +103,7 @@ brews:
       token: "{{ .Env.HOMEBREW_TAP }}"
 
     url_template: "https://github.com/aserto-dev/ds-load/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
-    download_strategy: GitHubPrivateRepositoryReleaseDownloadStrategy
+    download_strategy: GitDownloadStrategy
 
     commit_author:
       name: Aserto Bot
