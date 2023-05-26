@@ -109,3 +109,8 @@ func bufGenerate(image string) error {
 		buf.AddArg(image),
 	)
 }
+
+// Release releases the project.
+func Release() error {
+	return common.Release()
+}
