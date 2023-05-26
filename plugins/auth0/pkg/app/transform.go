@@ -34,10 +34,6 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		}
 	}
 
-	if t.MaxChunkSize == 0 {
-		t.MaxChunkSize = 1 // By default do not write begin and end batches
-	}
-
 	tranformer := transform.NewTransformer(t.MaxChunkSize)
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {

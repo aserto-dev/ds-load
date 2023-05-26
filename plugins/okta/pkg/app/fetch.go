@@ -12,12 +12,10 @@ import (
 )
 
 type FetchCmd struct {
-	Domain    string `cmd:"" env:"DS_OKTA_DOMAIN"`
-	APIToken  string `cmd:"" env:"DS_OKTA_TOKEN"`
-	UserPID   string `cmd:"" env:"DS_OKTA_USER_PID"`
-	UserEmail string `cmd:"" env:"DS_OKTA_USER_EMAIL"`
-	Groups    bool   `cmd:"" env:"DS_OKTA_GROUPS" default:"true"`
-	Roles     bool   `cmd:"" env:"DS_OKTA_ROLES" default:"true"`
+	Domain   string `env:"DS_OKTA_DOMAIN"`
+	APIToken string `env:"DS_OKTA_TOKEN"`
+	Groups   bool   `env:"DS_OKTA_GROUPS" default:"true" negatable:""`
+	Roles    bool   `env:"DS_OKTA_ROLES" default:"true" negatable:""`
 }
 
 type OktaPager func(context.Context, *okta.Response, *[]*okta.User) (*okta.Response, error)
@@ -27,65 +25,113 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 	if err != nil {
 		return err
 	}
-
-	users, resp, err := oktaClient.ListUsers(context.Background(), nil)
+	results := make(chan map[string]interface{}, 1)
+	errors := make(chan error, 1)
+	go func() {
+		cmd.Fetch(oktaClient, results, errors)
+		close(results)
+		close(errors)
+	}()
 	if err != nil {
 		return err
 	}
+
+	go func() {
+		for err := range errors {
+			os.Stderr.WriteString(err.Error())
+			os.Stderr.WriteString("\n")
+		}
+	}()
+
+	for o := range results {
+		res, err := json.Marshal(o)
+		if err != nil {
+			return err
+		}
+		os.Stdout.Write(res)
+		os.Stdout.WriteString("\n")
+	}
+	return nil
+}
+
+func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[string]interface{}, errors chan error) {
+	users, resp, err := oktaClient.ListUsers(context.Background(), nil)
+	if err != nil {
+		errors <- err
+		return
+	}
 	err = handleResponse(resp)
 	if err != nil {
-		return err
+		errors <- err
+		return
 	}
 
 	for _, user := range users {
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			return err
+			errors <- err
+			return
 		}
-		os.Stdout.Write(userBytes)
-		os.Stdout.WriteString("\n")
+		var obj map[string]interface{}
+		err = json.Unmarshal(userBytes, &obj)
+		if err != nil {
+			errors <- err
+		}
+		results <- obj
 
 		if cmd.Groups {
 			// Write all user groups
 			groups, resp, err := oktaClient.ListUserGroups(context.Background(), user.Id)
 			if err != nil {
-				return err
+				errors <- err
+				return
 			}
 			err = handleResponse(resp)
 			if err != nil {
-				return err
+				errors <- err
+				return
 			}
 			for _, group := range groups {
 				groupBytes, err := json.Marshal(group)
 				if err != nil {
-					os.Stderr.WriteString(err.Error())
+					errors <- err
+					return
 				}
-				os.Stdout.Write(groupBytes)
-				os.Stdout.WriteString("\n")
+				var obj map[string]interface{}
+				err = json.Unmarshal(groupBytes, &obj)
+				if err != nil {
+					errors <- err
+				}
+				results <- obj
 			}
 		}
+
 		if cmd.Roles {
 			// Write all user roles
 			roles, resp, err := oktaClient.ListAssignedRolesForUser(context.Background(), user.Id, nil)
 			if err != nil {
-				return err
+				errors <- err
+				return
 			}
 			err = handleResponse(resp)
 			if err != nil {
-				return err
+				errors <- err
+				return
 			}
 			for _, role := range roles {
 				roleBytes, err := json.Marshal(role)
 				if err != nil {
 					os.Stderr.WriteString(err.Error())
 				}
-				os.Stdout.Write(roleBytes)
-				os.Stdout.WriteString("\n")
+				var obj map[string]interface{}
+				err = json.Unmarshal(roleBytes, &obj)
+				if err != nil {
+					errors <- err
+				}
+				results <- obj
 			}
 		}
 	}
-
-	return nil
 }
 
 func handleResponse(resp *okta.Response) error {
