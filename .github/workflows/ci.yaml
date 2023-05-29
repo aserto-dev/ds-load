@@ -114,7 +114,7 @@ jobs:
       -
         name: Release
         env:
-          HOMEBREW_TAP: ${{ steps.vault.outputs.ASERTO_TAP }}
+          ASERTO_TAP: ${{ steps.vault.outputs.ASERTO_TAP }}
           GITHUB_TOKEN: ${{ steps.vault.outputs.READ_WRITE_TOKEN }}
         run: |
           go run mage.go release
