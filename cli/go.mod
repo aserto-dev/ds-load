@@ -9,8 +9,10 @@ require (
 	github.com/aserto-dev/ds-load/common v0.0.0-20230509080912-e3260ee2efd4
 	github.com/aserto-dev/go-aserto v0.20.3
 	github.com/aserto-dev/go-directory v0.21.0
+	github.com/aserto-dev/logger v0.0.3
 	github.com/fullstorydev/grpcurl v1.8.7
 	github.com/pkg/errors v0.9.1
+	github.com/rs/zerolog v1.28.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -27,12 +29,14 @@ require (
 	github.com/jhump/protoreflect v1.12.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible // indirect
+	github.com/magefile/mage v1.14.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
