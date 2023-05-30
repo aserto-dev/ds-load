@@ -120,7 +120,7 @@ ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenan
 
 ### Import data with custom transformation file
 ```
-ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> ----template-file=<template-path> --max-chunk-size=20
+ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template-file=<template-path> --max-chunk-size=20
 ```
 
 ### View data from auth0
@@ -128,14 +128,14 @@ ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenan
 ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --max-chunk-size=20
 ```
 
-### Transform data from a previouslt saved auth0 fetch
+### Transform data from a previously saved auth0 fetch
 we use `-p` in order to just print the transform data
 ```
 ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.data
 cat auth0.data | ds-load -p auth0 transform
 ```
 
-### Transform and import data from a previouslt saved auth0 fetch
+### Transform and import data from a previously saved auth0 fetch
 ```
 ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.data
 cat auth0.data | ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 transform
