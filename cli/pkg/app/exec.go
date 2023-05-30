@@ -3,7 +3,6 @@ package app
 import (
 	"bufio"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -25,9 +24,9 @@ type ExecCmd struct {
 	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
 	PluginFolder string   `hidden:""`
 
-	execPlugin *plugin.Plugin
-	pluginArgs []string `kong:"-"`
-	dirClient  dsi.ImporterClient
+	execPlugin *plugin.Plugin     `kong:"-"`
+	pluginArgs []string           `kong:"-"`
+	dirClient  dsi.ImporterClient `kong:"-"`
 }
 
 func (e *ExecCmd) Run(c *cc.CommonCtx) error {
@@ -127,7 +126,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 		}()
 	}
 
-	go listenOnStderr(pStderr)
+	go listenOnStderr(c, pStderr)
 
 	err = pluginCmd.Start()
 	if err != nil {
@@ -169,7 +168,7 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 		}
 
 		var sErr error
-		protoMsg := convertToProto(line)
+		protoMsg := convertToProto(c, line)
 		if protoMsg == nil {
 			continue
 		}
@@ -224,7 +223,7 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 		}
 		// TODO handle stream errors
 		if sErr != nil {
-			return sErr
+			c.Log.Err(sErr)
 		}
 	}
 
@@ -249,17 +248,17 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	return nil
 }
 
-func convertToProto(line []byte) *msg.PluginMessage {
+func convertToProto(c *cc.CommonCtx, line []byte) *msg.PluginMessage {
 	pluginMsg := &msg.PluginMessage{}
 	err := protojson.Unmarshal(line, pluginMsg)
 	if err != nil {
-		log.Println(err)
+		c.Log.Err(err)
 	}
 
 	return pluginMsg
 }
 
-func listenOnStderr(stderr io.ReadCloser) {
+func listenOnStderr(c *cc.CommonCtx, stderr io.ReadCloser) {
 	scanner := bufio.NewReader(stderr)
 
 	for {
@@ -268,11 +267,10 @@ func listenOnStderr(stderr io.ReadCloser) {
 			// we have reached the end of the stream
 			break
 		} else if err != nil {
-			log.Fatal(err)
+			c.Log.Fatal().Err(err)
 		}
 
-		os.Stderr.WriteString(string(line))
-		os.Stderr.WriteString("\n")
+		c.Log.Error().Msg(string(line))
 	}
 }
 
