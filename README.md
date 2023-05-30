@@ -73,8 +73,32 @@ When passing custom config files to both the cli and the plugin, use `ds-load -c
 ### CLI config
 default location: `~/.config/ds-load/cfg/config.yaml` can be overridden using `-c/--config`
 
+#### example
+```yaml
+---
+exec:
+  host: directory.eng.aserto.com:8443
+  api-key: secretapikey
+  tenant-id: your-tenant-id
+```
+
 ### Plugin config
 default location: `~/.config/ds-load/cfg/<plugin-name>.yaml` can be overridden using `-c/--config`
+
+#### example
+```yaml
+---
+exec:
+  domain: "domain.auth0.com"
+  client-id: "clientid"
+  client-secret: "clientsupersecret"
+  template-file: "/path/to/transform.file"
+  max-chunk-size: 20
+fetch:
+  domain: "domain.auth0.com"
+  client-id: "clientid"
+  client-secret: "clientsupersecret"
+```
 
 ## Transform
 The data received from the fetcher is being transformed using a transformation template, which is written as a go template and it outputs objects and relations.
