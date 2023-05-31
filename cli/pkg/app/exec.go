@@ -237,6 +237,10 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 		line, err := scanner.ReadBytes('\n')
 		if err == io.EOF {
 			// we have reached the end of the stream
+			if len(line) > 0 {
+				// write last line
+				os.Stdout.Write(line)
+			}
 			break
 		} else if err != nil {
 			return err
