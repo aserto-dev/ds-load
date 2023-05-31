@@ -10,7 +10,6 @@ replace github.com/aserto-dev/ds-load/plugins/okta => ../../plugins/okta
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/alecthomas/kong-yaml v0.1.1
 	github.com/aserto-dev/ds-load/common v0.0.0-20230517082410-8615661d7c89
 	github.com/aserto-dev/ds-load/plugins/okta v0.0.0-00010101000000-000000000000
 	github.com/aserto-dev/ds-load/plugins/sdk v0.0.0-00010101000000-000000000000
@@ -26,12 +25,9 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/patrickmn/go-cache v0.0.0-20180815053127-5633e0862627 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

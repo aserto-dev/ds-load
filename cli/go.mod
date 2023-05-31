@@ -2,9 +2,10 @@ module github.com/aserto-dev/ds-load/cli
 
 go 1.19
 
+replace github.com/aserto-dev/ds-load/common => ../common
+
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/alecthomas/kong-yaml v0.1.1
 	github.com/aserto-dev/clui v0.8.1
 	github.com/aserto-dev/ds-load/common v0.0.0-20230509080912-e3260ee2efd4
 	github.com/aserto-dev/go-aserto v0.20.3
@@ -21,7 +22,6 @@ require (
 )
 
 require (
-	github.com/aserto-dev/go-grpc v0.8.56 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -36,6 +36,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rogpeppe/go-internal v1.8.1 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
