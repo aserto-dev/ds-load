@@ -11,6 +11,7 @@ require (
 	github.com/aserto-dev/ds-load/common v0.0.0-20230517082410-8615661d7c89
 	github.com/aserto-dev/ds-load/plugins/sdk v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/auth0.v5 v5.21.1
 )

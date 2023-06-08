@@ -43,5 +43,22 @@
               }
       }
     {{ end }}
+
+    {{ if $.roles }}, {{ end }}
+
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{$.user_id}}"
+              },
+              "object": {
+                  "type": "group",
+                  "key": "{{$element.name}}"
+              }
+      }
+    {{ end }}
   ]
 }
