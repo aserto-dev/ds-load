@@ -2,7 +2,10 @@ package app
 
 import (
 	"encoding/json"
+	"net/http"
 	"os"
+
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 
 	"github.com/alecthomas/kong"
 	"gopkg.in/auth0.v5/management"
@@ -12,15 +15,26 @@ type FetchCmd struct {
 	Domain       string `name:"domain" short:"d" env:"AUTH0_DOMAIN" help:"auth0 domain" required:""`
 	ClientID     string `name:"client-id" short:"i" env:"AUTH0_CLIENT_ID" help:"auth0 client id" required:""`
 	ClientSecret string `name:"client-secret" short:"s" env:"AUTH0_CLIENT_SECRET" help:"auth0 client secret" required:""`
+	RateLimit    bool   `default:"true" help:"enable http client rate limiter" negatable:"" optional:""`
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
-	mgmt, err := management.New(
-		cmd.Domain,
+	options := []management.ManagementOption{
 		management.WithClientCredentials(
 			cmd.ClientID,
 			cmd.ClientSecret,
-		))
+		),
+	}
+	if cmd.RateLimit {
+		client := http.DefaultClient
+		client.Transport = httpclient.NewTransport(http.DefaultTransport)
+		options = append(options, management.WithClient(client))
+	}
+
+	mgmt, err := management.New(
+		cmd.Domain,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
@@ -80,6 +94,11 @@ func Fetch(mgmt *management.Management, results chan map[string]interface{}, err
 			if err != nil {
 				errors <- err
 			}
+			roles, err := getRoles(mgmt, *u.ID)
+			if err != nil {
+				errors <- err
+			}
+			obj["roles"] = roles
 			results <- obj
 		}
 		if !ul.HasNext() {
@@ -87,4 +106,41 @@ func Fetch(mgmt *management.Management, results chan map[string]interface{}, err
 		}
 		page++
 	}
+}
+
+func getRoles(mgmt *management.Management, uID string) ([]map[string]interface{}, error) {
+	page := 0
+	finished := false
+
+	var results []map[string]interface{}
+
+	for {
+		if finished {
+			break
+		}
+
+		rOpts := management.Page(page)
+		roles, err := mgmt.User.Roles(uID, rOpts)
+		if err != nil {
+			return nil, err
+		}
+		for _, r := range roles.Roles {
+			res, err := json.Marshal(r)
+			if err != nil {
+				return nil, err
+			}
+			var obj map[string]interface{}
+			err = json.Unmarshal(res, &obj)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, obj)
+		}
+		if !roles.HasNext() {
+			finished = true
+		}
+
+		page++
+	}
+	return results, nil
 }

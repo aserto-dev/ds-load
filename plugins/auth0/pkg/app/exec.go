@@ -1,10 +1,12 @@
 package app
 
 import (
+	"net/http"
 	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/common/msg"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -17,12 +19,22 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(context *kong.Context) error {
-	mgmt, err := management.New(
-		cmd.Domain,
+	options := []management.ManagementOption{
 		management.WithClientCredentials(
 			cmd.ClientID,
 			cmd.ClientSecret,
-		))
+		),
+	}
+	if cmd.RateLimit {
+		client := http.DefaultClient
+		client.Transport = httpclient.NewTransport(http.DefaultTransport)
+		options = append(options, management.WithClient(client))
+	}
+
+	mgmt, err := management.New(
+		cmd.Domain,
+		options...,
+	)
 	if err != nil {
 		return err
 	}
