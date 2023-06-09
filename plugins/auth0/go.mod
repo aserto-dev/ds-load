@@ -8,7 +8,6 @@ replace github.com/aserto-dev/ds-load/plugins/sdk => ../../plugins/sdk
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/alecthomas/kong-yaml v0.1.1
 	github.com/aserto-dev/ds-load/common v0.0.0-20230517082410-8615661d7c89
 	github.com/aserto-dev/ds-load/plugins/sdk v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
@@ -19,6 +18,7 @@ require (
 require (
 	github.com/PuerkitoBio/rehttp v1.0.0 // indirect
 	github.com/aserto-dev/go-directory v0.21.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect

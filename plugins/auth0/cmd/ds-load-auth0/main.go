@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	kongyaml "github.com/alecthomas/kong-yaml"
+	"github.com/aserto-dev/ds-load/common/kongyaml"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app"
 )
 
