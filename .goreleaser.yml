@@ -121,3 +121,5 @@ brews:
       system "#{bin}/ds-load version"
     install: |
       bin.install "ds-load"
+      bin.install "ds-load-auth0"
+      bin.install "ds-load-okta"
