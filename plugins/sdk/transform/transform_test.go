@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/common/msg"
 	"github.com/aserto-dev/ds-load/plugins/sdk"
 	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
@@ -77,10 +78,10 @@ func TestTransformWithManyObjects(t *testing.T) {
 	assert.Equal(t, len(directoryObject.Relations), 1)
 
 	t.Log("Chunking")
-	objectChunks, relationChunks := transformer.PrepareChunks(&directoryObject)
-	t.Log("Object chunks", len(objectChunks))
-	assert.NotNil(t, objectChunks)
-	assert.NotNil(t, relationChunks)
+	chunks := transformer.PrepareChunks(&directoryObject)
+	t.Log("Object chunks", len(chunks))
+	assert.NotNil(t, chunks)
+	// assert.NotNil(t, relationChunks)
 	runtime.ReadMemStats(&m2)
 	t.Logf("after: %v Kb", bToKb(m2.TotalAlloc))
 	t.Logf("total diff: %v Kb", bToKb(m2.TotalAlloc-m1.TotalAlloc))
@@ -116,9 +117,9 @@ func TestTransformChunking(t *testing.T) {
 
 	trans := transform.NewTransformer(10)
 
-	objectChunks, relationChunks := trans.PrepareChunks(&directoryObjects)
-	assert.Equal(t, len(objectChunks), 3)
-	assert.Equal(t, len(relationChunks), 3)
+	chunks := trans.PrepareChunks(&directoryObjects)
+	assert.Equal(t, len(chunks), 3)
+	// assert.Equal(t, len(relationChunks), 3)
 }
 
 func TestTransformWriter(t *testing.T) {
@@ -147,11 +148,12 @@ func TestTransformWriter(t *testing.T) {
 
 	trans := transform.NewTransformer(5)
 
-	objectChunks, relationChunks := trans.PrepareChunks(&directoryObjects)
-	assert.Equal(t, len(objectChunks), 6)
-	assert.Equal(t, len(relationChunks), 6)
+	chunks := trans.PrepareChunks(&directoryObjects)
+	assert.Equal(t, len(chunks), 6)
+	// assert.Equal(t, len(relationChunks), 6)
 	var output bytes.Buffer
-	err := trans.WriteChunks(&output, objectChunks, relationChunks)
+	jsonWriter := js.NewJSONArrayWriter(&output)
+	err := trans.WriteChunks(jsonWriter, chunks)
 	assert.NoError(t, err)
 	t.Log(output.String())
 }
