@@ -10,6 +10,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/common/msg"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 	"github.com/pkg/errors"
@@ -147,73 +148,42 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
-	scanner := bufio.NewReader(stdout)
-
-	var stream dsi.Importer_ImportClient
-	errGroup, iCtx := errgroup.WithContext(c.Context)
-	stream, err := e.dirClient.Import(iCtx)
+	reader, err := js.NewJSONArrayReader(stdout)
 	if err != nil {
 		return err
 	}
-	errGroup.Go(receiver(stream))
-	streamOpen := true
+
+	var stream dsi.Importer_ImportClient
 
 	for {
-		line, err := scanner.ReadBytes('\n')
+		var message msg.Transform
+		err := reader.ReadProtoMessage(&message)
 		if err == io.EOF {
-			// we have reached the end of the stream
 			break
-		} else if err != nil {
+		}
+		if err != nil {
 			return err
 		}
 
 		var sErr error
-		protoMsg := convertToProto(c, line)
-		if protoMsg == nil {
-			continue
+		errGroup, iCtx := errgroup.WithContext(c.Context)
+		stream, err = e.dirClient.Import(iCtx)
+		if err != nil {
+			return err
 		}
-		switch protoMsg.Data.(type) {
-		case *msg.PluginMessage_Batch:
-			batch := protoMsg.GetBatch()
-			switch batch.Type {
-			case msg.BatchType_BEGIN:
-				if streamOpen {
-					continue
-				}
+		errGroup.Go(receiver(stream))
 
-				errGroup, iCtx = errgroup.WithContext(c.Context)
-				stream, err = e.dirClient.Import(iCtx)
-				if err != nil {
-					return err
-				}
-				errGroup.Go(receiver(stream))
-				streamOpen = true
-			case msg.BatchType_END:
-				if !streamOpen {
-					continue
-				}
-				err = stream.CloseSend()
-				if err != nil {
-					return err
-				}
-				streamOpen = false
-				err = errGroup.Wait()
-				if err != nil {
-					return err
-				}
-			case msg.BatchType_NONE:
-				return errors.New("received unexpected batch type none")
-			}
-		case *msg.PluginMessage_Object:
-			object := protoMsg.GetObject()
+		// import objects
+		for _, object := range message.Objects {
 			c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
 			sErr = stream.Send(&dsi.ImportRequest{
 				Msg: &dsi.ImportRequest_Object{
 					Object: object,
 				},
 			})
-		case *msg.PluginMessage_Relation:
-			relation := protoMsg.GetRelation()
+		}
+
+		for _, relation := range message.Relations {
 			c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
 			sErr = stream.Send(&dsi.ImportRequest{
 				Msg: &dsi.ImportRequest_Relation{
@@ -221,6 +191,17 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 				},
 			})
 		}
+
+		err = stream.CloseSend()
+		if err != nil {
+			return err
+		}
+
+		err = errGroup.Wait()
+		if err != nil {
+			return err
+		}
+
 		// TODO handle stream errors
 		if sErr != nil {
 			c.Log.Err(sErr)
