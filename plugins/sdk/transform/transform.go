@@ -20,7 +20,7 @@ func NewTransformer(chunkSize int) *Tranformer {
 	}
 }
 
-func (t *Tranformer) WriteChunks(writer *js.JSONWriter, chunks []*msg.Transform) error {
+func (t *Tranformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Transform) error {
 	for _, chunk := range chunks {
 		err := t.writeProtoMessage(writer, chunk)
 		if err != nil {
@@ -30,7 +30,7 @@ func (t *Tranformer) WriteChunks(writer *js.JSONWriter, chunks []*msg.Transform)
 	return nil
 }
 
-func (t *Tranformer) writeProtoMessage(writer *js.JSONWriter, message *msg.Transform) error {
+func (t *Tranformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.Transform) error {
 	// messageBytes, err := protojson.Marshal(message)
 	// if err != nil {
 	// 	return err

@@ -9,11 +9,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type JSONReader struct {
+type JSONArrayReader struct {
 	decoder *json.Decoder
 }
 
-func NewJSONArrayReader(r io.Reader) (*JSONReader, error) {
+func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 	decoder := json.NewDecoder(r)
 
 	tk, err := decoder.Token()
@@ -30,12 +30,12 @@ func NewJSONArrayReader(r io.Reader) (*JSONReader, error) {
 		return nil, errors.Wrap(err, "first token not a [")
 	}
 
-	return &JSONReader{
+	return &JSONArrayReader{
 		decoder: decoder,
 	}, nil
 }
 
-func (r *JSONReader) ReadProtoMessage(m proto.Message) error {
+func (r *JSONArrayReader) ReadProtoMessage(m proto.Message) error {
 	if !r.decoder.More() {
 		// if no more data in array read ] character at end of array
 		tok, err := r.decoder.Token()
@@ -49,6 +49,25 @@ func (r *JSONReader) ReadProtoMessage(m proto.Message) error {
 	}
 
 	if err := UnmarshalNext(r.decoder, m); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *JSONArrayReader) Read(m any) error {
+	if !r.decoder.More() {
+		// if no more data in array read ] character at end of array
+		tok, err := r.decoder.Token()
+		if err != nil {
+			return err
+		}
+		if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
+			return errors.Errorf("file does not contain a JSON array")
+		}
+		return io.EOF
+	}
+
+	if err := r.decoder.Decode(&m); err != nil {
 		return err
 	}
 	return nil
