@@ -2,6 +2,7 @@ package transform
 
 import (
 	"bytes"
+	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"html/template"
 	"reflect"
 	"strings"
@@ -45,48 +46,26 @@ func (t *Tranformer) writeProtoMessage(writer *js.JSONWriter, message *msg.Trans
 
 func (t *Tranformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transform {
 	var chunks []*msg.Transform
+	var chunkIndex = 0
+	chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
 
-	if len(directoryObject.Objects) > t.MaxChunkSize {
-		for i := 0; i < len(directoryObject.Objects); i += t.MaxChunkSize {
-			end := i + t.MaxChunkSize
-			if end > len(directoryObject.Objects) {
-				end = len(directoryObject.Objects)
-			}
-			chunks = append(chunks, &msg.Transform{
-				Objects: directoryObject.Objects[i:end],
-			})
+	for _, obj := range directoryObject.Objects {
+		if len(chunks[chunkIndex].Objects) >= t.MaxChunkSize {
+			chunkIndex += 1
+			chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
 		}
-	} else {
-		chunks = append(chunks, &msg.Transform{
-			Objects: directoryObject.Objects,
-		})
+
+		chunks[chunkIndex].Objects = append(chunks[chunkIndex].Objects, obj)
 	}
 
-	remaining := t.MaxChunkSize - len(chunks[len(chunks)-1].Objects)
-	if remaining > 0 {
-		if remaining < len(directoryObject.Relations) {
-			chunks[len(chunks)-1].Relations = directoryObject.Relations[:remaining-1]
-		} else {
-			chunks[len(chunks)-1].Relations = directoryObject.Relations
-			return chunks
+	for _, rel := range directoryObject.Relations {
+		if len(chunks[chunkIndex].Objects)+len(chunks[chunkIndex].Relations) >= t.MaxChunkSize {
+			chunkIndex += 1
+			chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
 		}
+		chunks[chunkIndex].Relations = append(chunks[chunkIndex].Relations, rel)
 	}
 
-	if len(directoryObject.Relations)-remaining > t.MaxChunkSize {
-		for i := remaining; i < len(directoryObject.Relations); i += t.MaxChunkSize {
-			end := i + t.MaxChunkSize
-			if end > len(directoryObject.Relations) {
-				end = len(directoryObject.Relations)
-			}
-			chunks = append(chunks, &msg.Transform{
-				Relations: directoryObject.Relations[i:end],
-			})
-		}
-	} else {
-		chunks = append(chunks, &msg.Transform{
-			Relations: directoryObject.Relations[remaining:],
-		})
-	}
 	return chunks
 }
 
