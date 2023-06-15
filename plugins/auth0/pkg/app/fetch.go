@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 
 	"github.com/alecthomas/kong"
@@ -57,13 +58,13 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 		}
 	}()
 
+	writer := js.NewJSONArrayWriter(os.Stdout)
+	defer writer.Close()
 	for o := range results {
-		res, err := json.Marshal(o)
+		err := writer.Write(o)
 		if err != nil {
 			return err
 		}
-		os.Stdout.Write(res)
-		os.Stdout.WriteString("\n")
 	}
 	return nil
 }

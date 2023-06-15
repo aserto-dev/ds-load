@@ -2,8 +2,7 @@
 package app
 
 import (
-	"bufio"
-	"encoding/json"
+	"io"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -36,15 +35,19 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	}
 	jsonWriter := js.NewJSONArrayWriter(os.Stdout)
 	tranformer := transform.NewTransformer(t.MaxChunkSize)
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		inputText := scanner.Bytes()
+	reader, err := js.NewJSONArrayReader(os.Stdin)
+	if err != nil {
+		return err
+	}
 
-		input := make(map[string]interface{})
-
-		err = json.Unmarshal(inputText, &input)
+	for {
+		var input map[string]interface{}
+		err := reader.Read(&input)
+		if err == io.EOF {
+			break
+		}
 		if err != nil {
-			return errors.Wrap(err, "failed to unmarshal input into map[string]interface{}")
+			return errors.Wrap(err, "failed to read input into map[string]interface{}")
 		}
 		output, err := tranformer.TransformToTemplate(input, string(templateContent))
 		if err != nil {
