@@ -31,10 +31,6 @@ func (t *Tranformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Trans
 }
 
 func (t *Tranformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.Transform) error {
-	// messageBytes, err := protojson.Marshal(message)
-	// if err != nil {
-	// 	return err
-	// }
 	err := writer.WriteProtoMessage(message)
 	if err != nil {
 		return err

@@ -44,7 +44,10 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		}
 	}()
 
-	writer := js.NewJSONArrayWriter(os.Stdout)
+	writer, err := js.NewJSONArrayWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
 	defer writer.Close()
 	for o := range results {
 		err := writer.Write(o)

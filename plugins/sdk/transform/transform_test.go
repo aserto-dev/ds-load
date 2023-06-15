@@ -81,7 +81,6 @@ func TestTransformWithManyObjects(t *testing.T) {
 	chunks := transformer.PrepareChunks(&directoryObject)
 	t.Log("Object chunks", len(chunks))
 	assert.NotNil(t, chunks)
-	// assert.NotNil(t, relationChunks)
 	runtime.ReadMemStats(&m2)
 	t.Logf("after: %v Kb", bToKb(m2.TotalAlloc))
 	t.Logf("total diff: %v Kb", bToKb(m2.TotalAlloc-m1.TotalAlloc))
@@ -119,7 +118,6 @@ func TestTransformChunking(t *testing.T) {
 
 	chunks := trans.PrepareChunks(&directoryObjects)
 	assert.Equal(t, len(chunks), 3)
-	// assert.Equal(t, len(relationChunks), 3)
 }
 
 func TestTransformWriter(t *testing.T) {
@@ -150,10 +148,10 @@ func TestTransformWriter(t *testing.T) {
 
 	chunks := trans.PrepareChunks(&directoryObjects)
 	assert.Equal(t, len(chunks), 6)
-	// assert.Equal(t, len(relationChunks), 6)
 	var output bytes.Buffer
-	jsonWriter := js.NewJSONArrayWriter(&output)
-	err := trans.WriteChunks(jsonWriter, chunks)
+	jsonWriter, err := js.NewJSONArrayWriter(&output)
+	assert.NoError(t, err)
+	err = trans.WriteChunks(jsonWriter, chunks)
 	assert.NoError(t, err)
 	t.Log(output.String())
 }

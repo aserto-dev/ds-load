@@ -13,12 +13,15 @@ type JSONArrayWriter struct {
 	first  bool
 }
 
-func NewJSONArrayWriter(w io.Writer) *JSONArrayWriter {
-	w.Write([]byte{'['})
+func NewJSONArrayWriter(w io.Writer) (*JSONArrayWriter, error) {
+	_, err := w.Write([]byte{'['})
+	if err != nil {
+		return nil, err
+	}
 	return &JSONArrayWriter{
 		writer: w,
 		first:  false,
-	}
+	}, nil
 }
 
 func (w *JSONArrayWriter) WriteProtoMessage(m protoreflect.ProtoMessage) error {

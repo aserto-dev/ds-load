@@ -33,7 +33,11 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 			return err
 		}
 	}
-	jsonWriter := js.NewJSONArrayWriter(os.Stdout)
+	jsonWriter, err := js.NewJSONArrayWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
+	defer jsonWriter.Close()
 	tranformer := transform.NewTransformer(t.MaxChunkSize)
 	reader, err := js.NewJSONArrayReader(os.Stdin)
 	if err != nil {
@@ -70,6 +74,5 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 		}
 	}
 
-	jsonWriter.Close()
 	return nil
 }
