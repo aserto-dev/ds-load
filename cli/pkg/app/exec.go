@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ExecCmd struct {
@@ -215,32 +214,18 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	scanner := bufio.NewReader(stdout)
 
 	for {
-		line, err := scanner.ReadBytes('\n')
+		b, err := scanner.ReadByte()
 		if err == io.EOF {
-			// we have reached the end of the stream
-			if len(line) > 0 {
-				// write last line
-				os.Stdout.Write(line)
-			}
+			os.Stdout.Write([]byte{b})
 			break
 		} else if err != nil {
 			return err
 		}
 
-		os.Stdout.Write(line)
+		os.Stdout.Write([]byte{b})
 	}
 
 	return nil
-}
-
-func convertToProto(c *cc.CommonCtx, line []byte) *msg.PluginMessage {
-	pluginMsg := &msg.PluginMessage{}
-	err := protojson.Unmarshal(line, pluginMsg)
-	if err != nil {
-		c.Log.Err(err)
-	}
-
-	return pluginMsg
 }
 
 func listenOnStderr(c *cc.CommonCtx, stderr io.ReadCloser) {
