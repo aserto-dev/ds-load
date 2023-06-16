@@ -2,13 +2,14 @@ package transform
 
 import (
 	"bytes"
-	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"html/template"
 	"reflect"
 	"strings"
 
 	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/common/msg"
+
+	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 )
 
 type Tranformer struct {
@@ -46,27 +47,42 @@ func (t *Tranformer) writeProtoMessage(writer *js.JSONWriter, message *msg.Trans
 
 func (t *Tranformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transform {
 	var chunks []*msg.Transform
-	var chunkIndex = 0
-	chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
+	var freeChunk *msg.Transform
 
 	for _, obj := range directoryObject.Objects {
-		if len(chunks[chunkIndex].Objects) >= t.MaxChunkSize {
-			chunkIndex += 1
-			chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
-		}
-
-		chunks[chunkIndex].Objects = append(chunks[chunkIndex].Objects, obj)
+		freeChunk, chunks = t.nextFreeChunk(chunks)
+		freeChunk.Objects = append(freeChunk.Objects, obj)
 	}
 
 	for _, rel := range directoryObject.Relations {
-		if len(chunks[chunkIndex].Objects)+len(chunks[chunkIndex].Relations) >= t.MaxChunkSize {
-			chunkIndex += 1
-			chunks = append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
-		}
-		chunks[chunkIndex].Relations = append(chunks[chunkIndex].Relations, rel)
+		freeChunk, chunks = t.nextFreeChunk(chunks)
+		freeChunk.Relations = append(freeChunk.Relations, rel)
 	}
 
 	return chunks
+}
+
+func (t *Tranformer) nextFreeChunk(chunks []*msg.Transform) (*msg.Transform, []*msg.Transform) {
+	if len(chunks) == 0 {
+		chunks = t.addEmptyChunk(chunks)
+	}
+
+	lastChunk := chunks[len(chunks)-1]
+	if t.isRoomInChunk(lastChunk) {
+		return lastChunk, chunks
+	}
+
+	chunks = t.addEmptyChunk(chunks)
+
+	return chunks[len(chunks)-1], chunks
+}
+
+func (t *Tranformer) isRoomInChunk(chunk *msg.Transform) bool {
+	return len(chunk.Objects)+len(chunk.Relations) < t.MaxChunkSize
+}
+
+func (t *Tranformer) addEmptyChunk(chunks []*msg.Transform) []*msg.Transform {
+	return append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
 }
 
 var fns = template.FuncMap{
