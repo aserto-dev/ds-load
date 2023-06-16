@@ -36,7 +36,7 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 }
 
 // reads next json object as proto message
-// returns io.EOF at the end of the input stream
+// returns io.EOF at the end of the input stream.
 func (r *JSONArrayReader) ReadProtoMessage(m proto.Message) error {
 	more, err := r.more()
 	if err != nil {
