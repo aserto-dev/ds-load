@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/okta/okta-sdk-golang/v2/okta"
 )
@@ -43,13 +44,16 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		}
 	}()
 
+	writer, err := js.NewJSONArrayWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
 	for o := range results {
-		res, err := json.Marshal(o)
+		err := writer.Write(o)
 		if err != nil {
 			return err
 		}
-		os.Stdout.Write(res)
-		os.Stdout.WriteString("\n")
 	}
 	return nil
 }

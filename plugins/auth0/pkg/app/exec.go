@@ -65,8 +65,11 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-	jsonWriter := js.NewJSONArrayWriter(os.Stdout)
-
+	jsonWriter, err := js.NewJSONArrayWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
+	defer jsonWriter.Close()
 	tranformer := transform.NewTransformer(cmd.MaxChunkSize)
 	for input := range results {
 		output, err := tranformer.TransformToTemplate(input, string(templateContent))
@@ -86,7 +89,6 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 			return errors.Wrap(err, "failed to write chunks to output")
 		}
 	}
-	jsonWriter.Close()
 
 	return nil
 }

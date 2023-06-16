@@ -9,11 +9,11 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type JSONReader struct {
+type JSONArrayReader struct {
 	decoder *json.Decoder
 }
 
-func NewJSONArrayReader(r io.Reader) (*JSONReader, error) {
+func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 	decoder := json.NewDecoder(r)
 
 	tk, err := decoder.Token()
@@ -30,28 +30,68 @@ func NewJSONArrayReader(r io.Reader) (*JSONReader, error) {
 		return nil, errors.Wrap(err, "first token not a [")
 	}
 
-	return &JSONReader{
+	return &JSONArrayReader{
 		decoder: decoder,
 	}, nil
 }
 
-func (r *JSONReader) ReadProtoMessage(m proto.Message) error {
-	if !r.decoder.More() {
-		// if no more data in array read ] character at end of array
-		tok, err := r.decoder.Token()
-		if err != nil {
-			return err
-		}
-		if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
-			return errors.Errorf("file does not contain a JSON array")
-		}
-		return io.EOF
-	}
-
-	if err := UnmarshalNext(r.decoder, m); err != nil {
+// reads next json object as proto message
+// returns io.EOF at the end of the input stream
+func (r *JSONArrayReader) ReadProtoMessage(m proto.Message) error {
+	more, err := r.more()
+	if err != nil {
 		return err
 	}
+	if more {
+		if err := UnmarshalNext(r.decoder, m); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func (r *JSONArrayReader) Read(m any) error {
+	more, err := r.more()
+	if err != nil {
+		return err
+	}
+	if more {
+		if err := r.decoder.Decode(&m); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *JSONArrayReader) more() (bool, error) {
+	if r.decoder.More() {
+		return true, nil
+	}
+
+	// if no more data in array read ] character at end of array
+	tok, err := r.decoder.Token()
+	if err != nil {
+		return false, err
+	}
+	if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
+		return false, errors.Errorf("file does not contain a JSON array")
+	}
+	// check for next token in case of multiple json sources
+	tok, err = r.decoder.Token()
+	if err != nil {
+		return false, err
+	}
+
+	delim, ok := tok.(json.Delim)
+	if !ok {
+		return false, errors.Wrap(err, "first token not a delimiter")
+	}
+
+	if delim == json.Delim('[') {
+		return true, nil
+	} else {
+		return false, errors.Wrap(err, "first token not a [")
+	}
 }
 
 // func (r *JSONReader) Read(results chan any) error {
