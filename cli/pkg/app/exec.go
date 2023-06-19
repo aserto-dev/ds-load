@@ -152,8 +152,6 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 		return err
 	}
 
-	var stream dsi.Importer_ImportClient
-
 	for {
 		var message msg.Transform
 		err := reader.ReadProtoMessage(&message)
@@ -163,48 +161,56 @@ func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
 		if err != nil {
 			return err
 		}
-
-		var sErr error
-		errGroup, iCtx := errgroup.WithContext(c.Context)
-		stream, err = e.dirClient.Import(iCtx)
+		err = e.importToDirectory(c, &message)
 		if err != nil {
 			return err
 		}
-		errGroup.Go(receiver(stream))
+	}
 
-		// import objects
-		for _, object := range message.Objects {
-			c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
-			sErr = stream.Send(&dsi.ImportRequest{
-				Msg: &dsi.ImportRequest_Object{
-					Object: object,
-				},
-			})
-		}
+	return nil
+}
 
-		for _, relation := range message.Relations {
-			c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
-			sErr = stream.Send(&dsi.ImportRequest{
-				Msg: &dsi.ImportRequest_Relation{
-					Relation: relation,
-				},
-			})
-		}
+func (e *ExecCmd) importToDirectory(c *cc.CommonCtx, message *msg.Transform) error {
+	var sErr error
+	errGroup, iCtx := errgroup.WithContext(c.Context)
+	stream, err := e.dirClient.Import(iCtx)
+	if err != nil {
+		return err
+	}
+	errGroup.Go(receiver(stream))
 
-		err = stream.CloseSend()
-		if err != nil {
-			return err
-		}
+	// import objects
+	for _, object := range message.Objects {
+		c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Object{
+				Object: object,
+			},
+		})
+	}
 
-		err = errGroup.Wait()
-		if err != nil {
-			return err
-		}
+	for _, relation := range message.Relations {
+		c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Relation{
+				Relation: relation,
+			},
+		})
+	}
 
-		// TODO handle stream errors
-		if sErr != nil {
-			c.Log.Err(sErr)
-		}
+	err = stream.CloseSend()
+	if err != nil {
+		return err
+	}
+
+	err = errGroup.Wait()
+	if err != nil {
+		return err
+	}
+
+	// TODO handle stream errors
+	if sErr != nil {
+		c.Log.Err(sErr)
 	}
 
 	return nil
