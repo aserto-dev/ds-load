@@ -78,7 +78,7 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
-	if !slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config") {
+	if (!slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config")) && c.ConfigPath != "" {
 		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
 	}
 	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
