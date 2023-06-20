@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/common/msg"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
@@ -64,7 +65,11 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-
+	jsonWriter, err := js.NewJSONArrayWriter(os.Stdout)
+	if err != nil {
+		return err
+	}
+	defer jsonWriter.Close()
 	tranformer := transform.NewTransformer(cmd.MaxChunkSize)
 	for input := range results {
 		output, err := tranformer.TransformToTemplate(input, string(templateContent))
@@ -78,9 +83,8 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
 		}
 
-		objectChunks, relationChunks := tranformer.PrepareChunks(&directoryObject)
-
-		err = tranformer.WriteChunks(os.Stdout, objectChunks, relationChunks)
+		chunks := tranformer.PrepareChunks(&directoryObject)
+		err = tranformer.WriteChunks(jsonWriter, chunks)
 		if err != nil {
 			return errors.Wrap(err, "failed to write chunks to output")
 		}

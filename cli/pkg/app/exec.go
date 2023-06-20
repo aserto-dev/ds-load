@@ -10,12 +10,12 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/common/msg"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 	"golang.org/x/sync/errgroup"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type ExecCmd struct {
@@ -147,84 +147,70 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
-	scanner := bufio.NewReader(stdout)
+	reader, err := js.NewJSONArrayReader(stdout)
+	if err != nil {
+		return err
+	}
 
-	var stream dsi.Importer_ImportClient
+	for {
+		var message msg.Transform
+		err := reader.ReadProtoMessage(&message)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		err = e.importToDirectory(c, &message)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (e *ExecCmd) importToDirectory(c *cc.CommonCtx, message *msg.Transform) error {
+	var sErr error
 	errGroup, iCtx := errgroup.WithContext(c.Context)
 	stream, err := e.dirClient.Import(iCtx)
 	if err != nil {
 		return err
 	}
 	errGroup.Go(receiver(stream))
-	streamOpen := true
 
-	for {
-		line, err := scanner.ReadBytes('\n')
-		if err == io.EOF {
-			// we have reached the end of the stream
-			break
-		} else if err != nil {
-			return err
-		}
+	// import objects
+	for _, object := range message.Objects {
+		c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Object{
+				Object: object,
+			},
+		})
+	}
 
-		var sErr error
-		protoMsg := convertToProto(c, line)
-		if protoMsg == nil {
-			continue
-		}
-		switch protoMsg.Data.(type) {
-		case *msg.PluginMessage_Batch:
-			batch := protoMsg.GetBatch()
-			switch batch.Type {
-			case msg.BatchType_BEGIN:
-				if streamOpen {
-					continue
-				}
+	for _, relation := range message.Relations {
+		c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Relation{
+				Relation: relation,
+			},
+		})
+	}
 
-				errGroup, iCtx = errgroup.WithContext(c.Context)
-				stream, err = e.dirClient.Import(iCtx)
-				if err != nil {
-					return err
-				}
-				errGroup.Go(receiver(stream))
-				streamOpen = true
-			case msg.BatchType_END:
-				if !streamOpen {
-					continue
-				}
-				err = stream.CloseSend()
-				if err != nil {
-					return err
-				}
-				streamOpen = false
-				err = errGroup.Wait()
-				if err != nil {
-					return err
-				}
-			case msg.BatchType_NONE:
-				return errors.New("received unexpected batch type none")
-			}
-		case *msg.PluginMessage_Object:
-			object := protoMsg.GetObject()
-			c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
-			sErr = stream.Send(&dsi.ImportRequest{
-				Msg: &dsi.ImportRequest_Object{
-					Object: object,
-				},
-			})
-		case *msg.PluginMessage_Relation:
-			relation := protoMsg.GetRelation()
-			c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
-			sErr = stream.Send(&dsi.ImportRequest{
-				Msg: &dsi.ImportRequest_Relation{
-					Relation: relation,
-				},
-			})
-		}
-		// TODO handle stream errors
-		if sErr != nil {
-			c.Log.Err(sErr)
-		}
+	err = stream.CloseSend()
+	if err != nil {
+		return err
+	}
+
+	err = errGroup.Wait()
+	if err != nil {
+		return err
+	}
+
+	// TODO handle stream errors
+	if sErr != nil {
+		c.Log.Err(sErr)
 	}
 
 	return nil
@@ -234,32 +220,18 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	scanner := bufio.NewReader(stdout)
 
 	for {
-		line, err := scanner.ReadBytes('\n')
+		b, err := scanner.ReadByte()
 		if err == io.EOF {
-			// we have reached the end of the stream
-			if len(line) > 0 {
-				// write last line
-				os.Stdout.Write(line)
-			}
+			os.Stdout.Write([]byte{b})
 			break
 		} else if err != nil {
 			return err
 		}
 
-		os.Stdout.Write(line)
+		os.Stdout.Write([]byte{b})
 	}
 
 	return nil
-}
-
-func convertToProto(c *cc.CommonCtx, line []byte) *msg.PluginMessage {
-	pluginMsg := &msg.PluginMessage{}
-	err := protojson.Unmarshal(line, pluginMsg)
-	if err != nil {
-		c.Log.Err(err)
-	}
-
-	return pluginMsg
 }
 
 func listenOnStderr(c *cc.CommonCtx, stderr io.ReadCloser) {
