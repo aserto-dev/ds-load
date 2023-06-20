@@ -13,6 +13,7 @@ func main() {
 
 	defaultConfigPath := "~/.config/ds-load/cfg/auth0.yaml"
 
+	yamlLoader := kongyaml.NewYAMLResolver("auth0")
 	options := []kong.Option{
 		kong.Name(app.AppName),
 		kong.Exit(func(exitCode int) {
@@ -20,7 +21,7 @@ func main() {
 		}),
 		kong.Description(app.AppDescription),
 		kong.UsageOnError(),
-		kong.Configuration(kongyaml.Loader, defaultConfigPath),
+		kong.Configuration(yamlLoader.Loader, defaultConfigPath),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,
 			Summary:             false,

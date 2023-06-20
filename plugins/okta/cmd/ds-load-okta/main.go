@@ -12,6 +12,7 @@ func main() {
 	cli := app.CLI{}
 
 	defaultConfigPath := "~/.config/ds-load/cfg/okta.yaml"
+	yamlLoader := kongyaml.NewYAMLResolver("okta")
 
 	options := []kong.Option{
 		kong.Name(app.AppName),
@@ -20,7 +21,7 @@ func main() {
 		}),
 		kong.Description(app.AppDescription),
 		kong.UsageOnError(),
-		kong.Configuration(kongyaml.Loader, defaultConfigPath),
+		kong.Configuration(yamlLoader.Loader, defaultConfigPath),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,
 			Summary:             false,

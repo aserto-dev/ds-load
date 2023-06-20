@@ -30,6 +30,8 @@ func main() {
 	}
 	pluginEnum = strings.TrimSuffix(pluginEnum, "|")
 
+	yamlLoader := kongyaml.NewYAMLResolver("")
+
 	cli := app.CLI{}
 	options := []kong.Option{
 		kong.Name(constants.AppName),
@@ -39,7 +41,7 @@ func main() {
 		kong.Vars{"plugins": pluginEnum},
 		kong.Description(constants.AppDescription),
 		kong.UsageOnError(),
-		kong.Configuration(kongyaml.Loader, constants.DefaultConfigPath),
+		kong.Configuration(yamlLoader.Loader, constants.DefaultConfigPath),
 		kong.ConfigureHelp(kong.HelpOptions{
 			NoAppSummary:        false,
 			Summary:             false,
@@ -52,7 +54,7 @@ func main() {
 	}
 
 	kongCtx := kong.Parse(&cli, options...)
-	ctx := cc.NewCommonContext(cli.Verbosity)
+	ctx := cc.NewCommonContext(cli.Verbosity, string(cli.Config))
 	err = kongCtx.Run(ctx)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())

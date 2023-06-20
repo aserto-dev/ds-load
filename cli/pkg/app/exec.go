@@ -78,6 +78,9 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
+	if !slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config") {
+		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
+	}
 	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
 
 	pStdout, err := pluginCmd.StdoutPipe()
@@ -104,29 +107,11 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 
 		// data is from pipe redirect stdin to plugin stdin
 		wg.Add(1)
-		go func() {
-			scanner := bufio.NewScanner(os.Stdin)
-			for scanner.Scan() {
-				line := scanner.Bytes()
-				_, err = pStdin.Write(line)
-				if err != nil {
-					c.UI.Problem().Msg(err.Error())
-				}
-				_, err = pStdin.Write([]byte("\n"))
-				if err != nil {
-					c.UI.Problem().Msg(err.Error())
-				}
-			}
-
-			wg.Done()
-			err = pStdin.Close()
-			if err != nil {
-				c.UI.Problem().Msg(err.Error())
-			}
-		}()
+		go redirectStdin(c, &wg, pStdin)
 	}
 
-	go listenOnStderr(c, pStderr)
+	wg.Add(1)
+	go listenOnStderr(c, &wg, pStderr)
 
 	err = pluginCmd.Start()
 	if err != nil {
@@ -139,6 +124,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 		err = e.handleMessages(c, pStdout)
 	}
 	if err != nil {
+		wg.Wait()
 		return err
 	}
 
@@ -234,20 +220,52 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	return nil
 }
 
-func listenOnStderr(c *cc.CommonCtx, stderr io.ReadCloser) {
+func redirectStdin(c *cc.CommonCtx, wg *sync.WaitGroup, pluginStdin io.WriteCloser) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		_, err := pluginStdin.Write(line)
+		if err != nil {
+			c.Log.Fatal().Err(err)
+		}
+		_, err = pluginStdin.Write([]byte("\n"))
+		if err != nil {
+			c.Log.Fatal().Err(err)
+		}
+	}
+
+	err := pluginStdin.Close()
+	if err != nil {
+		c.Log.Fatal().Err(err)
+	}
+
+	wg.Done()
+}
+
+func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 	scanner := bufio.NewReader(stderr)
+	gotError := false
 
 	for {
 		line, err := scanner.ReadBytes('\n')
+		os.Stderr.Write(line)
+
+		if len(line) > 0 {
+			gotError = true
+		}
+
+		// we have reached the end of the stream
 		if err == io.EOF {
-			// we have reached the end of the stream
+			if gotError {
+				os.Exit(1)
+			}
+
 			break
 		} else if err != nil {
 			c.Log.Fatal().Err(err)
 		}
-
-		c.Log.Error().Msg(string(line))
 	}
+	wg.Done()
 }
 
 func receiver(stream dsi.Importer_ImportClient) func() error {
