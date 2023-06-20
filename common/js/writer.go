@@ -56,7 +56,7 @@ func (w *JSONArrayWriter) Write(message any) error {
 
 func (w *JSONArrayWriter) Close() error {
 	if w.writer != nil {
-		_, _ = w.writer.Write([]byte{']'})
+		_, _ = w.writer.Write([]byte{']', '\n'})
 		w.addDelimiter = false
 		w.writer = nil
 	}
