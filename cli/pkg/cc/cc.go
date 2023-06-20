@@ -12,13 +12,14 @@ import (
 )
 
 type CommonCtx struct {
-	Context  context.Context
-	UI       *clui.UI
-	LogLevel zerolog.Level
-	Log      *zerolog.Logger
+	Context    context.Context
+	UI         *clui.UI
+	LogLevel   zerolog.Level
+	Log        *zerolog.Logger
+	ConfigPath string
 }
 
-func NewCommonContext(verbosity int) *CommonCtx {
+func NewCommonContext(verbosity int, config string) *CommonCtx {
 	logLevelParsed := GetLogLevel(verbosity)
 	logCfg := &logger.Config{
 		Prod:           false,
@@ -30,10 +31,11 @@ func NewCommonContext(verbosity int) *CommonCtx {
 	}
 
 	return &CommonCtx{
-		Context:  context.Background(),
-		UI:       iostream.NewUI(iostream.DefaultIO()),
-		LogLevel: logLevelParsed,
-		Log:      newLogger,
+		Context:    context.Background(),
+		UI:         iostream.NewUI(iostream.DefaultIO()),
+		LogLevel:   logLevelParsed,
+		Log:        newLogger,
+		ConfigPath: config,
 	}
 }
 

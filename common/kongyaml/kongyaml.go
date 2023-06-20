@@ -5,17 +5,37 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
+type YAMLResolver struct {
+	yamlKey string
+}
+
+func NewYAMLResolver(yamlKey string) *YAMLResolver {
+	return &YAMLResolver{
+		yamlKey: yamlKey,
+	}
+}
+
 // Loader is a Kong configuration loader for YAML.
-func Loader(r io.Reader) (kong.Resolver, error) {
+func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 	decoder := yaml.NewDecoder(r)
 	config := map[interface{}]interface{}{}
 	err := decoder.Decode(config)
 	if err != nil {
 		return nil, err
 	}
+
+	if y.yamlKey != "" {
+		var ok bool
+		config, ok = config[y.yamlKey].(map[interface{}]interface{})
+		if !ok {
+			return nil, errors.Errorf("could not find config key: %s", y.yamlKey)
+		}
+	}
+
 	return kong.ResolverFunc(func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
 		// Build a string path up to this flag.
 		path := []string{}

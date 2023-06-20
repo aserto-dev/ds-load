@@ -18,7 +18,7 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 
 	tk, err := decoder.Token()
 	if err != nil {
-		return nil, errors.Wrap(err, "could not read")
+		return nil, errors.Wrap(err, "could not read json output")
 	}
 
 	delim, ok := tk.(json.Delim)

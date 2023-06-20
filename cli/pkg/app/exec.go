@@ -78,6 +78,9 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 }
 
 func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
+	if !slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config") {
+		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
+	}
 	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
 
 	pStdout, err := pluginCmd.StdoutPipe()
@@ -126,7 +129,8 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 		}()
 	}
 
-	go listenOnStderr(c, pStderr)
+	go listenOnStderr(c, &wg, pStderr)
+	wg.Add(1)
 
 	err = pluginCmd.Start()
 	if err != nil {
@@ -139,6 +143,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 		err = e.handleMessages(c, pStdout)
 	}
 	if err != nil {
+		wg.Wait()
 		return err
 	}
 
@@ -234,20 +239,25 @@ func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
 	return nil
 }
 
-func listenOnStderr(c *cc.CommonCtx, stderr io.ReadCloser) {
+func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 	scanner := bufio.NewReader(stderr)
 
 	for {
 		line, err := scanner.ReadBytes('\n')
 		if err == io.EOF {
+			// write line if not empty
+			os.Stderr.Write(line)
+			os.Exit(1)
 			// we have reached the end of the stream
 			break
 		} else if err != nil {
 			c.Log.Fatal().Err(err)
 		}
 
-		c.Log.Error().Msg(string(line))
+		os.Stderr.Write(line)
+		os.Exit(1)
 	}
+	wg.Done()
 }
 
 func receiver(stream dsi.Importer_ImportClient) func() error {
