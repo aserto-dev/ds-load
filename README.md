@@ -125,7 +125,7 @@ ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenan
 
 ### View data from auth0
 ```
-ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --max-chunk-size=20
+ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret>
 ```
 
 ### Transform data from a previously saved auth0 fetch
@@ -144,4 +144,22 @@ cat auth0.data | ds-load --host=<directory-host> --api-key=<directory-api-key> -
 ### Pipe data from fetch to transform
 ```
 ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> | ds-load -p auth0 transform
+```
+
+### Use config file to import data from auth0 into the directory
+
+config.yaml
+```yaml
+---
+host: "directory.eng.aserto.com:8443"
+api-key: "secretapikey"
+tenant-id: "your-tenant-id"
+auth0:
+  domain: "domain.auth0.com"
+  client-id: "clientid"
+  client-secret: "clientsupersecret"
+```
+
+```
+ds-load -c ./config.yaml auth0
 ```
