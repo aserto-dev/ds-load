@@ -9,7 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
-	"github.com/aserto-dev/ds-load/common/kongyaml"
+	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
 func main() {

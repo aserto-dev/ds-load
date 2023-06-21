@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/common/kongyaml"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app"
+	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
 func main() {

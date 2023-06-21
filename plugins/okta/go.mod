@@ -1,18 +1,12 @@
-module github.com/aseto-dev/ds-load/plugins/okta
+module github.com/aserto-dev/ds-load/plugins/okta
 
 go 1.19
 
-replace github.com/aserto-dev/ds-load/common => ../../common
-
-replace github.com/aserto-dev/ds-load/plugins/sdk => ../../plugins/sdk
-
-replace github.com/aserto-dev/ds-load/plugins/okta => ../../plugins/okta
+replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/aserto-dev/ds-load/common v0.0.0-20230517082410-8615661d7c89
-	github.com/aserto-dev/ds-load/plugins/okta v0.0.0-00010101000000-000000000000
-	github.com/aserto-dev/ds-load/plugins/sdk v0.0.0-00010101000000-000000000000
+	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
 	github.com/okta/okta-sdk-golang/v2 v2.18.0
 	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.54.0
@@ -25,6 +19,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/patrickmn/go-cache v0.0.0-20180815053127-5633e0862627 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
