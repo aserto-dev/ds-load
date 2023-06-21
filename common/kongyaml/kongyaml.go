@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
