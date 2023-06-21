@@ -81,13 +81,9 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	if (!slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config")) && c.ConfigPath != "" {
 		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
 	}
-	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
-
-	pStdout, err := pluginCmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-	defer pStdout.Close()
+		pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
+	var pStdout io.ReadCloser
+	var wg sync.WaitGroup
 
 	pStderr, err := pluginCmd.StderrPipe()
 	if err != nil {
@@ -95,32 +91,33 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	}
 	defer pStderr.Close()
 
-	var wg sync.WaitGroup
+	wg.Add(1)
+	go listenOnStderr(c, &wg, pStderr)
 
-	fi, _ := os.Stdin.Stat()
-	if (fi.Mode() & os.ModeCharDevice) == 0 {
-		pStdin, err := pluginCmd.StdinPipe()
+	if e.Print {
+		pluginCmd.Stdout = os.Stdout
+	} else {
+		pStdout, err = pluginCmd.StdoutPipe()
 		if err != nil {
 			return err
 		}
-		defer pStdin.Close()
-
-		// data is from pipe redirect stdin to plugin stdin
-		wg.Add(1)
-		go redirectStdin(c, &wg, pStdin)
+		defer pStdout.Close()
 	}
 
-	wg.Add(1)
-	go listenOnStderr(c, &wg, pStderr)
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return err
+	}
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		pluginCmd.Stdin = os.Stdin
+	}
 
 	err = pluginCmd.Start()
 	if err != nil {
 		return err
 	}
 
-	if e.Print {
-		err = e.printOutput(pStdout)
-	} else {
+	if !e.Print {
 		err = e.handleMessages(c, pStdout)
 	}
 	if err != nil {
@@ -200,46 +197,6 @@ func (e *ExecCmd) importToDirectory(c *cc.CommonCtx, message *msg.Transform) err
 	}
 
 	return nil
-}
-
-func (e *ExecCmd) printOutput(stdout io.ReadCloser) error {
-	scanner := bufio.NewReader(stdout)
-
-	for {
-		b, err := scanner.ReadByte()
-		if err == io.EOF {
-			os.Stdout.Write([]byte{b})
-			break
-		} else if err != nil {
-			return err
-		}
-
-		os.Stdout.Write([]byte{b})
-	}
-
-	return nil
-}
-
-func redirectStdin(c *cc.CommonCtx, wg *sync.WaitGroup, pluginStdin io.WriteCloser) {
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Bytes()
-		_, err := pluginStdin.Write(line)
-		if err != nil {
-			c.Log.Fatal().Err(err)
-		}
-		_, err = pluginStdin.Write([]byte("\n"))
-		if err != nil {
-			c.Log.Fatal().Err(err)
-		}
-	}
-
-	err := pluginStdin.Close()
-	if err != nil {
-		c.Log.Fatal().Err(err)
-	}
-
-	wg.Done()
 }
 
 func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
