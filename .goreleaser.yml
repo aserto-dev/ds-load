@@ -69,6 +69,29 @@ builds:
       - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
+  - id: ds-load-azuread
+    main: ./plugins/azuread/cmd/ds-load-azuread
+    binary: ds-load-azuread
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
 archives:
   - format: zip
     rlcp: true
@@ -122,4 +145,5 @@ brews:
     install: |
       bin.install "ds-load"
       bin.install "ds-load-auth0"
+      bin.install "ds-load-azuread"
       bin.install "ds-load-okta"

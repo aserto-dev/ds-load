@@ -1,0 +1,49 @@
+{
+{{$email := $.mail}}
+{{ if not $.mail}}
+{{$email = $.userPrincipalName}}
+{{end}}
+  "objects": [
+    {
+      "key": "{{ $.id }}",
+      "type": "user",
+      "displayName": "{{ $.displayName }}",
+      "created_at":"{{ $.createdDateTime }}",
+      "properties":{
+        "email": "{{ $email }}"
+      }
+    },
+    {
+      "key": "{{ $email }}",
+      "type": "identity"
+    },
+    {
+      "key": "{{ $.id }}",
+      "type": "identity"
+    }
+  ],
+  "relations":[  
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$.id}}"
+      }
+    },
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$email}}"
+      }
+    }
+  ]
+}
