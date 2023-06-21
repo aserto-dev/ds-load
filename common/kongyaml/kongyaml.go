@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -32,7 +31,9 @@ func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 		var ok bool
 		config, ok = config[y.yamlKey].(map[interface{}]interface{})
 		if !ok {
-			return nil, errors.Errorf("could not find config key: %s", y.yamlKey)
+			return kong.ResolverFunc(func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {
+				return nil, nil
+			}), nil
 		}
 	}
 
