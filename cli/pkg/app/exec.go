@@ -81,7 +81,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	if (!slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config")) && c.ConfigPath != "" {
 		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
 	}
-		pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
+	pluginCmd := exec.Command(e.execPlugin.Path, e.pluginArgs...) //nolint:gosec
 	var pStdout io.ReadCloser
 	var wg sync.WaitGroup
 
