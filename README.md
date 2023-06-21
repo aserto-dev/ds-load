@@ -61,43 +61,43 @@ Parameters can also be passed by environment, as seen in the help message of eac
 config files are in yaml format:
 ```yaml
 ---
-command:
-  arg: value
-  another-arg: value
-another-command:
+arg: value
+another-arg: value
+<plugin-name>:
   arg: value
 ```
 
-When passing custom config files to both the cli and the plugin, use `ds-load -c <config-path> plugin -c <plugin-config-path>` 
+When passing custom config files to both the cli and the plugin, use `ds-load -c <config-path> <plugin-name> <command>` 
 
 ### CLI config
 default location: `~/.config/ds-load/cfg/config.yaml` can be overridden using `-c/--config`
 
-#### example
+#### example with auth0 plugin
 ```yaml
 ---
-exec:
-  host: directory.eng.aserto.com:8443
-  api-key: secretapikey
-  tenant-id: your-tenant-id
-```
-
-### Plugin config
-default location: `~/.config/ds-load/cfg/<plugin-name>.yaml` can be overridden using `-c/--config`
-
-#### example
-```yaml
----
-exec:
+host: directory.eng.aserto.com:8443
+api-key: secretapikey
+tenant-id: your-tenant-id
+auth0:
   domain: "domain.auth0.com"
   client-id: "clientid"
   client-secret: "clientsupersecret"
   template-file: "/path/to/transform.file"
   max-chunk-size: 20
-fetch:
+```
+
+### Plugin config
+default location: `~/.config/ds-load/cfg/<plugin-name>.yaml` can be overridden using `-c/--config`
+
+#### example for auth0
+```yaml
+---
+auth0:
   domain: "domain.auth0.com"
   client-id: "clientid"
   client-secret: "clientsupersecret"
+  template-file: "/path/to/transform.file"
+  max-chunk-size: 20
 ```
 
 ## Transform
