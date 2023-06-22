@@ -7,8 +7,8 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/okta/okta-sdk-golang/v2/okta"
 )
 

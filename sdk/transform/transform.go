@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/aserto-dev/ds-load/common/js"
-	"github.com/aserto-dev/ds-load/common/msg"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/common/msg"
 
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 )

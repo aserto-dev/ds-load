@@ -17,9 +17,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 
@@ -41,9 +41,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-okta
@@ -64,9 +64,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/common/version.date={{.Date}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
+      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:

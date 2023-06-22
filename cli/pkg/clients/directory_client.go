@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/common/version"
+	"github.com/aserto-dev/ds-load/sdk/common/version"
 	grpcClient "github.com/aserto-dev/go-aserto/client"
 	"github.com/fullstorydev/grpcurl"
 	"github.com/pkg/errors"

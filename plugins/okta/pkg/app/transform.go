@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/common/js"
-	"github.com/aserto-dev/ds-load/common/msg"
-	"github.com/aserto-dev/ds-load/plugins/sdk/transform"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/common/msg"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )

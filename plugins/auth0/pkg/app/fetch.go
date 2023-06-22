@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/aserto-dev/ds-load/common/js"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
 
 	"github.com/alecthomas/kong"
 	"gopkg.in/auth0.v5/management"

@@ -8,7 +8,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
-	"github.com/aserto-dev/ds-load/common/version"
+	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
 
 type Context struct {
