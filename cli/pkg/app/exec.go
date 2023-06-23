@@ -10,12 +10,8 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
-	"golang.org/x/sync/errgroup"
 )
 
 type ExecCmd struct {
@@ -24,9 +20,9 @@ type ExecCmd struct {
 	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
 	PluginFolder string   `hidden:""`
 
-	execPlugin *plugin.Plugin     `kong:"-"`
-	pluginArgs []string           `kong:"-"`
-	dirClient  dsi.ImporterClient `kong:"-"`
+	execPlugin *plugin.Plugin          `kong:"-"`
+	pluginArgs []string                `kong:"-"`
+	dirClient  clients.DirectoryClient `kong:"-"`
 }
 
 func (e *ExecCmd) Run(c *cc.CommonCtx) error {
@@ -118,7 +114,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	}
 
 	if !e.Print {
-		err = e.handleMessages(c, pStdout)
+		err = e.dirClient.HandleMessages(pStdout)
 	}
 	if err != nil {
 		wg.Wait()
@@ -127,76 +123,6 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 
 	wg.Wait()
 	return pluginCmd.Wait()
-}
-
-func (e *ExecCmd) handleMessages(c *cc.CommonCtx, stdout io.ReadCloser) error {
-	reader, err := js.NewJSONArrayReader(stdout)
-	if err != nil {
-		return err
-	}
-
-	for {
-		var message msg.Transform
-		err := reader.ReadProtoMessage(&message)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		err = e.importToDirectory(c, &message)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (e *ExecCmd) importToDirectory(c *cc.CommonCtx, message *msg.Transform) error {
-	var sErr error
-	errGroup, iCtx := errgroup.WithContext(c.Context)
-	stream, err := e.dirClient.Import(iCtx)
-	if err != nil {
-		return err
-	}
-	errGroup.Go(receiver(stream))
-
-	// import objects
-	for _, object := range message.Objects {
-		c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
-		sErr = stream.Send(&dsi.ImportRequest{
-			Msg: &dsi.ImportRequest_Object{
-				Object: object,
-			},
-		})
-	}
-
-	for _, relation := range message.Relations {
-		c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
-		sErr = stream.Send(&dsi.ImportRequest{
-			Msg: &dsi.ImportRequest_Relation{
-				Relation: relation,
-			},
-		})
-	}
-
-	err = stream.CloseSend()
-	if err != nil {
-		return err
-	}
-
-	err = errGroup.Wait()
-	if err != nil {
-		return err
-	}
-
-	// TODO handle stream errors
-	if sErr != nil {
-		c.Log.Err(sErr)
-	}
-
-	return nil
 }
 
 func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
@@ -223,19 +149,4 @@ func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 		}
 	}
 	wg.Done()
-}
-
-func receiver(stream dsi.Importer_ImportClient) func() error {
-	return func() error {
-		for {
-			_, err := stream.Recv()
-			if err == io.EOF {
-				return nil
-			}
-
-			if err != nil {
-				return err
-			}
-		}
-	}
 }

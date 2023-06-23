@@ -14,13 +14,13 @@ import (
 
 func main() {
 	pluginEnum := ""
-	find, err := plugin.NewHomeDirFinder(true)
+	pluginFinder, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
 
-	plugins, err := find.Find()
+	plugins, err := pluginFinder.Find()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)

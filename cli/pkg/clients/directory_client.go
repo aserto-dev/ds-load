@@ -2,12 +2,16 @@ package clients
 
 import (
 	"context"
+	"io"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 	grpcClient "github.com/aserto-dev/go-aserto/client"
 	"github.com/fullstorydev/grpcurl"
 	"github.com/pkg/errors"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -24,7 +28,16 @@ type Config struct {
 	TenantID string `short:"t" env:"DIRECTORY_TENANT_ID" help:"Directory Tenant ID"`
 }
 
-func NewDirectoryImportClient(c *cc.CommonCtx, cfg *Config) (dsi.ImporterClient, error) {
+type DirectoryClient interface {
+	HandleMessages(stdout io.Reader) error
+}
+
+type directoryClient struct {
+	commonCtx *cc.CommonCtx
+	dirClient dsi.ImporterClient `kong:"-"`
+}
+
+func NewDirectoryImportClient(c *cc.CommonCtx, cfg *Config) (DirectoryClient, error) {
 	if cfg.Host == "" {
 		cfg.Host = localhostDirectory
 	}
@@ -51,7 +64,10 @@ func NewDirectoryImportClient(c *cc.CommonCtx, cfg *Config) (dsi.ImporterClient,
 		return nil, err
 	}
 
-	return dsi.NewImporterClient(conn.Conn), nil
+	return &directoryClient{
+		dirClient: dsi.NewImporterClient(conn.Conn),
+		commonCtx: c,
+	}, nil
 }
 
 func validate(cfg *Config) error {
@@ -74,4 +90,89 @@ func validate(cfg *Config) error {
 		return err
 	}
 	return nil
+}
+
+func (d *directoryClient) HandleMessages(stdout io.Reader) error {
+	reader, err := js.NewJSONArrayReader(stdout)
+	if err != nil {
+		return err
+	}
+
+	for {
+		var message msg.Transform
+		err := reader.ReadProtoMessage(&message)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		err = d.importToDirectory(d.commonCtx, &message)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (d *directoryClient) importToDirectory(c *cc.CommonCtx, message *msg.Transform) error {
+	var sErr error
+	errGroup, iCtx := errgroup.WithContext(c.Context)
+	stream, err := d.dirClient.Import(iCtx)
+	if err != nil {
+		return err
+	}
+	errGroup.Go(receiver(stream))
+
+	// import objects
+	for _, object := range message.Objects {
+		c.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Object{
+				Object: object,
+			},
+		})
+	}
+
+	for _, relation := range message.Relations {
+		c.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
+		sErr = stream.Send(&dsi.ImportRequest{
+			Msg: &dsi.ImportRequest_Relation{
+				Relation: relation,
+			},
+		})
+	}
+
+	err = stream.CloseSend()
+	if err != nil {
+		return err
+	}
+
+	err = errGroup.Wait()
+	if err != nil {
+		return err
+	}
+
+	// TODO handle stream errors
+	if sErr != nil {
+		c.Log.Err(sErr)
+	}
+
+	return nil
+}
+
+func receiver(stream dsi.Importer_ImportClient) func() error {
+	return func() error {
+		for {
+			_, err := stream.Recv()
+			if err == io.EOF {
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+	}
 }
