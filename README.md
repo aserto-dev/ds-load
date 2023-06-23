@@ -163,3 +163,7 @@ auth0:
 ```
 ds-load -c ./config.yaml auth0
 ```
+
+### Load directory data from a file
+ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --max-chunk-size=20 > objs_and_rel.json
+cat objs_and_rel.json | ds-load load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
