@@ -1,7 +1,7 @@
 builds:
-  - id: ds-load
-    main: ./cli/cmd/ds-load
-    binary: ds-load
+  - id: ds
+    main: ./cli/cmd/ds
+    binary: ds
     goos:
       - darwin
       - linux
@@ -23,9 +23,9 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 
-  - id: ds-load-auth0
-    main: ./plugins/auth0/cmd/ds-load-auth0
-    binary: ds-load-auth0
+  - id: ds-auth0
+    main: ./plugins/auth0/cmd/ds-auth0
+    binary: ds-auth0
     goos:
       - darwin
       - linux
@@ -46,9 +46,9 @@ builds:
       - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: ds-load-okta
-    main: ./plugins/okta/cmd/ds-load-okta
-    binary: ds-load-okta
+  - id: ds-okta
+    main: ./plugins/okta/cmd/ds-okta
+    binary: ds-okta
     goos:
       - darwin
       - linux
@@ -69,9 +69,9 @@ builds:
       - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-  - id: ds-load-azuread
-    main: ./plugins/azuread/cmd/ds-load-azuread
-    binary: ds-load-azuread
+  - id: ds-azuread
+    main: ./plugins/azuread/cmd/ds-azuread
+    binary: ds-azuread
     goos:
       - darwin
       - linux
@@ -118,7 +118,7 @@ release:
 
 brews:
   -
-    name: ds-load
+    name: ds
 
     tap:
       owner: aserto-dev
@@ -141,9 +141,9 @@ brews:
     skip_upload: false
 
     test: |
-      system "#{bin}/ds-load version"
+      system "#{bin}/ds version"
     install: |
-      bin.install "ds-load"
-      bin.install "ds-load-auth0"
-      bin.install "ds-load-azuread"
-      bin.install "ds-load-okta"
+      bin.install "ds"
+      bin.install "ds-auth0"
+      bin.install "ds-azuread"
+      bin.install "ds-okta"
