@@ -4,6 +4,7 @@ use (
 	./cli
 	./magefiles
 	./plugins/auth0
+	./plugins/azuread
 	./plugins/okta
 	./sdk
 )
