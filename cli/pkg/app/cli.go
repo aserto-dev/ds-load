@@ -5,10 +5,10 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/cli/pkg/constants"
-	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
-	"github.com/aserto-dev/ds-load/sdk/common/version"
+	"github.com/aserto-dev/ds/cli/pkg/cc"
+	"github.com/aserto-dev/ds/cli/pkg/constants"
+	"github.com/aserto-dev/ds/cli/pkg/plugin"
+	"github.com/aserto-dev/ds/sdk/common/version"
 )
 
 type Context struct {

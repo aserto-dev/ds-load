@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/sdk/common/version"
+	"github.com/aserto-dev/ds/sdk/common/version"
 )
 
 type CLI struct {

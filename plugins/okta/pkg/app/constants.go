@@ -1,4 +1,4 @@
 package app
 
-const AppName = "ds-load-okta"
+const AppName = "ds-okta"
 const AppDescription = "okta directory loader"

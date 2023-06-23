@@ -1,4 +1,4 @@
-module github.com/aserto-dev/ds-load/magefiles
+module github.com/aserto-dev/ds/magefiles
 
 go 1.19
 

@@ -4,16 +4,16 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/okta/pkg/app"
-	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
+	"github.com/aserto-dev/ds/plugins/auth0/pkg/app"
+	"github.com/aserto-dev/ds/sdk/common/kongyaml"
 )
 
 func main() {
 	cli := app.CLI{}
 
-	defaultConfigPath := "~/.config/ds-load/cfg/okta.yaml"
-	yamlLoader := kongyaml.NewYAMLResolver("okta")
+	defaultConfigPath := "~/.config/ds/cfg/auth0.yaml"
 
+	yamlLoader := kongyaml.NewYAMLResolver("auth0")
 	options := []kong.Option{
 		kong.Name(app.AppName),
 		kong.Exit(func(exitCode int) {

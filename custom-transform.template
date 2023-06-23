@@ -1,0 +1,65 @@
+{
+  "objects": [
+    {
+      "key": "{{ $.user_id }}",
+      "type": "user",
+      "displayName": "{{ $.nickname }}",
+      "created_at":"{{ $.created_at }}",
+      "properties":{
+        "email": "{{ $.email }}",
+        "picture": "{{ $.picture }}",
+        "mycustomprop": "very custom"
+      }
+    },
+    {{ range $index, $element := $.identities }}
+      {{ if $index }},{{ end }}
+      {
+        "key": "{{$element.user_id}}",
+        "type": "identity"
+      }
+    {{ end }}
+
+    {{ if $.roles }}, {{ end }}
+
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+        "key": "{{$element.name}}",
+        "type": "group"
+      }
+    {{ end }}
+  ],
+  "relations":[    
+    {{ range $i,$element := $.identities }} 
+      {{ if $i }},{{ end }}
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{$.user_id}}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{$element.user_id}}"
+              }
+      }
+    {{ end }}
+
+    {{ if $.roles }}, {{ end }}
+
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{$.user_id}}"
+              },
+              "object": {
+                  "type": "group",
+                  "key": "{{$element.name}}"
+              }
+      }
+    {{ end }}
+  ]
+}

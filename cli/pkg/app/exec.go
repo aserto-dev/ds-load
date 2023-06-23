@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/cli/pkg/clients"
-	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds/cli/pkg/cc"
+	"github.com/aserto-dev/ds/cli/pkg/clients"
+	"github.com/aserto-dev/ds/cli/pkg/plugin"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/aserto-dev/ds-load/pkg/msg;msg";
+option go_package = "github.com/aserto-dev/ds/pkg/msg;msg";
 
 package aserto.dsload;
 

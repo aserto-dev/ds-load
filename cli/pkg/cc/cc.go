@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/aserto-dev/clui"
-	"github.com/aserto-dev/ds-load/cli/pkg/cc/iostream"
+	"github.com/aserto-dev/ds/cli/pkg/cc/iostream"
 	logger "github.com/aserto-dev/logger"
 	"github.com/rs/zerolog"
 )

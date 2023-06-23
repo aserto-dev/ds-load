@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/alecthomas/assert"
-	"github.com/aserto-dev/ds-load/sdk"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	"github.com/aserto-dev/ds-load/sdk/transform"
+	"github.com/aserto-dev/ds/sdk"
+	"github.com/aserto-dev/ds/sdk/common/js"
+	"github.com/aserto-dev/ds/sdk/common/msg"
+	"github.com/aserto-dev/ds/sdk/transform"
 	"github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	"google.golang.org/protobuf/encoding/protojson"
 )

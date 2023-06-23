@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/cli/pkg/clients"
+	"github.com/aserto-dev/ds/cli/pkg/cc"
+	"github.com/aserto-dev/ds/cli/pkg/clients"
 	"github.com/pkg/errors"
 )
 

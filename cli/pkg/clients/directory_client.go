@@ -4,10 +4,10 @@ import (
 	"context"
 	"io"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	"github.com/aserto-dev/ds-load/sdk/common/version"
+	"github.com/aserto-dev/ds/cli/pkg/cc"
+	"github.com/aserto-dev/ds/sdk/common/js"
+	"github.com/aserto-dev/ds/sdk/common/msg"
+	"github.com/aserto-dev/ds/sdk/common/version"
 	grpcClient "github.com/aserto-dev/go-aserto/client"
 	"github.com/fullstorydev/grpcurl"
 	"github.com/pkg/errors"
@@ -81,7 +81,7 @@ func validate(cfg *Config) error {
 	creds := credentials.NewTLS(tlsConf)
 
 	opts := []grpc.DialOption{
-		grpc.WithUserAgent("ds-load " + version.GetInfo().Version),
+		grpc.WithUserAgent("ds " + version.GetInfo().Version),
 	}
 	if cfg.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))

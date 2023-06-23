@@ -1,13 +1,13 @@
-module github.com/aserto-dev/ds-load/cli
+module github.com/aserto-dev/ds/cli
 
 go 1.19
 
-replace github.com/aserto-dev/ds-load/sdk => ../sdk
+replace github.com/aserto-dev/ds/sdk => ../sdk
 
 require (
 	github.com/alecthomas/kong v0.7.1
 	github.com/aserto-dev/clui v0.8.1
-	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
+	github.com/aserto-dev/ds/sdk v0.0.0-00010101000000-000000000000
 	github.com/aserto-dev/go-aserto v0.20.3
 	github.com/aserto-dev/go-directory v0.21.0
 	github.com/aserto-dev/logger v0.0.3

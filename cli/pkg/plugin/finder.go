@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/constants"
+	"github.com/aserto-dev/ds/cli/pkg/constants"
 	"golang.org/x/exp/slices"
 )
 
@@ -29,7 +29,7 @@ func NewHomeDirFinder(env bool) (*Finder, error) {
 	}
 
 	return &Finder{
-		dirs: []string{filepath.Join(homeDir, ".ds-load", "plugins")},
+		dirs: []string{filepath.Join(homeDir, ".ds", "plugins")},
 		env:  env,
 	}, nil
 }

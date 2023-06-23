@@ -1,4 +1,4 @@
-module github.com/aserto-dev/ds-load/sdk
+module github.com/aserto-dev/ds/sdk
 
 go 1.19
 

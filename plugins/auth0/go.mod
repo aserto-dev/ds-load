@@ -1,12 +1,12 @@
-module github.com/aserto-dev/ds-load/plugins/auth0
+module github.com/aserto-dev/ds/plugins/auth0
 
 go 1.19
 
-replace github.com/aserto-dev/ds-load/sdk => ../../sdk
+replace github.com/aserto-dev/ds/sdk => ../../sdk
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
+	github.com/aserto-dev/ds/sdk v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	google.golang.org/protobuf v1.30.0
 	gopkg.in/auth0.v5 v5.21.1

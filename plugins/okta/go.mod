@@ -1,12 +1,12 @@
-module github.com/aserto-dev/ds-load/plugins/okta
+module github.com/aserto-dev/ds/plugins/okta
 
 go 1.19
 
-replace github.com/aserto-dev/ds-load/sdk => ../../sdk
+replace github.com/aserto-dev/ds/sdk => ../../sdk
 
 require (
 	github.com/alecthomas/kong v0.7.1
-	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
+	github.com/aserto-dev/ds/sdk v0.0.0-00010101000000-000000000000
 	github.com/okta/okta-sdk-golang/v2 v2.18.0
 	github.com/pkg/errors v0.9.1
 	google.golang.org/grpc v1.54.0
