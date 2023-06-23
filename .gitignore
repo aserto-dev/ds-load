@@ -10,3 +10,4 @@
 
 # IDE speciffic
 /.idea/
+.run/
