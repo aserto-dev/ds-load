@@ -34,7 +34,7 @@ type DirectoryClient interface {
 
 type directoryClient struct {
 	commonCtx *cc.CommonCtx
-	dirClient dsi.ImporterClient `kong:"-"`
+	dirClient dsi.ImporterClient
 }
 
 func NewDirectoryImportClient(c *cc.CommonCtx, cfg *Config) (DirectoryClient, error) {
