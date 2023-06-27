@@ -8,7 +8,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/okta/okta-sdk-golang/v2/okta"
 )
 
@@ -33,29 +33,7 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		close(results)
 		close(errors)
 	}()
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for err := range errors {
-			os.Stderr.WriteString(err.Error())
-			os.Stderr.WriteString("\n")
-		}
-	}()
-
-	writer, err := js.NewJSONArrayWriter(os.Stdout)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-	for o := range results {
-		err := writer.Write(o)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
 }
 
 func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[string]interface{}, errors chan error) {

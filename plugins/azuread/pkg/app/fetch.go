@@ -3,11 +3,10 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"os"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
 	kiota "github.com/microsoft/kiota-serialization-json-go"
 )
 
@@ -31,24 +30,7 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		close(results)
 		close(errors)
 	}()
-	if err != nil {
-		return err
-	}
-
-	go printErrors(errors)
-
-	writer, err := js.NewJSONArrayWriter(os.Stdout)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-	for result := range results {
-		err := writer.Write(result)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
 }
 
 func Fetch(azureClient *azureclient.AzureADClient, results chan map[string]interface{}, errors chan error) {
@@ -96,11 +78,4 @@ func createAzureAdClient(tenant, clientID, clientSecret, refreshToken string) (a
 		tenant,
 		clientID,
 		clientSecret)
-}
-
-func printErrors(errors chan error) {
-	for err := range errors {
-		os.Stderr.WriteString(err.Error())
-		os.Stderr.WriteString("\n")
-	}
 }

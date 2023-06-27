@@ -3,10 +3,9 @@ package app
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
 
 	"github.com/alecthomas/kong"
 	"github.com/auth0/go-auth0/management"
@@ -51,25 +50,7 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 		return err
 	}
 
-	go func() {
-		for err := range errors {
-			os.Stderr.WriteString(err.Error())
-			os.Stderr.WriteString("\n")
-		}
-	}()
-
-	writer, err := js.NewJSONArrayWriter(os.Stdout)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-	for o := range results {
-		err := writer.Write(o)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
 }
 
 func Fetch(mgmt *management.Management, results chan map[string]interface{}, errors chan error) {

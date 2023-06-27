@@ -12,17 +12,17 @@ import (
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 )
 
-type Tranformer struct {
+type Transformer struct {
 	MaxChunkSize int
 }
 
-func NewTransformer(chunkSize int) *Tranformer {
-	return &Tranformer{
+func NewTransformer(chunkSize int) *Transformer {
+	return &Transformer{
 		MaxChunkSize: chunkSize,
 	}
 }
 
-func (t *Tranformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Transform) error {
+func (t *Transformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Transform) error {
 	for _, chunk := range chunks {
 		err := t.writeProtoMessage(writer, chunk)
 		if err != nil {
@@ -32,7 +32,7 @@ func (t *Tranformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Trans
 	return nil
 }
 
-func (t *Tranformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.Transform) error {
+func (t *Transformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.Transform) error {
 	err := writer.WriteProtoMessage(message)
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (t *Tranformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.
 	return nil
 }
 
-func (t *Tranformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transform {
+func (t *Transformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transform {
 	var chunks []*msg.Transform
 	var freeChunk *msg.Transform
 
@@ -58,7 +58,7 @@ func (t *Tranformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transf
 	return chunks
 }
 
-func (t *Tranformer) nextFreeChunk(chunks []*msg.Transform) (*msg.Transform, []*msg.Transform) {
+func (t *Transformer) nextFreeChunk(chunks []*msg.Transform) (*msg.Transform, []*msg.Transform) {
 	if len(chunks) == 0 {
 		chunks = t.addEmptyChunk(chunks)
 	}
@@ -73,11 +73,11 @@ func (t *Tranformer) nextFreeChunk(chunks []*msg.Transform) (*msg.Transform, []*
 	return chunks[len(chunks)-1], chunks
 }
 
-func (t *Tranformer) isRoomInChunk(chunk *msg.Transform) bool {
+func (t *Transformer) isRoomInChunk(chunk *msg.Transform) bool {
 	return len(chunk.Objects)+len(chunk.Relations) < t.MaxChunkSize
 }
 
-func (t *Tranformer) addEmptyChunk(chunks []*msg.Transform) []*msg.Transform {
+func (t *Transformer) addEmptyChunk(chunks []*msg.Transform) []*msg.Transform {
 	return append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
 }
 
@@ -100,7 +100,7 @@ func separator(s string) func() string {
 	}
 }
 
-func (t *Tranformer) TransformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+func (t *Transformer) TransformToTemplate(input map[string]interface{}, templateString string) (string, error) {
 	temp := template.New("transform")
 	parsed, err := temp.Funcs(fns).Parse(templateString)
 	if err != nil {
