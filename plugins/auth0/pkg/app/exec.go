@@ -9,9 +9,9 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/aserto-dev/ds-load/sdk/transform"
+	"github.com/auth0/go-auth0/management"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
-	"gopkg.in/auth0.v5/management"
 )
 
 type ExecCmd struct {
@@ -20,7 +20,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(context *kong.Context) error {
-	options := []management.ManagementOption{
+	options := []management.Option{
 		management.WithClientCredentials(
 			cmd.ClientID,
 			cmd.ClientSecret,
