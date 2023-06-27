@@ -9,7 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 
 	"github.com/alecthomas/kong"
-	"gopkg.in/auth0.v5/management"
+	"github.com/auth0/go-auth0/management"
 )
 
 type FetchCmd struct {
@@ -20,7 +20,7 @@ type FetchCmd struct {
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
-	options := []management.ManagementOption{
+	options := []management.Option{
 		management.WithClientCredentials(
 			cmd.ClientID,
 			cmd.ClientSecret,
