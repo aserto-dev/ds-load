@@ -85,7 +85,19 @@ var fns = template.FuncMap{
 	"last": func(x int, a interface{}) bool {
 		return x == reflect.ValueOf(a).Len()-1
 	},
-	"contains": strings.Contains,
+	"contains":  strings.Contains,
+	"separator": separator,
+}
+
+func separator(s string) func() string {
+	i := -1
+	return func() string {
+		i++
+		if i == 0 {
+			return ""
+		}
+		return s
+	}
 }
 
 func (t *Tranformer) TransformToTemplate(input map[string]interface{}, templateString string) (string, error) {
