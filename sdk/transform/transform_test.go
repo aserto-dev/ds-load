@@ -22,7 +22,7 @@ func TestTransform(t *testing.T) {
 	input := make(map[string]interface{})
 	err = json.Unmarshal(content, &input)
 	assert.NoError(t, err)
-	template, err := sdk.Assets().ReadFile("assets/transform_template.tmpl")
+	template, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
 	assert.NoError(t, err)
 
 	transformer := transform.NewTransformer(1)
@@ -53,7 +53,7 @@ func TestTransformWithManyObjects(t *testing.T) {
 	input := make(map[string]interface{})
 	err = json.Unmarshal(content, &input)
 	assert.NoError(t, err)
-	template, err := sdk.Assets().ReadFile("assets/transform_template.tmpl")
+	template, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
 	assert.NoError(t, err)
 
 	t.Logf("Attaching %d roles to peoplefinder", numberOfObject)
