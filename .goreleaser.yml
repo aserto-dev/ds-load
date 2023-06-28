@@ -122,13 +122,12 @@ brews:
 
     tap:
       owner: aserto-dev
-      name: aserto-tap
+      name: homebrew-tap
       token: "{{ .Env.ASERTO_TAP }}"
 
     url_template: "https://github.com/aserto-dev/ds-load/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     
-    download_strategy: CustomGitHubPrivateRepositoryReleaseDownloadStrategy
-    custom_require: "lib/custom_download_strategy"
+    download_strategy: CurlDownloadStrategy
 
     commit_author:
       name: Aserto Bot
@@ -137,6 +136,8 @@ brews:
     homepage: "https://docs.aserto.com/"
 
     description: "DS Load CLI"
+
+    license: "MIT"
 
     skip_upload: false
 
