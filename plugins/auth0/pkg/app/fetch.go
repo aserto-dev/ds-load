@@ -20,8 +20,8 @@ type FetchCmd struct {
 	ConnectionName string `name:"connection-name" env:"AUTH0_CONNECTION_NAME" help:"auth0 connection name" optional:""`
 	UserPID        string `name:"user-pid" env:"AUTH0_USER_PID" help:"auth0 user PID of the user you want to read" optional:""`
 	UserEmail      string `name:"user-email" env:"AUTH0_USER_EMAIL" help:"auth0 user email of the user you want to read" optional:""`
-	RateLimit      bool   `default:"true" help:"enable http client rate limiter" negatable:""`
-	Roles          bool   `env:"AUTH0_ROLES" default:"false" negatable:""`
+	Roles          bool   `name:"roles" env:"AUTH0_ROLES" default:"false" negatable:"" help:"include roles"`
+	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
 
 	mgmt *management.Management `kong:"-"`
 }
