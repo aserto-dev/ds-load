@@ -16,6 +16,7 @@ type FetchCmd struct {
 	ClientID     string `name:"client-id" short:"i" env:"AUTH0_CLIENT_ID" help:"auth0 client id" required:""`
 	ClientSecret string `name:"client-secret" short:"s" env:"AUTH0_CLIENT_SECRET" help:"auth0 client secret" required:""`
 	RateLimit    bool   `default:"true" help:"enable http client rate limiter" negatable:"" optional:""`
+	Roles        bool   `env:"AUTH0_ROLES" default:"false" negatable:""`
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
@@ -42,7 +43,7 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 	results := make(chan map[string]interface{}, 1)
 	errors := make(chan error, 1)
 	go func() {
-		Fetch(mgmt, results, errors)
+		cmd.Fetch(mgmt, results, errors)
 		close(results)
 		close(errors)
 	}()
@@ -53,7 +54,7 @@ func (cmd *FetchCmd) Run(context *kong.Context) error {
 	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
 }
 
-func Fetch(mgmt *management.Management, results chan map[string]interface{}, errors chan error) {
+func (cmd *FetchCmd) Fetch(mgmt *management.Management, results chan map[string]interface{}, errors chan error) {
 	page := 0
 	finished := false
 
@@ -79,11 +80,13 @@ func Fetch(mgmt *management.Management, results chan map[string]interface{}, err
 			if err != nil {
 				errors <- err
 			}
-			roles, err := getRoles(mgmt, *u.ID)
-			if err != nil {
-				errors <- err
+			if cmd.Roles {
+				roles, err := getRoles(mgmt, *u.ID)
+				if err != nil {
+					errors <- err
+				}
+				obj["roles"] = roles
 			}
-			obj["roles"] = roles
 			results <- obj
 		}
 		if !ul.HasNext() {
