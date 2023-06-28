@@ -12,11 +12,12 @@ import (
 )
 
 type FetchCmd struct {
-	Domain       string `name:"domain" short:"d" env:"AUTH0_DOMAIN" help:"auth0 domain" required:""`
-	ClientID     string `name:"client-id" short:"i" env:"AUTH0_CLIENT_ID" help:"auth0 client id" required:""`
-	ClientSecret string `name:"client-secret" short:"s" env:"AUTH0_CLIENT_SECRET" help:"auth0 client secret" required:""`
-	RateLimit    bool   `default:"true" help:"enable http client rate limiter" negatable:"" optional:""`
-	Roles        bool   `env:"AUTH0_ROLES" default:"false" negatable:""`
+	Domain         string `name:"domain" short:"d" env:"AUTH0_DOMAIN" help:"auth0 domain" required:""`
+	ClientID       string `name:"client-id" short:"i" env:"AUTH0_CLIENT_ID" help:"auth0 client id" required:""`
+	ClientSecret   string `name:"client-secret" short:"s" env:"AUTH0_CLIENT_SECRET" help:"auth0 client secret" required:""`
+	ConnectionName string `name:"connection-name" env:"AUTH0_CONNECTION_NAME" help:"auth0 connection name" optional:""`
+	RateLimit      bool   `default:"true" help:"enable http client rate limiter" negatable:"" optional:""`
+	Roles          bool   `env:"AUTH0_ROLES" default:"false" negatable:""`
 }
 
 func (cmd *FetchCmd) Run(context *kong.Context) error {
@@ -63,8 +64,11 @@ func (cmd *FetchCmd) Fetch(mgmt *management.Management, results chan map[string]
 			break
 		}
 
-		opts := management.Page(page)
-		ul, err := mgmt.User.List(opts)
+		opts := []management.RequestOption{management.Page(page)}
+		if cmd.ConnectionName != "" {
+			opts = append(opts, management.Query(`identities.connection:"`+cmd.ConnectionName+`"`))
+		}
+		ul, err := mgmt.User.List(opts...)
 		if err != nil {
 			errors <- err
 			return

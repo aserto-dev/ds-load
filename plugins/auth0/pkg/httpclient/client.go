@@ -34,7 +34,7 @@ func (c *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := c.roundTripperWrap.RoundTrip(r)
-	if err != nil {
+	if err != nil || resp.StatusCode >= 400 {
 		return resp, err
 	}
 	rl, err := parseRateLimit(resp)
