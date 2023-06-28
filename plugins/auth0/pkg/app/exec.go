@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
@@ -15,6 +16,10 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(context *kong.Context) error {
+	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
+		cmd.UserPID = "auth0|" + cmd.UserPID
+	}
+
 	options := []management.Option{
 		management.WithClientCredentials(
 			cmd.ClientID,
@@ -35,10 +40,12 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 		return err
 	}
 
+	cmd.mgmt = mgmt
+
 	results := make(chan map[string]interface{}, 1)
 	errCh := make(chan error, 1)
 	go func() {
-		cmd.Fetch(mgmt, results, errCh)
+		cmd.Fetch(results, errCh)
 		close(results)
 		close(errCh)
 	}()
