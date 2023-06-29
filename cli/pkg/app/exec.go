@@ -14,9 +14,9 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type ExecCmd struct {
+type ImportCmd struct {
 	clients.Config
-	CommandArgs  []string `name:"command" passthrough:"" arg:"" help:"available commands are: ${plugins}"`
+	CommandArgs  []string `name:"source" passthrough:"" arg:"" help:"available sources are: ${plugins}"`
 	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
 	PluginFolder string   `hidden:""`
 
@@ -25,7 +25,7 @@ type ExecCmd struct {
 	dirClient  clients.DirectoryClient `kong:"-"`
 }
 
-func (e *ExecCmd) Run(c *cc.CommonCtx) error {
+func (e *ImportCmd) Run(c *cc.CommonCtx) error {
 	defaultPrintCmd := []string{"fetch", "version", "export-transform"}
 	var err error
 	var find *plugin.Finder
@@ -73,7 +73,7 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	return e.LaunchPlugin(c)
 }
 
-func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
+func (e *ImportCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	if (!slices.Contains(e.pluginArgs, "-c") || !slices.Contains(e.pluginArgs, "--config")) && c.ConfigPath != "" {
 		e.pluginArgs = append(e.pluginArgs, "-c", c.ConfigPath)
 	}

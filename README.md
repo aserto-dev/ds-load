@@ -9,7 +9,7 @@ Usage: ds-load <command>
 Directory loader
 
 Commands:
-  exec                  import data in directory
+  import                import data into directory
   get-plugin            download plugin
   set-default-plugin    sets a plugin as default
   list-plugins          list available plugins
@@ -20,24 +20,24 @@ Flags:
   -c, --config=CONFIG-FLAG    Path to the config file. Any argument provided to the CLI will take precedence.
   -v, --verbosity=INT         Use to increase output verbosity.
 ```
-The default command for ds-load is `exec`, so when running `ds-load` without any command, the exec parameters need to be passed.
+The default command for ds-load is `import`, so when running `ds-load` without any command, the `import` parameters need to be passed.
 The CLI parameters need to be passed first, and then, an arbitrary list of positional parameters can be passed. The first positional parameter is the plugin name we want to invoke followed by the plugin parameters. `ds-load --host=<directory host> auth0 --domain=<auth0 domain>`.
 
 For viewing the plugin help: `ds-load auth0 --help`. 
 
 ### Parameter position
-When running `ds-load auth0 --key`, `auth0` is a positional parameter, so `--key` will be run in the context of the plugin. If we run `ds-load --key auth0`, `--key` would be a parameter to `ds-load exec`.
+When running `ds-load auth0 --key`, `auth0` is a positional parameter, so `--key` will be run in the context of the plugin. If we run `ds-load --key auth0`, `--key` would be a parameter to `ds-load import`.
 
-### ds-load exec
-`exec` is the default command. it will invoke a plugin with the specified parameters reading it's output and importing the resulting data into the directory.
+### ds-load import
+`import` is the default command. it will invoke a plugin with the specified parameters reading it's output and importing the resulting data into the directory.
 
 ```
-Usage: ds-load exec <command> ...
+Usage: ds-load import <source> ...
 
-import data in directory
+import data into directory
 
 Arguments:
-  <command> ...    available commands are: auth0|okta
+  <source> ...    available sources are: auth0|okta
 
 Flags:
   -h, --help                  Show context-sensitive help.
@@ -67,7 +67,7 @@ another-arg: value
   arg: value
 ```
 
-When passing custom config files to both the cli and the plugin, use `ds-load -c <config-path> <plugin-name> <command>` 
+When passing custom config files to both the cli and the plugin, use `ds-load -c <config-path> <source-name> <command>` 
 
 ### CLI config
 default location: `~/.config/ds-load/cfg/config.yaml` can be overridden using `-c/--config`
