@@ -9,24 +9,23 @@ import (
 )
 
 type JSONArrayWriter struct {
-	writer       io.Writer
-	addDelimiter bool
+	writer           io.Writer
+	addDelimiter     bool
+	arrayInitialized bool
 }
 
 func NewJSONArrayWriter(w io.Writer) (*JSONArrayWriter, error) {
-	_, err := w.Write([]byte{'['})
-	if err != nil {
-		return nil, err
-	}
 	return &JSONArrayWriter{
-		writer:       w,
-		addDelimiter: false,
+		writer:           w,
+		addDelimiter:     false,
+		arrayInitialized: false,
 	}, nil
 }
 
 func (w *JSONArrayWriter) WriteProtoMessage(message protoreflect.ProtoMessage) error {
-	if w.addDelimiter {
-		_, _ = w.writer.Write([]byte{','})
+	err := w.writeDelimiters()
+	if err != nil {
+		return err
 	}
 	jsonObj, err := protojson.Marshal(message)
 	if err != nil {
@@ -40,8 +39,9 @@ func (w *JSONArrayWriter) WriteProtoMessage(message protoreflect.ProtoMessage) e
 }
 
 func (w *JSONArrayWriter) Write(message any) error {
-	if w.addDelimiter {
-		_, _ = w.writer.Write([]byte{','})
+	err := w.writeDelimiters()
+	if err != nil {
+		return err
 	}
 	jsonObj, err := json.Marshal(message)
 	if err != nil {
@@ -56,9 +56,31 @@ func (w *JSONArrayWriter) Write(message any) error {
 
 func (w *JSONArrayWriter) Close() error {
 	if w.writer != nil {
-		_, _ = w.writer.Write([]byte{']', '\n'})
+		if w.arrayInitialized {
+			_, err := w.writer.Write([]byte{']', '\n'})
+			if err != nil {
+				return err
+			}
+		}
 		w.addDelimiter = false
 		w.writer = nil
+	}
+	return nil
+}
+
+func (w *JSONArrayWriter) writeDelimiters() error {
+	if !w.arrayInitialized {
+		_, err := w.writer.Write([]byte{'['})
+		if err != nil {
+			return err
+		}
+		w.arrayInitialized = true
+	}
+	if w.addDelimiter {
+		_, err := w.writer.Write([]byte{','})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
