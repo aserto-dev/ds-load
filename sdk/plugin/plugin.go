@@ -4,6 +4,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
@@ -45,6 +46,8 @@ func NewDSPlugin(options ...PluginOption) *DSPlugin {
 
 // json encodes results and prints to plugin writer.
 func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error, transformMessage bool) error {
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		for err := range errCh {
 			_, wErr := plugin.errWriter.Write([]byte(err.Error() + "\n"))
@@ -52,6 +55,7 @@ func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, er
 				log.Fatalf("cannot write to output: %s", wErr.Error())
 			}
 		}
+		wg.Done()
 	}()
 
 	writer, err := js.NewJSONArrayWriter(plugin.outWriter)
@@ -71,6 +75,7 @@ func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, er
 			}
 		}
 	}
+	wg.Wait()
 	return nil
 }
 
