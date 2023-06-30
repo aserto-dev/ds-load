@@ -2,7 +2,11 @@ module github.com/aserto-dev/ds-load/magefiles
 
 go 1.19
 
-require github.com/aserto-dev/mage-loot v0.8.15
+require (
+	github.com/aserto-dev/mage-loot v0.8.15
+	github.com/itchyny/gojq v0.12.13
+	github.com/magefile/mage v1.15.0
+)
 
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
@@ -15,18 +19,18 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.13 // indirect
+	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible // indirect
-	github.com/magefile/mage v1.15.0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect

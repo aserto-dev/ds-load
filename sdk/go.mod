@@ -16,7 +16,7 @@ require (
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/repr v0.1.0 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
-	github.com/mattn/go-isatty v0.0.16 // indirect
+	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
