@@ -2,9 +2,9 @@ package transform
 
 import (
 	"bytes"
-	"html/template"
 	"reflect"
 	"strings"
+	"text/template"
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
