@@ -5,6 +5,7 @@ use (
 	./magefiles
 	./plugins/auth0
 	./plugins/azuread
+	./plugins/cognito
 	./plugins/okta
 	./sdk
 )

@@ -1,0 +1,53 @@
+{
+{{$email := $.Attributes.email}}
+{{ if not $.Attributes.email}}
+{{$email = $.Username}}
+{{end}}
+{{$name := $.Attributes.name}}
+{{ if not $.Attributes.name}}
+{{$name = $.Username}}
+{{end}}
+  "objects": [
+    {
+      "key": "{{ $.Username }}",
+      "type": "user",
+      "displayName": "{{ $name }}",
+      "created_at":"{{ $.UserCreateDate }}",
+      "properties":{
+        "email": "{{ $email }}"
+      }
+    },
+    {
+      "key": "{{ $email }}",
+      "type": "identity"
+    },
+    {
+      "key": "{{ $.Username }}",
+      "type": "identity"
+    }
+  ],
+  "relations":[  
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.Username}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$.Username}}"
+      }
+    },
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.Username}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$email}}"
+      }
+    }
+  ]
+}
