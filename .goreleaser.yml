@@ -99,7 +99,7 @@ archives:
       - LICENSE
       - README.md
     name_template: >-
-      ds_load_{{.Version}}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}
+      ds-load-{{.Version}}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}
 
 checksum:
   name_template: "checksums.txt"
