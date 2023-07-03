@@ -75,6 +75,7 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 		user, err := fetcher.readByPID()
 		if err != nil {
 			errCh <- err
+			SetExitCode(1)
 			return
 		}
 		results <- user
@@ -85,6 +86,7 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 		users, err := fetcher.readByEmail()
 		if err != nil {
 			errCh <- err
+			SetExitCode(1)
 			return
 		}
 		for _, user := range users {
@@ -105,6 +107,7 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 		ul, err := fetcher.mgmt.User.List(opts...)
 		if err != nil {
 			errCh <- err
+			SetExitCode(1)
 			return
 		}
 
@@ -112,18 +115,21 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 			res, err := u.MarshalJSON()
 			if err != nil {
 				errCh <- err
+				SetExitCode(1)
 				continue
 			}
 			var obj map[string]interface{}
 			err = json.Unmarshal(res, &obj)
 			if err != nil {
 				errCh <- err
+				SetExitCode(1)
 				continue
 			}
 			if fetcher.Roles {
 				roles, err := fetcher.getRoles(*u.ID)
 				if err != nil {
 					errCh <- err
+					SetExitCode(1)
 				} else {
 					obj["roles"] = roles
 				}

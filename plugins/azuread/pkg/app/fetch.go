@@ -37,6 +37,7 @@ func Fetch(azureClient *azureclient.AzureADClient, results chan map[string]inter
 	aadUsers, err := azureClient.ListUsers()
 	if err != nil {
 		errors <- err
+		SetExitCode(1)
 	}
 
 	for _, user := range aadUsers.GetValue() {
@@ -44,11 +45,13 @@ func Fetch(azureClient *azureclient.AzureADClient, results chan map[string]inter
 		err := user.Serialize(writer)
 		if err != nil {
 			errors <- err
+			SetExitCode(1)
 			return
 		}
 		userBytes, err := writer.GetSerializedContent()
 		if err != nil {
 			errors <- err
+			SetExitCode(1)
 			return
 		}
 
@@ -57,6 +60,7 @@ func Fetch(azureClient *azureclient.AzureADClient, results chan map[string]inter
 		err = json.Unmarshal([]byte(userString), &obj)
 		if err != nil {
 			errors <- err
+			SetExitCode(1)
 			return
 		}
 		results <- obj

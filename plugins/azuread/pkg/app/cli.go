@@ -2,10 +2,28 @@ package app
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
+
+var (
+	exitCode int
+	mutex    sync.RWMutex
+)
+
+func GetExitCode() int {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return exitCode
+}
+
+func SetExitCode(code int) {
+	mutex.Lock()
+	exitCode = code
+	mutex.Unlock()
+}
 
 type CLI struct {
 	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`

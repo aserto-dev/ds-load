@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
@@ -11,10 +12,21 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
 
-type Context struct {
-	Config    string
-	Verbosity int
-	Insecure  bool
+var (
+	exitCode int
+	mutex    sync.RWMutex
+)
+
+func GetExitCode() int {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	return exitCode
+}
+
+func SetExitCode(code int) {
+	mutex.Lock()
+	exitCode = code
+	mutex.Unlock()
 }
 
 type CLI struct {
