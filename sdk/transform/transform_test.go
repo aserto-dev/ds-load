@@ -38,7 +38,8 @@ func TestTransform(t *testing.T) {
 	assert.NoError(t, err)
 	objectCount := len(directoryObject.Objects)
 	assert.Equal(t, objectCount, 5)
-	assert.Equal(t, len(directoryObject.Relations), 1)
+	relationCount := len(directoryObject.Relations)
+	assert.Equal(t, relationCount, 2)
 }
 
 func TestTransformWithManyObjects(t *testing.T) {
@@ -75,7 +76,7 @@ func TestTransformWithManyObjects(t *testing.T) {
 	var directoryObject msg.Transform
 	err = protojson.Unmarshal(out.Bytes(), &directoryObject)
 	assert.NoError(t, err)
-	assert.Equal(t, len(directoryObject.Relations), 1)
+	assert.Equal(t, len(directoryObject.Relations), 2)
 
 	t.Log("Chunking")
 	chunks := transformer.PrepareChunks(&directoryObject)
@@ -117,7 +118,7 @@ func TestTransformChunking(t *testing.T) {
 	trans := transform.NewTransformer(10)
 
 	chunks := trans.PrepareChunks(&directoryObjects)
-	assert.Equal(t, len(chunks), 3)
+	assert.Equal(t, len(chunks), 6)
 }
 
 func TestTransformWriter(t *testing.T) {
@@ -147,11 +148,74 @@ func TestTransformWriter(t *testing.T) {
 	trans := transform.NewTransformer(5)
 
 	chunks := trans.PrepareChunks(&directoryObjects)
-	assert.Equal(t, len(chunks), 6)
+	assert.Equal(t, len(chunks), 12)
 	var output bytes.Buffer
 	jsonWriter, err := js.NewJSONArrayWriter(&output)
 	assert.NoError(t, err)
 	err = trans.WriteChunks(jsonWriter, chunks)
 	assert.NoError(t, err)
 	t.Log(output.String())
+}
+
+func TestTransformEscapedChars(t *testing.T) {
+	const auth0user string = `
+	{
+		"created_at": "2023-06-19T10:18:13.702Z",
+		"email": "oana+test666@aserto.com",
+		"email_verified": true,
+		"identities": [
+			{
+				"connection": "Username-Password-Authentication",
+				"provider": "auth0",
+				"user_id": "64902b655c2e91cb3dee85a4",
+				"isSocial": false
+			}
+		],
+		"name": "oana+test666@aserto.com",
+		"nickname": "oana+test666",
+		"picture": "https://s.gravatar.com/avatar/de191b7ce00efcc0cd07690f793c5186?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Foa.png",
+		"updated_at": "2023-06-30T12:47:52.762Z",
+		"user_id": "auth0|64902b655c2e91cb3dee85a4",
+		"user_metadata": {
+			"aserto-allow-tenant-creation": 5
+		},
+		"username": "oanatest1231",
+		"last_password_reset": "2023-06-19T10:19:13.475Z",
+		"last_ip": "109.99.219.89",
+		"last_login": "2023-06-30T12:47:52.762Z",
+		"logins_count": 9,
+		"blocked_for": [],
+		"guardian_authenticators": []
+	}`
+
+	content := []byte(auth0user)
+	input := make(map[string]interface{})
+	err := json.Unmarshal(content, &input)
+	assert.NoError(t, err)
+	template, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
+	assert.NoError(t, err)
+
+	transformer := transform.NewTransformer(1)
+
+	output, err := transformer.TransformToTemplate(input, string(template))
+	assert.NoError(t, err)
+	t.Log(output)
+	var out bytes.Buffer
+	err = json.Indent(&out, []byte(output), "", "\t")
+	assert.NoError(t, err)
+	var directoryObject msg.Transform
+	err = protojson.Unmarshal(out.Bytes(), &directoryObject)
+	assert.NoError(t, err)
+	objectCount := len(directoryObject.Objects)
+	assert.Equal(t, objectCount, 2)
+	relationCount := len(directoryObject.Relations)
+	assert.Equal(t, relationCount, 2)
+
+	userObject := directoryObject.Objects[0]
+	assert.Equal(t, userObject.Type, "user")
+	assert.Equal(t, userObject.DisplayName, "oana+test666")
+
+	userEmail, ok := userObject.Properties.Fields["email"]
+	assert.True(t, ok)
+	assert.Equal(t, userEmail.GetStringValue(), "oana+test666@aserto.com")
 }
