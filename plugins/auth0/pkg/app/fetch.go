@@ -21,6 +21,7 @@ type FetchCmd struct {
 	UserPID        string `name:"user-pid" env:"AUTH0_USER_PID" help:"auth0 user PID of the user you want to read" optional:""`
 	UserEmail      string `name:"user-email" env:"AUTH0_USER_EMAIL" help:"auth0 user email of the user you want to read" optional:""`
 	Roles          bool   `name:"roles" env:"AUTH0_ROLES" default:"false" negatable:"" help:"include roles"`
+	Organizations  bool   `name:"orgs" env:"AUTH0_ORGS" default:"false" negatable:"" help:"include organizations"`
 	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
 
 	mgmt *management.Management `kong:"-"`
@@ -128,6 +129,14 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 					obj["roles"] = roles
 				}
 			}
+			if fetcher.Organizations {
+				orgs, err := fetcher.getOrgs(*u.ID)
+				if err != nil {
+					errCh <- err
+				} else {
+					obj["orgs"] = orgs
+				}
+			}
 			results <- obj
 		}
 		if !ul.HasNext() {
@@ -174,6 +183,43 @@ func (fetcher *FetchCmd) getRoles(uID string) ([]map[string]interface{}, error) 
 	return results, nil
 }
 
+func (fetcher *FetchCmd) getOrgs(uID string) ([]map[string]interface{}, error) {
+	page := 0
+	finished := false
+
+	var results []map[string]interface{}
+
+	for {
+		if finished {
+			break
+		}
+
+		reqOpts := management.Page(page)
+		orgs, err := fetcher.mgmt.User.Organizations(uID, reqOpts)
+		if err != nil {
+			return nil, err
+		}
+		for _, org := range orgs.Organizations {
+			res, err := json.Marshal(org)
+			if err != nil {
+				return nil, err
+			}
+			var obj map[string]interface{}
+			err = json.Unmarshal(res, &obj)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, obj)
+		}
+		if !orgs.HasNext() {
+			finished = true
+		}
+
+		page++
+	}
+	return results, nil
+}
+
 func (fetcher *FetchCmd) readByPID() (map[string]interface{}, error) {
 
 	user, err := fetcher.mgmt.User.Read(fetcher.UserPID)
@@ -203,7 +249,7 @@ func (fetcher *FetchCmd) readByEmail() ([]map[string]interface{}, error) {
 		return nil, err
 	}
 	if len(auth0Users) < 1 {
-		return nil, errors.Wrapf(err, "failed to get user by emal %s", fetcher.UserEmail)
+		return nil, errors.Wrapf(err, "failed to get user by email %s", fetcher.UserEmail)
 	}
 
 	for _, user := range auth0Users {
