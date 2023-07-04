@@ -19,7 +19,7 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 	results := make(chan map[string]interface{}, 1)
 	errCh := make(chan error, 1)
 	go func() {
-		Fetch(cognitoClient, results, errCh)
+		Fetch(cognitoClient, cmd.Groups, results, errCh)
 		close(results)
 		close(errCh)
 	}()

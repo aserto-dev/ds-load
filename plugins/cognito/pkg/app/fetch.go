@@ -26,14 +26,14 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 	results := make(chan map[string]interface{}, 1)
 	errors := make(chan error, 1)
 	go func() {
-		Fetch(cognitoClient, results, errors)
+		Fetch(cognitoClient, cmd.Groups, results, errors)
 		close(results)
 		close(errors)
 	}()
 	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
 }
 
-func Fetch(cognitoClient *cognitoclient.CognitoClient, results chan map[string]interface{}, errors chan error) {
+func Fetch(cognitoClient *cognitoclient.CognitoClient, fetchGroups bool, results chan map[string]interface{}, errors chan error) {
 	users, err := cognitoClient.ListUsers()
 	if err != nil {
 		errors <- err
@@ -57,23 +57,25 @@ func Fetch(cognitoClient *cognitoclient.CognitoClient, results chan map[string]i
 		}
 		obj["Attributes"] = attributes
 
-		groups, err := cognitoClient.GetGroupsForUser(*user.Username)
-		if err != nil {
-			errors <- err
-			continue
-		}
+		if fetchGroups {
+			groups, err := cognitoClient.GetGroupsForUser(*user.Username)
+			if err != nil {
+				errors <- err
+				continue
+			}
 
-		groupBytes, err := json.Marshal(groups.Groups)
-		if err != nil {
-			errors <- err
-			return
+			groupBytes, err := json.Marshal(groups.Groups)
+			if err != nil {
+				errors <- err
+				return
+			}
+			var grps []map[string]string
+			err = json.Unmarshal(groupBytes, &grps)
+			if err != nil {
+				errors <- err
+			}
+			obj["Groups"] = grps
 		}
-		var grps []map[string]string
-		err = json.Unmarshal(groupBytes, &grps)
-		if err != nil {
-			errors <- err
-		}
-		obj["Groups"] = grps
 
 		results <- obj
 	}
