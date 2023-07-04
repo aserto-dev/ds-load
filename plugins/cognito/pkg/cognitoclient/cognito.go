@@ -43,6 +43,23 @@ func (c *CognitoClient) ListUsers() (*cognitoidentityprovider.ListUsersOutput, e
 	return c.cognitoClient.ListUsers(listUsersInput)
 }
 
+func (c *CognitoClient) ListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
+	listGroupsInput := &cognitoidentityprovider.ListGroupsInput{
+		UserPoolId: aws.String(c.userPoolID),
+	}
+
+	return c.cognitoClient.ListGroups(listGroupsInput)
+}
+
+func (c *CognitoClient) GetGroupsForUser(user string) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {
+	listUsersInGroupInput := &cognitoidentityprovider.AdminListGroupsForUserInput{
+		UserPoolId: aws.String(c.userPoolID),
+		Username:   aws.String(user),
+	}
+
+	return c.cognitoClient.AdminListGroupsForUser(listUsersInGroupInput)
+}
+
 func (c *CognitoClient) GetUserByID(id string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	return c.listUser(id)
 }
@@ -53,7 +70,7 @@ func (c *CognitoClient) GetUserByEmail(email string) (*cognitoidentityprovider.A
 
 func (c *CognitoClient) listUser(user string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	adminGetUserInput := &cognitoidentityprovider.AdminGetUserInput{
-		UserPoolId: &c.userPoolID,
+		UserPoolId: aws.String(c.userPoolID),
 		Username:   aws.String(user),
 	}
 

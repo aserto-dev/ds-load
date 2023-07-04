@@ -14,6 +14,7 @@ type FetchCmd struct {
 	SecretKey  string `short:"s" help:"AWS Secret Key" env:"AWS_SECRET_KEY" required:""`
 	UserPoolID string `short:"p" help:"AWS Cognito User Pool ID" env:"AWS_COGNITO_USER_POOL_ID" required:""`
 	Region     string `short:"r" help:"AWS Region" env:"AWS_REGION" required:""`
+	Groups     bool   `short:"g" help:"Retrieve Cognito groups" env:"AWS_COGNITO_GROUPS" default:"false" negatable:""`
 }
 
 func (cmd *FetchCmd) Run(ctx *kong.Context) error {
@@ -55,6 +56,25 @@ func Fetch(cognitoClient *cognitoclient.CognitoClient, results chan map[string]i
 			errors <- err
 		}
 		obj["Attributes"] = attributes
+
+		groups, err := cognitoClient.GetGroupsForUser(*user.Username)
+		if err != nil {
+			errors <- err
+			continue
+		}
+
+		groupBytes, err := json.Marshal(groups.Groups)
+		if err != nil {
+			errors <- err
+			return
+		}
+		var grps []map[string]string
+		err = json.Unmarshal(groupBytes, &grps)
+		if err != nil {
+			errors <- err
+		}
+		obj["Groups"] = grps
+
 		results <- obj
 	}
 }

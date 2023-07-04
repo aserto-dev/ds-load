@@ -5,7 +5,7 @@
 {{end}}
 {{$name := $.Attributes.name}}
 {{ if not $.Attributes.name}}
-{{$name = $.Username}}
+{{$name = $email}}
 {{end}}
   "objects": [
     {
@@ -25,6 +25,16 @@
       "key": "{{ $.Username }}",
       "type": "identity"
     }
+    {{ if $.Groups }}, {{ end }}
+
+    {{ range $i, $element := $.Groups }}
+      {{ if $i }},{{ end }}
+      {
+        "key": "{{$element.GroupName}}",
+        "displayName": "{{$element.Description}}",
+        "type": "group"
+      }
+    {{ end }}
   ],
   "relations":[  
     {  
@@ -49,5 +59,22 @@
         "key": "{{$email}}"
       }
     }
+
+    {{ if $.Groups }}, {{ end }}
+
+    {{ range $i, $element := $.Groups }}
+      {{ if $i }},{{ end }}
+      {
+      "relation": "member",
+              "subject": {
+                  "type": "user",
+                  "key": "{{$.Username}}"
+              },
+              "object": {
+                  "type": "group",
+                  "key": "{{$element.GroupName}}"
+              }
+      }
+    {{ end }}
   ]
 }
