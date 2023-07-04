@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"os"
-	"sync"
+	"sync/atomic"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
@@ -13,20 +13,15 @@ import (
 )
 
 var (
-	exitCode int
-	mutex    sync.RWMutex
+	exitCode int32
 )
 
 func GetExitCode() int {
-	mutex.RLock()
-	defer mutex.RUnlock()
-	return exitCode
+	return int(atomic.LoadInt32(&exitCode))
 }
 
 func SetExitCode(code int) {
-	mutex.Lock()
-	exitCode = code
-	mutex.Unlock()
+	atomic.StoreInt32(&exitCode, int32(code))
 }
 
 type CLI struct {
