@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
@@ -55,5 +56,5 @@ func main() {
 	if err := kongCtx.Run(ctx); err != nil {
 		kongCtx.FatalIfErrorf(err)
 	}
-	os.Exit(app.GetExitCode())
+	os.Exit(common.GetExitCode())
 }

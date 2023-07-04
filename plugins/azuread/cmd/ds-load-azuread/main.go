@@ -5,6 +5,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
@@ -34,5 +35,5 @@ func main() {
 	if err := ctx.Run(); err != nil {
 		ctx.FatalIfErrorf(err)
 	}
-	os.Exit(app.GetExitCode())
+	os.Exit(common.GetExitCode())
 }

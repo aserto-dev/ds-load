@@ -3,7 +3,6 @@ package app
 import (
 	"fmt"
 	"os"
-	"sync/atomic"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
@@ -11,18 +10,6 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
-
-var (
-	exitCode int32
-)
-
-func GetExitCode() int {
-	return int(atomic.LoadInt32(&exitCode))
-}
-
-func SetExitCode(code int) {
-	atomic.StoreInt32(&exitCode, int32(code))
-}
 
 type CLI struct {
 	Exec             ExecCmd             `cmd:"" help:"import data in directory" default:"withargs"`
