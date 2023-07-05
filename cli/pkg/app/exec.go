@@ -10,6 +10,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 )
@@ -140,7 +141,7 @@ func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 		// we have reached the end of the stream
 		if err == io.EOF {
 			if gotError {
-				os.Exit(1)
+				common.SetExitCode(1)
 			}
 
 			break

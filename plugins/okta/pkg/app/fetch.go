@@ -8,6 +8,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/okta/okta-sdk-golang/v2/okta"
 )
@@ -40,11 +41,13 @@ func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[st
 	users, resp, err := oktaClient.ListUsers(context.Background(), nil)
 	if err != nil {
 		errors <- err
+		common.SetExitCode(1)
 		return
 	}
 	err = handleResponse(resp)
 	if err != nil {
 		errors <- err
+		common.SetExitCode(1)
 		return
 	}
 
@@ -52,12 +55,14 @@ func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[st
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			errors <- err
+			common.SetExitCode(1)
 			return
 		}
 		var obj map[string]interface{}
 		err = json.Unmarshal(userBytes, &obj)
 		if err != nil {
 			errors <- err
+			common.SetExitCode(1)
 		}
 		results <- obj
 
@@ -66,23 +71,27 @@ func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[st
 			groups, resp, err := oktaClient.ListUserGroups(context.Background(), user.Id)
 			if err != nil {
 				errors <- err
+				common.SetExitCode(1)
 				return
 			}
 			err = handleResponse(resp)
 			if err != nil {
 				errors <- err
+				common.SetExitCode(1)
 				return
 			}
 			for _, group := range groups {
 				groupBytes, err := json.Marshal(group)
 				if err != nil {
 					errors <- err
+					common.SetExitCode(1)
 					return
 				}
 				var obj map[string]interface{}
 				err = json.Unmarshal(groupBytes, &obj)
 				if err != nil {
 					errors <- err
+					common.SetExitCode(1)
 				}
 				results <- obj
 			}
@@ -93,22 +102,26 @@ func (cmd *FetchCmd) Fetch(oktaClient oktaclient.OktaClient, results chan map[st
 			roles, resp, err := oktaClient.ListAssignedRolesForUser(context.Background(), user.Id, nil)
 			if err != nil {
 				errors <- err
+				common.SetExitCode(1)
 				return
 			}
 			err = handleResponse(resp)
 			if err != nil {
 				errors <- err
+				common.SetExitCode(1)
 				return
 			}
 			for _, role := range roles {
 				roleBytes, err := json.Marshal(role)
 				if err != nil {
-					os.Stderr.WriteString(err.Error())
+					errors <- err
+					common.SetExitCode(1)
 				}
 				var obj map[string]interface{}
 				err = json.Unmarshal(roleBytes, &obj)
 				if err != nil {
 					errors <- err
+					common.SetExitCode(1)
 				}
 				results <- obj
 			}

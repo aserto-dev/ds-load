@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
@@ -35,9 +36,6 @@ func main() {
 	cli := app.CLI{}
 	options := []kong.Option{
 		kong.Name(constants.AppName),
-		kong.Exit(func(exitCode int) {
-			os.Exit(exitCode)
-		}),
 		kong.Vars{"plugins": pluginEnum},
 		kong.Description(constants.AppDescription),
 		kong.UsageOnError(),
@@ -55,9 +53,8 @@ func main() {
 
 	kongCtx := kong.Parse(&cli, options...)
 	ctx := cc.NewCommonContext(cli.Verbosity, string(cli.Config))
-	err = kongCtx.Run(ctx)
-	if err != nil {
-		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
+	if err := kongCtx.Run(ctx); err != nil {
+		kongCtx.FatalIfErrorf(err)
 	}
+	os.Exit(common.GetExitCode())
 }

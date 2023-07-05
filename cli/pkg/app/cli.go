@@ -11,12 +11,6 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
 
-type Context struct {
-	Config    string
-	Verbosity int
-	Insecure  bool
-}
-
 type CLI struct {
 	Exec             ExecCmd             `cmd:"" help:"import data in directory" default:"withargs"`
 	Load             LoadCmd             `cmd:"" help:"load data from stdin into directory"`
