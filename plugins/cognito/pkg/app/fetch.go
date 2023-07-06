@@ -39,7 +39,7 @@ func Fetch(cognitoClient *cognitoclient.CognitoClient, fetchGroups bool, results
 		errors <- err
 	}
 
-	for _, user := range users.Users {
+	for _, user := range users {
 		attributes := make(map[string]string)
 		for _, attr := range user.Attributes {
 			attributes[*attr.Name] = *attr.Value

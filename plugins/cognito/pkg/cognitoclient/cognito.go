@@ -35,12 +35,33 @@ func NewCognitoClient(ctx context.Context, accessKey, secretKey, userPoolID, reg
 	return c, nil
 }
 
-func (c *CognitoClient) ListUsers() (*cognitoidentityprovider.ListUsersOutput, error) {
-	listUsersInput := &cognitoidentityprovider.ListUsersInput{
-		UserPoolId: aws.String(c.userPoolID),
+func (c *CognitoClient) ListUsers() ([]*cognitoidentityprovider.UserType, error) {
+	users := make([]*cognitoidentityprovider.UserType, 0)
+	var paginationToken *string
+
+	for {
+		listUsersInput := &cognitoidentityprovider.ListUsersInput{
+			UserPoolId:      aws.String(c.userPoolID),
+			PaginationToken: paginationToken,
+			Limit:           aws.Int64(60),
+		}
+
+		listUsersOutput, err := c.cognitoClient.ListUsers(listUsersInput)
+		if err != nil {
+			fmt.Println("Failed to list users:", err)
+			return nil, err
+		}
+
+		users = append(users, listUsersOutput.Users...)
+
+		if listUsersOutput.PaginationToken == nil {
+			break
+		}
+
+		paginationToken = listUsersOutput.PaginationToken
 	}
 
-	return c.cognitoClient.ListUsers(listUsersInput)
+	return users, nil
 }
 
 func (c *CognitoClient) ListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
