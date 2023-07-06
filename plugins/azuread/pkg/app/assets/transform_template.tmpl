@@ -15,12 +15,31 @@
     },
     {
       "key": "{{ $email }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "verified": true,
+        "provider": "azuread"
+      }
     },
     {
       "key": "{{ $.id }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "verified": true,
+        "provider": "azuread"
+      }
     }
+    {{ if $.mobilePhone }}
+    ,
+      {
+          "key": "{{ $.mobilePhone }}",
+          "type": "identity",
+          "properties": {
+            "verified": false,
+            "provider": "azuread"
+          }
+      }
+    {{ end }}
   ],
   "relations":[  
     {  
@@ -45,5 +64,19 @@
         "key": "{{$email}}"
       }
     }
+    {{ if $.mobilePhone }}
+    ,
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$.mobilePhone}}"
+      }
+    }
+    {{ end }}
   ]
 }
