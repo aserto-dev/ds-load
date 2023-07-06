@@ -8,6 +8,9 @@
       "properties":{
         "email": "{{ $.email }}",
         "picture": "{{ $.picture }}"
+        {{ range $key, $value := $.user_metadata }}
+        ,"{{ $key }}": "{{ $value }}"
+        {{ end }}
       }
     },
     {
