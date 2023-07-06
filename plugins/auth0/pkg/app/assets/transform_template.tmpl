@@ -10,11 +10,48 @@
         "picture": "{{ $.picture }}"
       }
     },
-    {{ range $index, $element := $.identities }}
-      {{ if $index }},{{ end }}
+    {
+      "key": "{{ $.user_id }}",
+      "type": "identity",
+      "properties": {
+        "verified": true,
+        "provider": "auth0"
+      }
+    }
+    
+    {{ if ne $.email "" }}
+    ,
       {
-        "key": "{{$element.user_id}}",
-        "type": "identity"
+          "key": "{{ $.email }}",
+          "type": "identity",
+          "properties": {
+            "verified": {{ .email_verified }},
+            "provider": "auth0"
+          }
+      }
+    {{ end }}
+
+    {{ if $.user_metadata.IDENTITY_KIND_PHONE }}
+    ,
+      {
+          "key": "{{ $.user_metadata.IDENTITY_KIND_PHONE }}",
+          "type": "identity",
+          "properties": {
+            "verified": false,
+            "provider": "auth0"
+          }
+      }
+    {{ end }}
+
+    {{ if $.user_metadata.IDENTITY_KIND_USERNAME }}
+    ,
+      {
+          "key": "{{ $.user_metadata.IDENTITY_KIND_USERNAME }}",
+          "type": "identity",
+          "properties": {
+            "verified": false,
+            "provider": "auth0"
+          }
       }
     {{ end }}
 
@@ -28,9 +65,7 @@
       }
     {{ end }}
   ],
-  "relations":[    
-    {{ range $i,$element := $.identities }} 
-      {{ if $i }},{{ end }}
+  "relations":[
       {
       "relation": "identifier",
               "subject": {
@@ -39,7 +74,49 @@
               },
               "object": {
                   "type": "identity",
-                  "key": "{{$element.user_id}}"
+                  "key": "{{$.user_id}}"
+              }
+      }
+    {{ if ne $.email "" }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.email }}"
+              }
+      }
+    {{ end }}
+    {{ if $.user_metadata.IDENTITY_KIND_PHONE }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.user_metadata.IDENTITY_KIND_PHONE }}"
+              }
+      }
+    {{ end }}
+
+    {{ if $.user_metadata.IDENTITY_KIND_USERNAME }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.user_metadata.IDENTITY_KIND_USERNAME }}"
               }
       }
     {{ end }}
