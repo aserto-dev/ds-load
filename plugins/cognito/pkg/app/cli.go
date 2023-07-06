@@ -10,10 +10,10 @@ import (
 type CLI struct {
 	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`
 	Version         VersionCmd         `cmd:"" help:"version information"`
-	Fetch           FetchCmd           `cmd:"" help:"fetch Azure AD data"`
-	Transform       TransformCmd       `cmd:"" help:"transform Azure AD data"`
+	Fetch           FetchCmd           `cmd:"" help:"fetch cognito data"`
+	Transform       TransformCmd       `cmd:"" help:"transform cognito data"`
 	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
-	Exec            ExecCmd            `cmd:"" help:"fetch and transform Azure AD data" default:"withargs"`
+	Exec            ExecCmd            `cmd:"" help:"fetch and transform cognito data" default:"withargs"`
 }
 
 type VersionCmd struct {
