@@ -1,3 +1,7 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if $.blocked}}
+{{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
 {
   "objects": [
     {
@@ -7,9 +11,12 @@
       "created_at":"{{ $.created_at }}",
       "properties":{
         "email": "{{ $.email }}",
-        "picture": "{{ $.picture }}"
+        "enabled": true,
+        "picture": "{{ $.picture }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "status": "{{ $status }}"
         {{ range $key, $value := $.user_metadata }}
-        ,"{{ $key }}": "{{ $value }}"
+        ,"{{ $key }}": {{ marshal $value }}
         {{ end }}
       }
     },
@@ -17,43 +24,47 @@
       "key": "{{ $.user_id }}",
       "type": "identity",
       "properties": {
-        "verified": true,
-        "provider": "auth0"
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "auth0",
+        "verified": true
       }
     }
     
-    {{ if ne $.email "" }}
+    {{ if and (ne $.email "") ($.email_verified) }}
     ,
       {
           "key": "{{ $.email }}",
           "type": "identity",
           "properties": {
-            "verified": {{ .email_verified }},
-            "provider": "auth0"
+            "kind": "IDENTITY_KIND_EMAIL",
+            "provider": "auth0",
+            "verified": {{ .email_verified }}
           }
       }
     {{ end }}
 
-    {{ if $.user_metadata.IDENTITY_KIND_PHONE }}
+    {{ if and ($.username) (ne $.username "") }}
     ,
       {
-          "key": "{{ $.user_metadata.IDENTITY_KIND_PHONE }}",
+          "key": "{{ $.username }}",
           "type": "identity",
           "properties": {
-            "verified": false,
-            "provider": "auth0"
+            "kind": "IDENTITY_KIND_USERNAME",
+            "provider": "auth0",
+            "verified": true
           }
       }
     {{ end }}
 
-    {{ if $.user_metadata.IDENTITY_KIND_USERNAME }}
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
-          "key": "{{ $.user_metadata.IDENTITY_KIND_USERNAME }}",
+          "key": "{{ $.phone_number }}",
           "type": "identity",
           "properties": {
-            "verified": false,
-            "provider": "auth0"
+            "kind": "IDENTITY_KIND_PHONE",
+            "provider": "auth0",
+            "verified": {{ .phone_verified }}
           }
       }
     {{ end }}
@@ -73,14 +84,14 @@
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{$.user_id}}"
+                  "key": "{{ $.user_id }}"
               },
               "object": {
                   "type": "identity",
-                  "key": "{{$.user_id}}"
+                  "key": "{{ $.email }}"
               }
       }
-    {{ if ne $.email "" }}
+    {{ if and (ne $.email "") ($.email_verified) }}
     ,
       {
       "relation": "identifier",
@@ -94,7 +105,8 @@
               }
       }
     {{ end }}
-    {{ if $.user_metadata.IDENTITY_KIND_PHONE }}
+
+    {{ if and ($.username) (ne $.username "") }}
     ,
       {
       "relation": "identifier",
@@ -104,12 +116,12 @@
               },
               "object": {
                   "type": "identity",
-                  "key": "{{ $.user_metadata.IDENTITY_KIND_PHONE }}"
+                  "key": "{{ $.username }}"
               }
       }
     {{ end }}
 
-    {{ if $.user_metadata.IDENTITY_KIND_USERNAME }}
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
       "relation": "identifier",
@@ -119,7 +131,7 @@
               },
               "object": {
                   "type": "identity",
-                  "key": "{{ $.user_metadata.IDENTITY_KIND_USERNAME }}"
+                  "key": "{{ $.phone_number }}"
               }
       }
     {{ end }}

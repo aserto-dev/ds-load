@@ -2,6 +2,9 @@ package transform
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"text/template"
@@ -87,6 +90,15 @@ var fns = template.FuncMap{
 	},
 	"contains":  strings.Contains,
 	"separator": separator,
+	"marshal": func(v interface{}) string {
+		a, _ := json.Marshal(v)
+		return string(a)
+	},
+	"fromEnv": func(key, envName string) string {
+		value := os.Getenv(envName)
+		strValue, _ := json.Marshal(value)
+		return fmt.Sprintf("%q:%s", key, string(strValue))
+	},
 }
 
 func separator(s string) func() string {
