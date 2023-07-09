@@ -1,0 +1,76 @@
+{
+{{$email := $.primaryEmail}}
+  "objects": [
+  {{ if contains $.kind "admin#directory#user" }}
+    {
+      "key": "{{ $.id }}",
+      "type": "user",
+      "displayName": "{{ $.name.fullName }}",
+      "created_at":"{{ $.creationTime }}",
+      "properties":{
+        "email": "{{ $email }}",
+        "isAdmin": "{{ $.isAdmin }}",
+        "phone": "{{ $.recoveryPhone }}",
+        "picture": "{{ $.thumbnailPhotoUrl }}"
+      }
+    },
+    {
+      "key": "{{ $email }}",
+      "type": "identity"
+    },
+    {
+      "key": "{{ $.id }}",
+      "type": "identity"
+    }
+  {{ end }}
+  {{ if contains $.kind "admin#directory#group" }}
+    {
+      "key": "{{ $.id }}",
+      "type": "group",
+      "displayName": "{{ $.name }}"
+    }
+  {{ end }}
+  ],
+  "relations":[  
+    {{ if contains $.kind "admin#directory#user" }}
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$.id}}"
+      }
+    },
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$email}}"
+      }
+    }
+    {{ end }}
+    {{ if contains $.kind "admin#directory#group" }}
+    {{ range $i, $element := $.users }}
+      {{ if $i }},{{ end }}
+      {
+        "relation": "member",
+        "subject": {
+            "type": "user",
+            "key": "{{$element.id}}"
+        },
+        "object": {
+            "type": "group",
+            "key": "{{$.id}}"
+        }
+      }
+    {{ end }}
+    {{ end }}
+  ]
+}
