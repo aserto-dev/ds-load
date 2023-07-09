@@ -2,9 +2,11 @@ package googleclient
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -31,7 +33,7 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	}
 
 	// Create an HTTP server for handling the OAuth 2.0 callback
-	server := &http.Server{Addr: fmt.Sprintf(":%d", port)}
+	server := &http.Server{Addr: fmt.Sprintf(":%d", port), ReadHeaderTimeout: 5 * time.Second}
 
 	// Create a channel to receive the authorization code
 	authCodeChan := make(chan string)
@@ -44,7 +46,7 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 			authCodeChan <- code
 		})
 
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()
