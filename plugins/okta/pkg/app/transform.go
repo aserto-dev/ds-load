@@ -9,8 +9,7 @@ import (
 )
 
 type TransformCmd struct {
-	Template     string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
-	MaxChunkSize int    `name:"max-chunk-size" env:"DS_MAX_CHUNK_SIZE" help:"maximum chunk size" default:"20" optional:""`
+	Template string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
@@ -18,7 +17,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-	return transform.New(os.Stdin, os.Stdout, os.Stderr, content, t.MaxChunkSize).Execute()
+	return transform.New(os.Stdin, os.Stdout, os.Stderr, content).Execute()
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {

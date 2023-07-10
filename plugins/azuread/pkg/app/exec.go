@@ -28,5 +28,5 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 		return err
 	}
 
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(cmd.MaxChunkSize)).WriteFetchOutput(results, errCh, true)
+	return plugin.NewDSPlugin(plugin.WithTemplate(content)).WriteFetchOutput(results, errCh, true)
 }

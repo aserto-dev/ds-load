@@ -17,21 +17,18 @@ type Transform interface {
 }
 
 type transform struct {
-	reader       io.Reader
-	outWriter    io.Writer
-	errWriter    io.Writer
-	template     []byte
-	maxChunkSize int
-	chunker      Chunker
+	reader    io.Reader
+	outWriter io.Writer
+	errWriter io.Writer
+	template  []byte
 }
 
-func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []byte, maxChunkSize int) Transform {
+func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []byte) Transform {
 	return &transform{
 		reader:    reader,
 		outWriter: outWriter,
 		errWriter: errWriter,
 		template:  template,
-		chunker:   NewChunker(maxChunkSize),
 	}
 }
 
@@ -79,9 +76,9 @@ func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.J
 		return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
 	}
 
-	err = t.chunker.WriteChunks(jsonWriter, &directoryObject)
+	err = jsonWriter.WriteProtoMessage(&directoryObject)
 	if err != nil {
-		return errors.Wrap(err, "failed to write chunks to output")
+		return errors.Wrap(err, "failed to write directory objects to output")
 	}
 	return nil
 }

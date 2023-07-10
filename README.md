@@ -83,7 +83,6 @@ auth0:
   client-id: "clientid"
   client-secret: "clientsupersecret"
   template-file: "/path/to/transform.file"
-  max-chunk-size: 20
 ```
 
 ### Plugin config
@@ -97,7 +96,6 @@ auth0:
   client-id: "clientid"
   client-secret: "clientsupersecret"
   template-file: "/path/to/transform.file"
-  max-chunk-size: 20
 ```
 
 ## Transform
@@ -115,12 +113,12 @@ Logs are printed to `stdout`. You can increase detail using the verbosity flag (
 
 ### Import from auth0 into the directory
 ```
-ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --max-chunk-size=20
+ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret>
 ```
 
 ### Import data with custom transformation file
 ```
-ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template-file=<template-path> --max-chunk-size=20
+ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template-file=<template-path>
 ```
 
 ### View data from auth0
@@ -167,7 +165,7 @@ ds-load -c ./config.yaml auth0
 
 ### Load directory data from a file
 ```
-ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --max-chunk-size=20 > objs_and_rel.json
+ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > objs_and_rel.json
 
 cat objs_and_rel.json | ds-load load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
 ```
