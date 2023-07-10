@@ -9,9 +9,17 @@
       "created_at":"{{ $.creationTime }}",
       "properties":{
         "email": "{{ $email }}",
-        "isAdmin": "{{ $.isAdmin }}",
+        {{ if $.recoveryPhone }}
         "phone": "{{ $.recoveryPhone }}",
-        "picture": "{{ $.thumbnailPhotoUrl }}"
+        {{ end }}
+        {{ if $.thumbnailPhotoUrl }}
+        "picture": "{{ $.thumbnailPhotoUrl }}",
+        {{ end }}
+        {{ if $.isAdmin }}
+        "isAdmin": true
+        {{ else }}
+        "isAdmin": false
+        {{ end }}
       }
     },
     {
