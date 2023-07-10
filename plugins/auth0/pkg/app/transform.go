@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type TransformCmd struct {
@@ -18,7 +18,7 @@ func (t *TransformCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(t.MaxChunkSize)).Transform()
+	return transform.New(os.Stdin, os.Stdout, os.Stderr, content, t.MaxChunkSize).Execute()
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {
