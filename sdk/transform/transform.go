@@ -12,19 +12,15 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 )
 
-type Transform interface {
-	Execute() error
-}
-
-type transform struct {
+type Transform struct {
 	reader    io.Reader
 	outWriter io.Writer
 	errWriter io.Writer
 	template  []byte
 }
 
-func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []byte) Transform {
-	return &transform{
+func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []byte) *Transform {
+	return &Transform{
 		reader:    reader,
 		outWriter: outWriter,
 		errWriter: errWriter,
@@ -32,7 +28,7 @@ func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []
 	}
 }
 
-func (t *transform) Execute() error {
+func (t *Transform) Execute() error {
 	jsonWriter, err := js.NewJSONArrayWriter(t.outWriter)
 	if err != nil {
 		return err
@@ -61,7 +57,7 @@ func (t *transform) Execute() error {
 	return nil
 }
 
-func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
+func (t *Transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
 	output, err := t.transformToTemplate(idpData, string(t.template))
 	if err != nil {
 		return errors.Wrap(err, "transform template execute failed")
@@ -83,7 +79,7 @@ func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.J
 	return nil
 }
 
-func (t *transform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+func (t *Transform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
 	temp := template.New("transform")
 	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)
 	if err != nil {
