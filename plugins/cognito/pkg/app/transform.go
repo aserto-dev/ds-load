@@ -13,11 +13,11 @@ type TransformCmd struct {
 }
 
 func (t *TransformCmd) Run(context *kong.Context) error {
-	content, err := t.getTemplateContent()
+	template, err := t.getTemplateContent()
 	if err != nil {
 		return err
 	}
-	return transform.New(os.Stdin, os.Stdout, os.Stderr, content).Execute()
+	return transform.New(os.Stdin, os.Stdout, os.Stderr, template).Execute()
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {
