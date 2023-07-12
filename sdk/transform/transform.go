@@ -11,6 +11,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
+	"github.com/dongri/phonenumber"
 
 	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 )
@@ -98,6 +99,10 @@ var fns = template.FuncMap{
 		value := os.Getenv(envName)
 		strValue, _ := json.Marshal(value)
 		return fmt.Sprintf("%q:%s", key, string(strValue))
+	},
+	"phoneIso3166": func(phone string) string {
+		country := phonenumber.GetISO3166ByNumber(phone, true)
+		return phonenumber.ParseWithLandLine(phone, country.Alpha2)
 	},
 }
 

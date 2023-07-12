@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/kong v0.7.1
 	github.com/aserto-dev/go-directory v0.21.0
+	github.com/dongri/phonenumber v0.0.0-20230428094603-9e2d44886294
 	github.com/pkg/errors v0.9.1
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526203410-71b5a4ffd15e
 	google.golang.org/protobuf v1.31.0
