@@ -2,29 +2,30 @@ package transform
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"google.golang.org/protobuf/encoding/protojson"
 	"io"
 	"os"
 	"text/template"
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
+
+	"github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type Transform struct {
-	reader    io.Reader
-	outWriter io.Writer
-	errWriter io.Writer
-	template  []byte
+	reader            io.Reader
+	outWriter         io.Writer
+	errWriter         io.Writer
+	transformTemplate []byte
 }
 
-func New(reader io.Reader, outWriter io.Writer, errWriter io.Writer, template []byte) *Transform {
+func New(reader io.Reader, outWriter, errWriter io.Writer, transformTemplate []byte) *Transform {
 	return &Transform{
-		reader:    reader,
-		outWriter: outWriter,
-		errWriter: errWriter,
-		template:  template,
+		reader:            reader,
+		outWriter:         outWriter,
+		errWriter:         errWriter,
+		transformTemplate: transformTemplate,
 	}
 }
 
@@ -58,9 +59,9 @@ func (t *Transform) Execute() error {
 }
 
 func (t *Transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
-	output, err := t.transformToTemplate(idpData, string(t.template))
+	output, err := t.transformToTemplate(idpData, string(t.transformTemplate))
 	if err != nil {
-		return errors.Wrap(err, "transform template execute failed")
+		return errors.Wrap(err, "transform transformTemplate execute failed")
 	}
 	if os.Getenv("DEBUG") != "" {
 		os.Stdout.WriteString(output)
