@@ -23,11 +23,11 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 
 	delim, ok := tk.(json.Delim)
 	if !ok {
-		return nil, errors.Wrap(err, "first token not a delimiter")
+		return nil, errors.New("first token not a delimiter")
 	}
 
 	if delim != json.Delim('[') {
-		return nil, errors.Wrap(err, "first token not a [")
+		return nil, errors.New("first token not a [")
 	}
 
 	return &JSONArrayReader{
