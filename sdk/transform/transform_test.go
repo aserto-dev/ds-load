@@ -3,6 +3,7 @@ package transform_test
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"strings"
 	"testing"
 
@@ -25,10 +26,11 @@ func TestTransform(t *testing.T) {
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
 
-	transformer := transform.New(contentReader, writer, nil, template)
+	transformer := transform.New()
+	ctx := context.Background()
 
 	// Act
-	err = transformer.Execute()
+	err = transformer.Transform(ctx, contentReader, writer, nil, template)
 	assert.NoError(t, err)
 	writer.Flush()
 
@@ -96,10 +98,11 @@ func TestTransformEscapedChars(t *testing.T) {
 	contentReader := strings.NewReader(string(content))
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
-	transformer := transform.New(contentReader, writer, nil, transformTemplate)
+	transformer := transform.New()
+	ctx := context.Background()
 
 	// Act
-	err = transformer.Execute()
+	err = transformer.Transform(ctx, contentReader, writer, nil, transformTemplate)
 	assert.NoError(t, err)
 	writer.Flush()
 

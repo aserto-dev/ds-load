@@ -2,7 +2,9 @@
 package app
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/sdk/transform"
@@ -12,12 +14,16 @@ type TransformCmd struct {
 	Template string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
 }
 
-func (t *TransformCmd) Run(context *kong.Context) error {
+func (t *TransformCmd) Run(kongCtx *kong.Context) error {
 	template, err := t.getTemplateContent()
 	if err != nil {
 		return err
 	}
-	return transform.New(os.Stdin, os.Stdout, os.Stderr, template).Execute()
+
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+
+	return transform.New().Transform(timeoutCtx, os.Stdin, os.Stdout, os.Stderr, template)
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {

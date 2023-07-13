@@ -2,40 +2,32 @@ package transform
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"text/template"
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
 
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type Transform struct {
-	reader            io.Reader
-	outWriter         io.Writer
-	errWriter         io.Writer
-	transformTemplate []byte
+type transform struct{}
+
+func New() plugin.Transform {
+	return &transform{}
 }
 
-func New(reader io.Reader, outWriter, errWriter io.Writer, transformTemplate []byte) *Transform {
-	return &Transform{
-		reader:            reader,
-		outWriter:         outWriter,
-		errWriter:         errWriter,
-		transformTemplate: transformTemplate,
-	}
-}
-
-func (t *Transform) Execute() error {
-	jsonWriter, err := js.NewJSONArrayWriter(t.outWriter)
+func (t *transform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer, transformTemplate []byte) error {
+	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
 	if err != nil {
 		return err
 	}
 	defer jsonWriter.Close()
-	reader, err := js.NewJSONArrayReader(t.reader)
+	reader, err := js.NewJSONArrayReader(ioReader)
 	if err != nil {
 		return err
 	}
@@ -49,7 +41,7 @@ func (t *Transform) Execute() error {
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter)
+		err = t.doTransform(idpData, jsonWriter, transformTemplate)
 		if err != nil {
 			return err
 		}
@@ -58,8 +50,12 @@ func (t *Transform) Execute() error {
 	return nil
 }
 
-func (t *Transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
-	output, err := t.transformToTemplate(idpData, string(t.transformTemplate))
+func (t *transform) ExportDefaultTemplate(outputWriter io.Writer) {
+
+}
+
+func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
+	output, err := t.transformToTemplate(idpData, string(transformTemplate))
 	if err != nil {
 		return errors.Wrap(err, "transform transformTemplate execute failed")
 	}
@@ -80,7 +76,7 @@ func (t *Transform) doTransform(idpData map[string]interface{}, jsonWriter *js.J
 	return nil
 }
 
-func (t *Transform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+func (t *transform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
 	temp := template.New("transform")
 	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)
 	if err != nil {
