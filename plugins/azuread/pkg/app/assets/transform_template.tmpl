@@ -1,3 +1,8 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if ne $.accountEnabled true }}
+{{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
+
 {
 {{$email := $.mail}}
 {{ if not $.mail}}
@@ -10,7 +15,10 @@
       "displayName": "{{ $.displayName }}",
       "created_at":"{{ $.createdDateTime }}",
       "properties":{
-        "email": "{{ $email }}"
+        "enabled": true,
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "email": "{{ $email }}",
+        "status": "{{ $status }}"
       }
     },
     {
@@ -18,7 +26,8 @@
       "type": "identity",
       "properties": {
         "verified": true,
-        "provider": "azuread"
+        "provider": "azuread",
+        "kind": "IDENTITY_KIND_EMAIL"
       }
     },
     {
@@ -26,7 +35,8 @@
       "type": "identity",
       "properties": {
         "verified": true,
-        "provider": "azuread"
+        "provider": "azuread",
+        "kind": "IDENTITY_KIND_PID"
       }
     }
     {{ if $.mobilePhone }}
@@ -36,7 +46,8 @@
           "type": "identity",
           "properties": {
             "verified": false,
-            "provider": "azuread"
+            "provider": "azuread",
+            "kind": "IDENTITY_KIND_PHONE"
           }
       }
     {{ end }}
