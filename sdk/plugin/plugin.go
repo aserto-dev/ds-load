@@ -11,7 +11,7 @@ import (
 )
 
 type Fetcher interface {
-	FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) map[string]interface{}
+	FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) error
 	FetchUserById(ctx context.Context, id string, outputWriter, errorWriter io.Writer)
 	FetchUserByEmail(ctx context.Context, email string, outputWriter, errorWriter io.Writer)
 }

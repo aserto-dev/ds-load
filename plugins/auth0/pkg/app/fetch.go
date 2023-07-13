@@ -1,13 +1,17 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"io"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/pkg/errors"
 
 	"github.com/alecthomas/kong"
@@ -27,7 +31,7 @@ type FetchCmd struct {
 	mgmt *management.Management `kong:"-"`
 }
 
-func (fetcher *FetchCmd) Run(context *kong.Context) error {
+func (fetcher *FetchCmd) Run(kongContext *kong.Context) error {
 	if fetcher.UserPID != "" && !strings.HasPrefix(fetcher.UserPID, "auth0|") {
 		fetcher.UserPID = "auth0|" + fetcher.UserPID
 	}
@@ -54,46 +58,44 @@ func (fetcher *FetchCmd) Run(context *kong.Context) error {
 
 	fetcher.mgmt = mgmt
 
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-	go func() {
-		fetcher.Fetch(results, errCh)
-		close(results)
-		close(errCh)
-	}()
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+
+	return fetcher.FetchUsers(timeoutCtx, os.Stdout, os.Stderr)
+}
+
+func (fetcher *FetchCmd) FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+	writer, err := js.NewJSONArrayWriter(outputWriter)
 	if err != nil {
 		return err
 	}
+	defer writer.Close()
 
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errCh, false)
-}
-
-func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan error) {
 	page := 0
 	finished := false
 
 	if fetcher.UserPID != "" {
 		user, err := fetcher.readByPID()
 		if err != nil {
-			errCh <- err
+			errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
-			return
+			return err
 		}
-		results <- user
-		return
+		writer.Write(user)
+		return nil
 	}
 
 	if fetcher.UserEmail != "" {
 		users, err := fetcher.readByEmail()
 		if err != nil {
-			errCh <- err
+			errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
-			return
+			return err
 		}
 		for _, user := range users {
-			results <- user
+			writer.Write(user)
 		}
-		return
+		return nil
 	}
 
 	for {
@@ -107,41 +109,43 @@ func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan e
 		}
 		ul, err := fetcher.mgmt.User.List(opts...)
 		if err != nil {
-			errCh <- err
+			errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
-			return
+			return err
 		}
 
 		for _, u := range ul.Users {
 			res, err := u.MarshalJSON()
 			if err != nil {
-				errCh <- err
+				errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
 				continue
 			}
 			var obj map[string]interface{}
 			err = json.Unmarshal(res, &obj)
 			if err != nil {
-				errCh <- err
+				errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
 				continue
 			}
 			if fetcher.Roles {
 				roles, err := fetcher.getRoles(*u.ID)
 				if err != nil {
-					errCh <- err
+					errorWriter.Write([]byte(err.Error()))
 					common.SetExitCode(1)
 				} else {
 					obj["roles"] = roles
 				}
 			}
-			results <- obj
+			writer.Write(obj)
 		}
 		if !ul.HasNext() {
 			finished = true
 		}
 		page++
 	}
+
+	return nil
 }
 
 func (fetcher *FetchCmd) getRoles(uID string) ([]map[string]interface{}, error) {
