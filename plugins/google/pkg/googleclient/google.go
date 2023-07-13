@@ -20,7 +20,6 @@ type GoogleClient struct {
 
 func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port int) (string, error) {
 	redirectURL := fmt.Sprintf("http://localhost:%d", port)
-	// Configure the OAuth 2.0 client credentials
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
@@ -57,13 +56,13 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	fmt.Printf("Go to the following URL to authorize the application:\n\n%s\n\n", authURL)
 	fmt.Println("Waiting for authorization code...")
 
-	// Receive the authorization code from the channel
+	// Receive the authorization code from the channel, shut down the server
 	authCode := <-authCodeChan
 
 	// Exchange the authorization code for an access token
 	token, err := config.Exchange(ctx, authCode)
 	if err != nil {
-		log.Fatalf("Failed to exchange authorization code for access token: %v", err)
+		log.Printf("Failed to exchange authorization code for access token: %v\n", err)
 		return "", err
 	} else {
 		return token.RefreshToken, nil
@@ -73,11 +72,9 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 func NewGoogleClient(ctx context.Context, clientID, clientSecret, refreshToken string) (*GoogleClient, error) {
 	c := &GoogleClient{}
 
-	// Configure the OAuth 2.0 client credentials
 	config := &oauth2.Config{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
-		//RedirectURL:  redirectURL,
 		Scopes: []string{
 			admin.AdminDirectoryUserScope,
 			admin.AdminDirectoryGroupScope,
@@ -89,10 +86,9 @@ func NewGoogleClient(ctx context.Context, clientID, clientSecret, refreshToken s
 		RefreshToken: refreshToken,
 	}
 
-	// Create the Directory Service client
 	svc, err := admin.NewService(ctx, option.WithTokenSource(config.TokenSource(ctx, token)))
 	if err != nil {
-		log.Fatalf("Failed to create Directory Service client: %v", err)
+		return nil, err
 	}
 
 	c.googleClient = svc
@@ -106,11 +102,10 @@ func (c *GoogleClient) ListUsers() ([]*admin.User, error) {
 	for {
 		response, err := c.googleClient.Users.List().Customer("my_customer").PageToken(pageToken).Do()
 		if err != nil {
-			log.Fatalf("Failed to retrieve users: %v", err)
+			return nil, err
 		}
 		users = append(users, response.Users...)
 
-		// Check if there are more pages to retrieve
 		if response.NextPageToken == "" {
 			break
 		}
@@ -128,11 +123,10 @@ func (c *GoogleClient) ListGroups() ([]*admin.Group, error) {
 	for {
 		response, err := c.googleClient.Groups.List().Customer("my_customer").PageToken(pageToken).Do()
 		if err != nil {
-			log.Fatalf("Failed to retrieve users: %v", err)
+			return nil, err
 		}
 		groups = append(groups, response.Groups...)
 
-		// Check if there are more pages to retrieve
 		if response.NextPageToken == "" {
 			break
 		}
@@ -143,18 +137,17 @@ func (c *GoogleClient) ListGroups() ([]*admin.Group, error) {
 	return groups, nil
 }
 
-func (c *GoogleClient) GetUsersInGroups(group string) ([]*admin.Member, error) {
+func (c *GoogleClient) GetUsersInGroup(group string) ([]*admin.Member, error) {
 	members := make([]*admin.Member, 0)
 	pageToken := ""
 
 	for {
 		response, err := c.googleClient.Members.List(group).PageToken(pageToken).Do()
 		if err != nil {
-			log.Fatalf("Failed to retrieve users: %v", err)
+			return nil, err
 		}
 		members = append(members, response.Members...)
 
-		// Check if there are more pages to retrieve
 		if response.NextPageToken == "" {
 			break
 		}

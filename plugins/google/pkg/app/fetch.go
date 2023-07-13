@@ -36,18 +36,20 @@ func Fetch(googleClient *googleclient.GoogleClient, fetchGroups bool, results ch
 	users, err := googleClient.ListUsers()
 	if err != nil {
 		errors <- err
+		return
 	}
 
 	for _, user := range users {
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			errors <- err
-			return
+			continue
 		}
 		var obj map[string]interface{}
 		err = json.Unmarshal(userBytes, &obj)
 		if err != nil {
 			errors <- err
+			continue
 		}
 
 		results <- obj
@@ -57,21 +59,23 @@ func Fetch(googleClient *googleclient.GoogleClient, fetchGroups bool, results ch
 		groups, err := googleClient.ListGroups()
 		if err != nil {
 			errors <- err
+			return
 		}
 
 		for _, group := range groups {
 			groupBytes, err := json.Marshal(group)
 			if err != nil {
 				errors <- err
-				return
+				continue
 			}
 			var obj map[string]interface{}
 			err = json.Unmarshal(groupBytes, &obj)
 			if err != nil {
 				errors <- err
+				continue
 			}
 
-			usersInGroup, err := googleClient.GetUsersInGroups(group.Id)
+			usersInGroup, err := googleClient.GetUsersInGroup(group.Id)
 			if err != nil {
 				errors <- err
 			} else {
