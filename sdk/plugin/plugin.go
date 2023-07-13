@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"context"
 	"io"
 	"log"
 	"os"
@@ -8,6 +9,26 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
+
+type Fetcher interface {
+	FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) map[string]interface{}
+	FetchUserById(ctx context.Context, id string, outputWriter, errorWriter io.Writer)
+	FetchUserByEmail(ctx context.Context, email string, outputWriter, errorWriter io.Writer)
+}
+
+type Transform interface {
+	Transform(ctx context.Context, reader io.Reader, outputWriter, errorWriter io.Writer, template []byte) error
+	ExportDefaultTemplate(outputWriter io.Writer)
+}
+
+type Load interface {
+	Load(ctx context.Context, reader io.Reader)
+}
+
+type Plugin interface {
+	Fetcher
+	Transform
+}
 
 type DSPlugin struct {
 	template  []byte
