@@ -31,6 +31,7 @@
       "type": "identity"
     }
   {{ end }}
+
   {{ if contains $.kind "admin#directory#group" }}
     {
       "key": "{{ $.id }}",
@@ -64,13 +65,23 @@
       }
     }
     {{ end }}
+
     {{ if contains $.kind "admin#directory#group" }}
-    {{ range $i, $element := $.users }}
+      {{ range $i, $element := $.users }}
+
       {{ if $i }},{{ end }}
+      {{ $subject_type := $element.type }}
+
+      {{ if contains $element.type "USER" }}
+        {{ $subject_type = "user" }}
+      {{ end }}
+      {{ if contains $element.type "GROUP" }}
+        {{ $subject_type = "group" }}
+      {{ end }}
       {
         "relation": "member",
         "subject": {
-            "type": "user",
+            "type": "{{$subject_type}}",
             "key": "{{$element.id}}"
         },
         "object": {
@@ -78,7 +89,7 @@
             "key": "{{$.id}}"
         }
       }
-    {{ end }}
+      {{ end }}
     {{ end }}
   ]
 }
