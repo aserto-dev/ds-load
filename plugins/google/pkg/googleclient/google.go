@@ -59,6 +59,8 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	// Receive the authorization code from the channel, shut down the server
 	authCode := <-authCodeChan
 
+	go func() { server.Shutdown(ctx) }()
+
 	// Exchange the authorization code for an access token
 	token, err := config.Exchange(ctx, authCode)
 	if err != nil {
