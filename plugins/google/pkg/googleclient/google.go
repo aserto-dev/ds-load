@@ -31,24 +31,7 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 		Endpoint: google.Endpoint,
 	}
 
-	// Create an HTTP server for handling the OAuth 2.0 callback
-	server := &http.Server{Addr: fmt.Sprintf(":%d", port), ReadHeaderTimeout: 5 * time.Second}
-
-	// Create a channel to receive the authorization code
-	authCodeChan := make(chan string)
-
-	// Start the HTTP server in a separate goroutine
-	go func() {
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			code := r.URL.Query().Get("code")
-			fmt.Fprintf(w, "Authorization code received. You can close this tab now.")
-			authCodeChan <- code
-		})
-
-		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Failed to start HTTP server: %v", err)
-		}
-	}()
+	var authCode string
 
 	// Generate the authorization URL with "access_type=offline" and "prompt=consent"
 	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("prompt", "consent"))
@@ -56,10 +39,24 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	fmt.Printf("Go to the following URL to authorize the application:\n\n%s\n\n", authURL)
 	fmt.Println("Waiting for authorization code...")
 
-	// Receive the authorization code from the channel, shut down the server
-	authCode := <-authCodeChan
+	// Create an HTTP server for handling the OAuth 2.0 callback
+	server := &http.Server{Addr: fmt.Sprintf(":%d", port), ReadHeaderTimeout: 5 * time.Second}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		code := r.URL.Query().Get("code")
+		fmt.Fprintf(w, "Authorization code received. You can close this tab now.")
+		authCode = code
+		go func() {
+			// Shutdown the HTTP server once the callback is received
+			if err := server.Shutdown(ctx); err != nil {
+				log.Printf("Failed to shutdown HTTP server: %s", err)
+			}
+		}()
+	})
 
-	go func() { server.Shutdown(ctx) }()
+	// Start the HTTP server.
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		log.Fatalf("Failed to start HTTP server: %v", err)
+	}
 
 	// Exchange the authorization code for an access token
 	token, err := config.Exchange(ctx, authCode)
