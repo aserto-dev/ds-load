@@ -16,6 +16,7 @@ import (
 
 type GoogleClient struct {
 	googleClient *admin.Service
+	customer     string
 }
 
 func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port int) (string, error) {
@@ -68,7 +69,7 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	}
 }
 
-func NewGoogleClient(ctx context.Context, clientID, clientSecret, refreshToken string) (*GoogleClient, error) {
+func NewGoogleClient(ctx context.Context, clientID, clientSecret, refreshToken, customer string) (*GoogleClient, error) {
 	c := &GoogleClient{}
 
 	config := &oauth2.Config{
@@ -91,6 +92,7 @@ func NewGoogleClient(ctx context.Context, clientID, clientSecret, refreshToken s
 	}
 
 	c.googleClient = svc
+	c.customer = customer
 	return c, nil
 }
 
@@ -99,7 +101,7 @@ func (c *GoogleClient) ListUsers() ([]*admin.User, error) {
 	pageToken := ""
 
 	for {
-		response, err := c.googleClient.Users.List().Customer("my_customer").PageToken(pageToken).Do()
+		response, err := c.googleClient.Users.List().Customer(c.customer).PageToken(pageToken).Do()
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +122,7 @@ func (c *GoogleClient) ListGroups() ([]*admin.Group, error) {
 	pageToken := ""
 
 	for {
-		response, err := c.googleClient.Groups.List().Customer("my_customer").PageToken(pageToken).Do()
+		response, err := c.googleClient.Groups.List().Customer(c.customer).PageToken(pageToken).Do()
 		if err != nil {
 			return nil, err
 		}

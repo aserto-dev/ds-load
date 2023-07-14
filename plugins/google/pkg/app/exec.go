@@ -11,7 +11,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(context *kong.Context) error {
-	googleClient, err := createGoogleClient(cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+	googleClient, err := createGoogleClient(cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
 	if err != nil {
 		return err
 	}
