@@ -6,6 +6,7 @@ use (
 	./plugins/auth0
 	./plugins/azuread
 	./plugins/cognito
+	./plugins/google
 	./plugins/okta
 	./sdk
 )
