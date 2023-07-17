@@ -2,20 +2,12 @@ package app
 
 import (
 	"context"
-	"encoding/json"
-	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"io"
-	"net/http"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetcher"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
-	"github.com/aserto-dev/ds-load/sdk/common"
-	"github.com/pkg/errors"
-
 	"github.com/alecthomas/kong"
-	"github.com/auth0/go-auth0/management"
 )
 
 type FetchCmd struct {
@@ -27,208 +19,28 @@ type FetchCmd struct {
 	UserEmail      string `name:"user-email" env:"AUTH0_USER_EMAIL" help:"auth0 user email of the user you want to read" optional:""`
 	Roles          bool   `name:"roles" env:"AUTH0_ROLES" default:"false" negatable:"" help:"include roles"`
 	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
-
-	mgmt *management.Management `kong:"-"`
 }
 
-func (fetcher *FetchCmd) Run(kongContext *kong.Context) error {
-	if fetcher.UserPID != "" && !strings.HasPrefix(fetcher.UserPID, "auth0|") {
-		fetcher.UserPID = "auth0|" + fetcher.UserPID
+func (f *FetchCmd) Run(kongContext *kong.Context) error {
+	if f.UserPID != "" && !strings.HasPrefix(f.UserPID, "auth0|") {
+		f.UserPID = "auth0|" + f.UserPID
 	}
 
-	options := []management.Option{
-		management.WithClientCredentials(
-			fetcher.ClientID,
-			fetcher.ClientSecret,
-		),
-	}
-	if fetcher.RateLimit {
-		client := http.DefaultClient
-		client.Transport = httpclient.NewTransport(http.DefaultTransport)
-		options = append(options, management.WithClient(client))
-	}
-
-	mgmt, err := management.New(
-		fetcher.Domain,
-		options...,
-	)
+	auth0Fetcher, err := fetcher.New(f.UserPID, f.ClientID, f.ClientSecret, f.Domain)
 	if err != nil {
 		return err
 	}
-
-	fetcher.mgmt = mgmt
 
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
 	defer cancel()
 
-	return fetcher.FetchUsers(timeoutCtx, os.Stdout, os.Stderr)
-}
-
-func (fetcher *FetchCmd) FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) error {
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-
-	page := 0
-	finished := false
-
-	if fetcher.UserPID != "" {
-		user, err := fetcher.readByPID()
-		if err != nil {
-			errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
-			return err
-		}
-		writer.Write(user)
-		return nil
+	if f.UserPID != "" {
+		return auth0Fetcher.FetchUserByID(timeoutCtx, f.UserPID, os.Stdout, os.Stderr)
 	}
 
-	if fetcher.UserEmail != "" {
-		users, err := fetcher.readByEmail()
-		if err != nil {
-			errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
-			return err
-		}
-		for _, user := range users {
-			writer.Write(user)
-		}
-		return nil
+	if f.UserEmail != "" {
+
 	}
 
-	for {
-		if finished {
-			break
-		}
-
-		opts := []management.RequestOption{management.Page(page)}
-		if fetcher.ConnectionName != "" {
-			opts = append(opts, management.Query(`identities.connection:"`+fetcher.ConnectionName+`"`))
-		}
-		ul, err := fetcher.mgmt.User.List(opts...)
-		if err != nil {
-			errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
-			return err
-		}
-
-		for _, u := range ul.Users {
-			res, err := u.MarshalJSON()
-			if err != nil {
-				errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
-				continue
-			}
-			var obj map[string]interface{}
-			err = json.Unmarshal(res, &obj)
-			if err != nil {
-				errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
-				continue
-			}
-			if fetcher.Roles {
-				roles, err := fetcher.getRoles(*u.ID)
-				if err != nil {
-					errorWriter.Write([]byte(err.Error()))
-					common.SetExitCode(1)
-				} else {
-					obj["roles"] = roles
-				}
-			}
-			writer.Write(obj)
-		}
-		if !ul.HasNext() {
-			finished = true
-		}
-		page++
-	}
-
-	return nil
-}
-
-func (fetcher *FetchCmd) getRoles(uID string) ([]map[string]interface{}, error) {
-	page := 0
-	finished := false
-
-	var results []map[string]interface{}
-
-	for {
-		if finished {
-			break
-		}
-
-		reqOpts := management.Page(page)
-		roles, err := fetcher.mgmt.User.Roles(uID, reqOpts)
-		if err != nil {
-			return nil, err
-		}
-		for _, role := range roles.Roles {
-			res, err := json.Marshal(role)
-			if err != nil {
-				return nil, err
-			}
-			var obj map[string]interface{}
-			err = json.Unmarshal(res, &obj)
-			if err != nil {
-				return nil, err
-			}
-			results = append(results, obj)
-		}
-		if !roles.HasNext() {
-			finished = true
-		}
-
-		page++
-	}
-	return results, nil
-}
-
-func (fetcher *FetchCmd) readByPID() (map[string]interface{}, error) {
-
-	user, err := fetcher.mgmt.User.Read(fetcher.UserPID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.Wrapf(err, "failed to get user by pid %s", fetcher.UserPID)
-	}
-	res, err := user.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	var obj map[string]interface{}
-	err = json.Unmarshal(res, &obj)
-	if err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
-func (fetcher *FetchCmd) readByEmail() ([]map[string]interface{}, error) {
-	var users []map[string]interface{}
-
-	auth0Users, err := fetcher.mgmt.User.ListByEmail(fetcher.UserEmail)
-	if err != nil {
-		return nil, err
-	}
-	if len(auth0Users) < 1 {
-		return nil, errors.Wrapf(err, "failed to get user by emal %s", fetcher.UserEmail)
-	}
-
-	for _, user := range auth0Users {
-		res, err := user.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		var obj map[string]interface{}
-		err = json.Unmarshal(res, &obj)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, obj)
-	}
-
-	return users, nil
+	return auth0Fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
 }
