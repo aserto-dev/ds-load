@@ -13,16 +13,19 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(ctx *kong.Context) error {
-	oktaClient, err := oktaclient.NewOktaClient(context.Background(), cmd.Domain, cmd.APIToken)
+func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
+	ctx := context.Background()
+	oktaClient, err := oktaclient.NewOktaClient(ctx, cmd.Domain, cmd.APIToken, cmd.RequestTimeout)
 	if err != nil {
 		return err
 	}
 
+	cmd.oktaClient = oktaClient
 	results := make(chan map[string]interface{}, 1)
 	errCh := make(chan error, 1)
+
 	go func() {
-		cmd.Fetch(oktaClient, results, errCh)
+		cmd.Fetch(ctx, results, errCh)
 		close(results)
 		close(errCh)
 	}()

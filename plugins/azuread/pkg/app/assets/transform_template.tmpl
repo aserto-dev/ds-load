@@ -1,3 +1,8 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if ne $.accountEnabled true }}
+{{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
+
 {
 {{$email := $.mail}}
 {{ if not $.mail}}
@@ -10,17 +15,42 @@
       "displayName": "{{ $.displayName }}",
       "created_at":"{{ $.createdDateTime }}",
       "properties":{
-        "email": "{{ $email }}"
+        "enabled": true,
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "email": "{{ $email }}",
+        "status": "{{ $status }}"
       }
     },
     {
       "key": "{{ $email }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "verified": true,
+        "provider": "azuread",
+        "kind": "IDENTITY_KIND_EMAIL"
+      }
     },
     {
       "key": "{{ $.id }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "verified": true,
+        "provider": "azuread",
+        "kind": "IDENTITY_KIND_PID"
+      }
     }
+    {{ if $.mobilePhone }}
+    ,
+      {
+          "key": "{{ $.mobilePhone }}",
+          "type": "identity",
+          "properties": {
+            "verified": false,
+            "provider": "azuread",
+            "kind": "IDENTITY_KIND_PHONE"
+          }
+      }
+    {{ end }}
   ],
   "relations":[  
     {  
@@ -45,5 +75,19 @@
         "key": "{{$email}}"
       }
     }
+    {{ if $.mobilePhone }}
+    ,
+    {  
+      "relation": "identifier",
+      "subject": {
+        "type": "user",
+        "key": "{{$.id}}"
+      },
+      "object": {
+        "type": "identity",
+        "key": "{{$.mobilePhone}}"
+      }
+    }
+    {{ end }}
   ]
 }
