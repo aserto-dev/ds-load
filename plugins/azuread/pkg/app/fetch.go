@@ -12,7 +12,7 @@ import (
 )
 
 type FetchCmd struct {
-	Tenant       string `short:"t" help:"AzureAD tenant" env:"AZUREAD_TENANT" required:""`
+	Tenant       string `short:"a" help:"AzureAD tenant" env:"AZUREAD_TENANT" required:""`
 	ClientID     string `short:"i" help:"AzureAD Client ID" env:"AZUREAD_CLIENT_ID" required:""`
 	ClientSecret string `short:"s" help:"AzureAD Client Secret" env:"AZUREAD_CLIENT_SECRET" required:""`
 	RefreshToken string `short:"r" help:"AzureAD Refresh Token" env:"AZUREAD_REFRESH_TOKEN" optional:""`

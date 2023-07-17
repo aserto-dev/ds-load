@@ -24,13 +24,13 @@ type OktaClient interface {
 	ListAssignedRolesForUser(ctx context.Context, userID string, qp *query.Params) ([]*okta.Role, *okta.Response, error)
 }
 
-func NewOktaClient(ctx context.Context, domain, token string) (OktaClient, error) {
+func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int64) (OktaClient, error) {
 	_, client, err := okta.NewClient(
 		ctx,
 		okta.WithOrgUrl(fmt.Sprintf("https://%s", domain)),
 		okta.WithToken(token),
 		okta.WithConnectionTimeout(5),
-		okta.WithRequestTimeout(5),
+		okta.WithRequestTimeout(requestTimeout),
 		okta.WithRateLimitMaxBackOff(30),
 		okta.WithRateLimitMaxRetries(3),
 	)

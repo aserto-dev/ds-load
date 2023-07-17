@@ -77,7 +77,7 @@ func (c *AzureADClient) GetUserByEmail(email string) (models.UserCollectionRespo
 
 func (c *AzureADClient) listUsers(filter string) (models.UserCollectionResponseable, error) {
 	query := adusers.UsersRequestBuilderGetQueryParameters{
-		Select: []string{"displayName", "id", "mail", "createdDateTime", "mobilePhone", "userPrincipalName"},
+		Select: []string{"displayName", "id", "mail", "createdDateTime", "mobilePhone", "userPrincipalName", "accountEnabled"},
 		Filter: &filter,
 	}
 	return c.appClient.Users().
