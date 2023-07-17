@@ -26,7 +26,7 @@ func TestTransform(t *testing.T) {
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
 
-	transformer := transform.New()
+	transformer := transform.NewGoTemplateTransform()
 	ctx := context.Background()
 
 	// Act
@@ -98,7 +98,7 @@ func TestTransformEscapedChars(t *testing.T) {
 	contentReader := strings.NewReader(string(content))
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
-	transformer := transform.New()
+	transformer := transform.NewGoTemplateTransform()
 	ctx := context.Background()
 
 	// Act
