@@ -9,19 +9,21 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
-
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type transform struct{}
-
-func New() plugin.Transform {
-	return &transform{}
+type GoTemplateTransform struct {
+	template []byte
 }
 
-func (t *transform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer, transformTemplate []byte) error {
+func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
+	return &GoTemplateTransform{
+		template: transformTemplate,
+	}
+}
+
+func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
 	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
 	if err != nil {
 		return err
@@ -41,7 +43,7 @@ func (t *transform) Transform(ctx context.Context, ioReader io.Reader, outputWri
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter, transformTemplate)
+		err = t.doTransform(idpData, jsonWriter, t.template)
 		if err != nil {
 			return err
 		}
@@ -50,14 +52,10 @@ func (t *transform) Transform(ctx context.Context, ioReader io.Reader, outputWri
 	return nil
 }
 
-func (t *transform) ExportDefaultTemplate(outputWriter io.Writer) {
-
-}
-
-func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
+func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
 	output, err := t.transformToTemplate(idpData, string(transformTemplate))
 	if err != nil {
-		return errors.Wrap(err, "transform transformTemplate execute failed")
+		return errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
 	}
 	if os.Getenv("DEBUG") != "" {
 		os.Stdout.WriteString(output)
@@ -76,8 +74,8 @@ func (t *transform) doTransform(idpData map[string]interface{}, jsonWriter *js.J
 	return nil
 }
 
-func (t *transform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
-	temp := template.New("transform")
+func (t *GoTemplateTransform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+	temp := template.New("GoTemplateTransform")
 	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)
 	if err != nil {
 		return "", err

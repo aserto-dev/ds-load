@@ -22,7 +22,7 @@ func (t *TransformCmd) Run(kongContext *kong.Context) error {
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
 	defer cancel()
 
-	return transform.New().Transform(timeoutCtx, os.Stdin, os.Stdout, os.Stderr, template)
+	return transform.NewGoTemplateTransform(template).Transform(timeoutCtx, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {

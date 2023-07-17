@@ -11,18 +11,15 @@ import (
 )
 
 type Fetcher interface {
-	FetchUsers(ctx context.Context, outputWriter, errorWriter io.Writer) map[string]interface{}
-	FetchUserById(ctx context.Context, id string, outputWriter, errorWriter io.Writer)
-	FetchUserByEmail(ctx context.Context, email string, outputWriter, errorWriter io.Writer)
+	Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error
 }
 
 type Transform interface {
-	Transform(ctx context.Context, reader io.Reader, outputWriter, errorWriter io.Writer, template []byte) error
-	ExportDefaultTemplate(outputWriter io.Writer)
+	Transform(ctx context.Context, reader io.Reader, outputWriter, errorWriter io.Writer) error
 }
 
-type Load interface {
-	Load(ctx context.Context, reader io.Reader)
+type Publish interface {
+	Publish(ctx context.Context, reader io.Reader) error
 }
 
 type Plugin interface {
