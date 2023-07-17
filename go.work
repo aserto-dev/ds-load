@@ -7,7 +7,6 @@ use (
 	./plugins/azuread
 	./plugins/cognito
 	./plugins/google
-	./plugins/hubspot
 	./plugins/okta
 	./sdk
 )
