@@ -42,117 +42,96 @@ func (fetcher *FetchCmd) Run(kongCtx *kong.Context) error {
 
 func (fetcher *FetchCmd) Fetch(ctx context.Context, results chan map[string]interface{}, errors chan error) {
 	var response *okta.Response
+	var users []*okta.User
+	var err error
+
+	users, response, err = fetcher.oktaClient.ListUsers(ctx, nil)
+	if err != nil {
+		errors <- err
+		common.SetExitCode(1)
+		return
+	}
 
 	for {
-		var users []*okta.User
-		var err error
-
-		if response != nil {
-			if response.HasNextPage() {
-				resp, err := response.Next(ctx, &users)
-				if err != nil {
-					errors <- err
-					common.SetExitCode(1)
-					return
-				}
-				err = handleResponse(resp)
-				if err != nil {
-					errors <- err
-					common.SetExitCode(1)
-					return
-				}
-				response = resp
-			} else {
-				break
-			}
-		} else {
-			users, response, err = fetcher.oktaClient.ListUsers(ctx, nil)
-			if err != nil {
-				errors <- err
-				common.SetExitCode(1)
-				return
-			}
-			err = handleResponse(response)
-			if err != nil {
-				errors <- err
-				common.SetExitCode(1)
-				return
-			}
+		err = handleResponse(response)
+		if err != nil {
+			errors <- err
+			common.SetExitCode(1)
+			return
 		}
 
 		for _, user := range users {
-			userBytes, err := json.Marshal(user)
+			userResult, err := fetcher.processUser(ctx, user)
 			if err != nil {
 				errors <- err
 				common.SetExitCode(1)
-				return
-			}
-			var userResult map[string]interface{}
-			err = json.Unmarshal(userBytes, &userResult)
-			if err != nil {
-				errors <- err
-				common.SetExitCode(1)
-			}
-
-			if fetcher.Groups {
-				// Write all user groups
-				groups, err := fetcher.getGroups(ctx, user.Id)
-				if err != nil {
-					errors <- err
-					common.SetExitCode(1)
-					return
-				}
-				userResult["groups"] = groups
-			}
-
-			if fetcher.Roles {
-				// Write all user roles
-				roles, err := fetcher.getRoles(ctx, user.Id)
-				if err != nil {
-					errors <- err
-					common.SetExitCode(1)
-					return
-				}
-				userResult["roles"] = roles
 			}
 			results <- userResult
 		}
+
+		if response != nil && response.HasNextPage() {
+			response, err = response.Next(ctx, &users)
+			if err != nil {
+				errors <- err
+				common.SetExitCode(1)
+			}
+		} else {
+			break
+		}
 	}
+}
+
+func (fetcher *FetchCmd) processUser(ctx context.Context, user *okta.User) (map[string]interface{}, error) {
+	userBytes, err := json.Marshal(user)
+	if err != nil {
+		common.SetExitCode(1)
+		return nil, err
+	}
+	var userResult map[string]interface{}
+	err = json.Unmarshal(userBytes, &userResult)
+	if err != nil {
+		common.SetExitCode(1)
+		return nil, err
+	}
+
+	if fetcher.Groups {
+		// Write all user groups
+		groups, err := fetcher.getGroups(ctx, user.Id)
+		if err != nil {
+			common.SetExitCode(1)
+			return nil, err
+		}
+		userResult["groups"] = groups
+	}
+
+	if fetcher.Roles {
+		// Write all user roles
+		roles, err := fetcher.getRoles(ctx, user.Id)
+		if err != nil {
+			common.SetExitCode(1)
+			return nil, err
+		}
+		userResult["roles"] = roles
+	}
+	return userResult, nil
 }
 
 func (fetcher *FetchCmd) getGroups(ctx context.Context, userID string) ([]map[string]interface{}, error) {
 	var response *okta.Response
 	var result []map[string]interface{}
+	var groups []*okta.Group
+	var err error
+
+	groups, response, err = fetcher.oktaClient.ListUserGroups(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
 
 	for {
-		var groups []*okta.Group
-		var err error
-
-		if response != nil {
-			if response.HasNextPage() {
-				resp, err := response.Next(ctx, &groups)
-				if err != nil {
-					return nil, err
-				}
-				err = handleResponse(resp)
-				if err != nil {
-					return nil, err
-				}
-				response = resp
-			} else {
-				break
-			}
-		} else {
-			groups, response, err = fetcher.oktaClient.ListUserGroups(ctx, userID)
-			if err != nil {
-				return nil, err
-			}
-			err = handleResponse(response)
-			if err != nil {
-				return nil, err
-			}
+		err = handleResponse(response)
+		if err != nil {
+			return nil, err
 		}
-
 		for _, group := range groups {
 			groupBytes, err := json.Marshal(group)
 			if err != nil {
@@ -165,6 +144,15 @@ func (fetcher *FetchCmd) getGroups(ctx context.Context, userID string) ([]map[st
 			}
 			result = append(result, obj)
 		}
+
+		if response != nil && response.HasNextPage() {
+			response, err = response.Next(ctx, &groups)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			break
+		}
 	}
 	return result, nil
 }
@@ -172,47 +160,40 @@ func (fetcher *FetchCmd) getGroups(ctx context.Context, userID string) ([]map[st
 func (fetcher *FetchCmd) getRoles(ctx context.Context, userID string) ([]map[string]interface{}, error) {
 	var response *okta.Response
 	var result []map[string]interface{}
+	var roles []*okta.Role
+	var err error
+
+	roles, response, err = fetcher.oktaClient.ListAssignedRolesForUser(ctx, userID, nil)
+	if err != nil {
+		return nil, err
+	}
 
 	for {
-		var roles []*okta.Role
-		var err error
+		err = handleResponse(response)
+		if err != nil {
+			return nil, err
+		}
 
-		if response != nil {
-			if response.HasNextPage() {
-				resp, err := response.Next(ctx, &roles)
-				if err != nil {
-					return nil, err
-				}
-				err = handleResponse(resp)
-				if err != nil {
-					return nil, err
-				}
-				response = resp
-			} else {
-				break
+		for _, role := range roles {
+			roleBytes, err := json.Marshal(role)
+			if err != nil {
+				return nil, err
+			}
+			var obj map[string]interface{}
+			err = json.Unmarshal(roleBytes, &obj)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, obj)
+		}
+
+		if response != nil && response.HasNextPage() {
+			response, err = response.Next(ctx, &roles)
+			if err != nil {
+				return nil, err
 			}
 		} else {
-			roles, response, err = fetcher.oktaClient.ListAssignedRolesForUser(ctx, userID, nil)
-			if err != nil {
-				return nil, err
-			}
-			err = handleResponse(response)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, role := range roles {
-				roleBytes, err := json.Marshal(role)
-				if err != nil {
-					return nil, err
-				}
-				var obj map[string]interface{}
-				err = json.Unmarshal(roleBytes, &obj)
-				if err != nil {
-					return nil, err
-				}
-				result = append(result, obj)
-			}
+			break
 		}
 	}
 	return result, nil
