@@ -17,9 +17,9 @@ type GoTemplateTransform struct {
 	template []byte
 }
 
-func NewGoTemplateTransform(template []byte) *GoTemplateTransform {
+func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
 	return &GoTemplateTransform{
-		template: template,
+		template: transformTemplate,
 	}
 }
 
