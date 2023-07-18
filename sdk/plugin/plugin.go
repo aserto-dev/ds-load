@@ -14,17 +14,17 @@ type Fetcher interface {
 	Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error
 }
 
-type Transform interface {
+type Transformer interface {
 	Transform(ctx context.Context, reader io.Reader, outputWriter, errorWriter io.Writer) error
 }
 
-type Publish interface {
+type Publisher interface {
 	Publish(ctx context.Context, reader io.Reader) error
 }
 
 type Plugin interface {
 	Fetcher
-	Transform
+	Transformer
 }
 
 type DSPlugin struct {
