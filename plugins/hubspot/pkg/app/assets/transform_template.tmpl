@@ -1,0 +1,75 @@
+{
+  "objects": [
+  {{ if contains $.type "contact" }}
+    {
+      "key": "{{ $.key }}",
+      "type": "contact",
+      "displayName": "{{ $.displayName }}",
+      "created_at":"{{ $.createdAt }}",
+      "updated_at":"{{ $.updatedAt }}",
+      "properties":{
+        "id": "{{ $.id }}",
+        {{ if $.properties.phone }}
+        "phone": "{{ $.properties.phone }}",
+        {{ end }}
+        {{ if $.properties.company }}
+        "company": "{{ $.properties.company }}",
+        {{ end }}
+        "email": "{{ $.properties.email }}"
+      }
+    }
+  {{ end }}
+
+  {{ if contains $.type "company" }}
+    {
+      "key": "{{ $.id }}",
+      "type": "company",
+      "displayName": "{{ $.properties.name }}",
+      "created_at":"{{ $.createdAt }}",
+      "updated_at":"{{ $.updatedAt }}",
+      "properties": {
+        "city": "{{ $.properties.city }}",
+        "state": "{{ $.properties.state }}",
+        "domain": "{{ $.properties.domain }}",
+        "industry": "{{ $.properties.industry }}",
+        "phone": "{{ $.properties.phone }}"
+      }
+    }
+  {{ end }}
+  ],
+  "relations":[  
+    {{ if contains $.type "contact" }}
+      {{ if $.owner }}
+      {  
+        "relation": "owner",
+        "subject": {
+          "type": "user",
+          "key": "{{$.owner}}"
+        },
+        "object": {
+          "type": "contact",
+          "key": "{{$.key}}"
+        }
+      }
+      {{ end }}
+      
+      {{ if $.companyId }}
+        {{ if $.owner }}
+        ,
+        {{ end }}
+      {  
+        "relation": "employee",
+        "subject": {
+          "type": "contact",
+          "key": "{{$.key}}"
+        },
+        "object": {
+          "type": "company",
+          "key": "{{$.companyId}}"
+        }
+      }
+      {{ end }}
+
+    {{ end }}
+  ]
+}
