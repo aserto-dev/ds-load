@@ -1,11 +1,13 @@
 {{$status := "USER_STATUS_ACTIVE"}}
-{{ if $.blocked}}
-{{$status = "USER_STATUS_SUSPENDED"}}
+{{ if not $.email_verified }}
+  {{$status = "USER_STATUS_PROVISIONED"}}
+{{ else if $.blocked}}
+  {{$status = "USER_STATUS_SUSPENDED"}}
 {{end}}
 {
   "objects": [
     {
-      "key": "{{ $.user_id }}",
+      "key": "{{ $.email }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
       "created_at":"{{ $.created_at }}",
@@ -28,21 +30,17 @@
         "provider": "auth0",
         "verified": true
       }
+    },
+    {
+        "key": "{{ $.email }}",
+        "type": "identity",
+        "properties": {
+          "kind": "IDENTITY_KIND_EMAIL",
+          "provider": "auth0",
+          "verified": {{ .email_verified }}
+        }
     }
     
-    {{ if and (ne $.email "") ($.email_verified) }}
-    ,
-      {
-          "key": "{{ $.email }}",
-          "type": "identity",
-          "properties": {
-            "kind": "IDENTITY_KIND_EMAIL",
-            "provider": "auth0",
-            "verified": {{ .email_verified }}
-          }
-      }
-    {{ end }}
-
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
@@ -84,27 +82,24 @@
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{ $.user_id }}"
+                  "key": "{{ $.email }}"
               },
               "object": {
                   "type": "identity",
                   "key": "{{ $.user_id }}"
               }
-      }
-    {{ if and (ne $.email "") ($.email_verified) }}
-    ,
+      },
       {
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{ $.user_id }}"
+                  "key": "{{ $.email }}"
               },
               "object": {
                   "type": "identity",
                   "key": "{{ $.email }}"
               }
       }
-    {{ end }}
 
     {{ if and ($.username) (ne $.username "") }}
     ,
@@ -112,7 +107,7 @@
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{ $.user_id }}"
+                  "key": "{{ $.email }}"
               },
               "object": {
                   "type": "identity",
@@ -127,7 +122,7 @@
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{ $.user_id }}"
+                  "key": "{{ $.email }}"
               },
               "object": {
                   "type": "identity",
@@ -144,7 +139,7 @@
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{$.user_id}}"
+                  "key": "{{$.email}}"
               },
               "object": {
                   "type": "group",
