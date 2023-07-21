@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
@@ -19,10 +20,16 @@ func (t *TransformCmd) Run(kongContext *kong.Context) error {
 	if err != nil {
 		return err
 	}
+
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
 	defer cancel()
 
-	return transform.NewGoTemplateTransform(template).Transform(timeoutCtx, os.Stdin, os.Stdout, os.Stderr)
+	goTemplateTransformer := transform.NewGoTemplateTransform(template)
+	return t.transform(timeoutCtx, goTemplateTransformer)
+}
+
+func (t *TransformCmd) transform(ctx context.Context, transformer plugin.Transformer) error {
+	return transformer.Transform(ctx, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {

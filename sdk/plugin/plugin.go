@@ -51,7 +51,7 @@ func NewDSPlugin(options ...PluginOption) *DSPlugin {
 }
 
 // json encodes results and prints to plugin writer.
-func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error, transformMessage bool) error {
+func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -64,26 +64,22 @@ func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, er
 		wg.Done()
 	}()
 
-	writer, err := js.NewJSONArrayWriter(plugin.outWriter)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-	for result := range results {
-		err := writer.Write(result)
+	wg.Add(1)
+	go func() {
+		writer, err := js.NewJSONArrayWriter(plugin.outWriter)
 		if err != nil {
-			return err
+			log.Printf("Could not createJSONArrayWriter")
 		}
-	}
+		defer writer.Close()
+		for result := range results {
+			err := writer.Write(result)
+			if err != nil {
+				log.Printf("Could not write result [%s] to output", result)
+			}
+		}
+		wg.Done()
+	}()
+
 	wg.Wait()
-	return nil
-}
-
-func (plugin *DSPlugin) ExportTransform() error {
-	_, err := plugin.outWriter.Write(plugin.template)
-	if err != nil {
-		log.Fatalf("cannot write to output: %s", err.Error())
-	}
-
 	return nil
 }

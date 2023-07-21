@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"log"
 	"os"
 	"text/template"
 
@@ -21,6 +22,16 @@ func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
 	return &GoTemplateTransform{
 		template: transformTemplate,
 	}
+}
+
+func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
+	_, err := outputWriter.Write(t.template)
+	if err != nil {
+		log.Fatalf("cannot write to output: %s", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {

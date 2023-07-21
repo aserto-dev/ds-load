@@ -31,7 +31,8 @@ func (cmd *FetchCmd) Run(ctx *kong.Context) error {
 		close(results)
 		close(errors)
 	}()
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
+
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errors)
 }
 
 func Fetch(googleClient *googleclient.GoogleClient, fetchGroups bool, results chan map[string]interface{}, errors chan error) {

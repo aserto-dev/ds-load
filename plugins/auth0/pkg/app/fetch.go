@@ -61,11 +61,8 @@ func (fetcher *FetchCmd) Run(context *kong.Context) error {
 		close(results)
 		close(errCh)
 	}()
-	if err != nil {
-		return err
-	}
 
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errCh, false)
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errCh)
 }
 
 func (fetcher *FetchCmd) Fetch(results chan map[string]interface{}, errCh chan error) {

@@ -37,7 +37,7 @@ func (fetcher *FetchCmd) Run(kongCtx *kong.Context) error {
 		close(results)
 		close(errors)
 	}()
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
+	return plugin.NewDSPlugin().WriteFetchOutput(results, errors)
 }
 
 func (fetcher *FetchCmd) Fetch(ctx context.Context, results chan map[string]interface{}, errors chan error) {
