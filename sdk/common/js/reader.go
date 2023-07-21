@@ -13,8 +13,9 @@ type JSONArrayReader struct {
 	decoder *json.Decoder
 }
 
+var ErrInvalidInput = errors.New("invalid input")
+
 func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
-	ErrInvalidInput := errors.New("invalid input")
 	decoder := json.NewDecoder(r)
 
 	tk, err := decoder.Token()
