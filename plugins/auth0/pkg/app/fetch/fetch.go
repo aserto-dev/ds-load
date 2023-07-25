@@ -1,4 +1,4 @@
-package fetcher
+package fetch
 
 import (
 	"context"
@@ -62,7 +62,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		}
 		ul, err := f.mgmt.User.List(opts...)
 		if err != nil {
-			errorWriter.Write([]byte(err.Error()))
+			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
 			return err
 		}
@@ -70,21 +70,21 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		for _, u := range ul.Users {
 			res, err := u.MarshalJSON()
 			if err != nil {
-				errorWriter.Write([]byte(err.Error()))
+				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
 				continue
 			}
 			var obj map[string]interface{}
 			err = json.Unmarshal(res, &obj)
 			if err != nil {
-				errorWriter.Write([]byte(err.Error()))
+				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
 				continue
 			}
 			if f.Roles {
 				roles, err := f.getRoles(*u.ID)
 				if err != nil {
-					errorWriter.Write([]byte(err.Error()))
+					_, _ = errorWriter.Write([]byte(err.Error()))
 					common.SetExitCode(1)
 				} else {
 					obj["roles"] = roles
@@ -150,7 +150,7 @@ func (f *Fetcher) FetchUserByID(ctx context.Context, id string, outputWriter, er
 
 	user, err := f.readByPID()
 	if err != nil {
-		errorWriter.Write([]byte(err.Error()))
+		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
 		return err
 	}
@@ -187,7 +187,7 @@ func (f *Fetcher) FetchUserByEmail(ctx context.Context, email string, outputWrit
 
 	users, err := f.readByEmail()
 	if err != nil {
-		errorWriter.Write([]byte(err.Error()))
+		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
 		return err
 	}

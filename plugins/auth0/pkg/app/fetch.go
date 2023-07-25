@@ -2,12 +2,12 @@ package app
 
 import (
 	"context"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetcher"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
 )
 
 type FetchCmd struct {
@@ -26,7 +26,7 @@ func (f *FetchCmd) Run(kongContext *kong.Context) error {
 		f.UserPID = "auth0|" + f.UserPID
 	}
 
-	auth0Fetcher, err := fetcher.New(f.UserPID, f.ClientID, f.ClientSecret, f.Domain)
+	auth0Fetcher, err := fetch.New(f.UserPID, f.ClientID, f.ClientSecret, f.Domain)
 	if err != nil {
 		return err
 	}

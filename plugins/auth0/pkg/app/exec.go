@@ -2,12 +2,13 @@ package app
 
 import (
 	"context"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetcher"
 	"io"
+	"log"
 	"os"
 	"strings"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
@@ -20,7 +21,7 @@ type ExecCmd struct {
 func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 	ctx := context.Background()
 
-	fetcher, err := fetcher.New(cmd.UserPID, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
+	fetcher, err := fetch.New(cmd.UserPID, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
 	if err != nil {
 		return err
 	}
@@ -42,7 +43,10 @@ func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, fe
 	defer pipeReader.Close()
 
 	go func() {
-		fetcher.Fetch(ctx, pipeWriter, os.Stderr)
+		err := fetcher.Fetch(ctx, pipeWriter, os.Stderr)
+		if err != nil {
+			log.Printf("Could not fetch data %s", err.Error())
+		}
 		pipeWriter.Close()
 	}()
 
