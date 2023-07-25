@@ -12,7 +12,7 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 
-	"github.com/alecthomas/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTransform(t *testing.T) {
@@ -58,7 +58,6 @@ func TestTransform(t *testing.T) {
 
 func TestTransformEscapedChars(t *testing.T) {
 	// Arrange
-
 	const auth0user string = `
 	[
 	  {

@@ -1,3 +1,7 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if $.blocked}}
+{{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
 {
   "objects": [
     {
@@ -7,14 +11,61 @@
       "created_at":"{{ $.created_at }}",
       "properties":{
         "email": "{{ $.email }}",
-        "picture": "{{ $.picture }}"
+        "enabled": true,
+        "picture": "{{ $.picture }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "status": "{{ $status }}"
+        {{ range $key, $value := $.user_metadata }}
+        ,"{{ $key }}": {{ marshal $value }}
+        {{ end }}
       }
     },
-    {{ range $index, $element := $.identities }}
-      {{ if $index }},{{ end }}
+    {
+      "key": "{{ $.user_id }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "auth0",
+        "verified": true
+      }
+    }
+    
+    {{ if and (ne $.email "") ($.email_verified) }}
+    ,
       {
-        "key": "{{$element.user_id}}",
-        "type": "identity"
+          "key": "{{ $.email }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_EMAIL",
+            "provider": "auth0",
+            "verified": {{ .email_verified }}
+          }
+      }
+    {{ end }}
+
+    {{ if and ($.username) (ne $.username "") }}
+    ,
+      {
+          "key": "{{ $.username }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_USERNAME",
+            "provider": "auth0",
+            "verified": true
+          }
+      }
+    {{ end }}
+
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
+    ,
+      {
+          "key": "{{ $.phone_number }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_PHONE",
+            "provider": "auth0",
+            "verified": {{ .phone_verified }}
+          }
       }
     {{ end }}
 
@@ -28,18 +79,59 @@
       }
     {{ end }}
   ],
-  "relations":[    
-    {{ range $i,$element := $.identities }} 
-      {{ if $i }},{{ end }}
+  "relations":[
       {
       "relation": "identifier",
               "subject": {
                   "type": "user",
-                  "key": "{{$.user_id}}"
+                  "key": "{{ $.user_id }}"
               },
               "object": {
                   "type": "identity",
-                  "key": "{{$element.user_id}}"
+                  "key": "{{ $.user_id }}"
+              }
+      }
+    {{ if and (ne $.email "") ($.email_verified) }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.email }}"
+              }
+      }
+    {{ end }}
+
+    {{ if and ($.username) (ne $.username "") }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.username }}"
+              }
+      }
+    {{ end }}
+
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
+    ,
+      {
+      "relation": "identifier",
+              "subject": {
+                  "type": "user",
+                  "key": "{{ $.user_id }}"
+              },
+              "object": {
+                  "type": "identity",
+                  "key": "{{ $.phone_number }}"
               }
       }
     {{ end }}
