@@ -2,17 +2,14 @@ package app
 
 import (
 	"context"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetcher"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
-	"github.com/auth0/go-auth0/management"
-	"github.com/rs/zerolog/log"
 )
 
 type ExecCmd struct {
@@ -22,63 +19,32 @@ type ExecCmd struct {
 
 func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 	ctx := context.Background()
-	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
-		cmd.UserPID = "auth0|" + cmd.UserPID
-	}
 
-	options := []management.Option{
-		management.WithClientCredentials(
-			cmd.ClientID,
-			cmd.ClientSecret,
-		),
-	}
-	if cmd.RateLimit {
-		client := http.DefaultClient
-		client.Transport = httpclient.NewTransport(http.DefaultTransport)
-		options = append(options, management.WithClient(client))
-	}
-
-	mgmt, err := management.New(
-		cmd.Domain,
-		options...,
-	)
+	fetcher, err := fetcher.New(cmd.UserPID, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
 	if err != nil {
 		return err
 	}
-
-	cmd.mgmt = mgmt
-
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-
-	go func() {
-		cmd.Fetch(results, errCh)
-		close(results)
-		close(errCh)
-	}()
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
+	transformer := transform.NewGoTemplateTransform(templateContent)
+	return cmd.exec(ctx, transformer, fetcher)
+}
+
+func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, fetcher plugin.Fetcher) error {
+	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
+		cmd.UserPID = "auth0|" + cmd.UserPID
+	}
 
 	pipeReader, pipeWriter := io.Pipe()
-	transformer := transform.NewGoTemplateTransform(templateContent)
+	defer pipeReader.Close()
 
 	go func() {
-		err = plugin.NewDSPlugin(plugin.WithOutputWriter(pipeWriter)).WriteFetchOutput(results, errCh)
-		if err != nil {
-			log.Printf("Could not write fetcher output %s", err.Error())
-		}
-
+		fetcher.Fetch(ctx, pipeWriter, os.Stderr)
 		pipeWriter.Close()
 	}()
 
-	defer pipeReader.Close()
-
-	return cmd.exec(ctx, transformer, pipeReader)
-}
-
-func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, pipeReader io.Reader) error {
 	return transformer.Transform(ctx, pipeReader, os.Stdout, os.Stderr)
 }
