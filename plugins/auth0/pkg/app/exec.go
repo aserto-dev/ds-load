@@ -2,15 +2,14 @@ package app
 
 import (
 	"context"
-	"io"
-	"log"
-	"os"
-	"strings"
-
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
+	"io"
+	"log"
+	"os"
+	"strings"
 )
 
 type ExecCmd struct {
@@ -20,6 +19,9 @@ type ExecCmd struct {
 
 func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 	ctx := context.Background()
+	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
+		cmd.UserPID = "auth0|" + cmd.UserPID
+	}
 
 	fetcher, err := fetch.New(cmd.UserPID, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
 	if err != nil {
@@ -35,10 +37,6 @@ func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 }
 
 func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, fetcher plugin.Fetcher) error {
-	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
-		cmd.UserPID = "auth0|" + cmd.UserPID
-	}
-
 	pipeReader, pipeWriter := io.Pipe()
 	defer pipeReader.Close()
 
