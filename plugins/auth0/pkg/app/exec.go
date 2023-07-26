@@ -1,13 +1,18 @@
 package app
 
 import (
+	"context"
+	"io"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 	"github.com/auth0/go-auth0/management"
+	"github.com/rs/zerolog/log"
 )
 
 type ExecCmd struct {
@@ -15,7 +20,8 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(context *kong.Context) error {
+func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
+	ctx := context.Background()
 	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
 		cmd.UserPID = "auth0|" + cmd.UserPID
 	}
@@ -44,16 +50,35 @@ func (cmd *ExecCmd) Run(context *kong.Context) error {
 
 	results := make(chan map[string]interface{}, 1)
 	errCh := make(chan error, 1)
+
 	go func() {
 		cmd.Fetch(results, errCh)
 		close(results)
 		close(errCh)
 	}()
 
-	content, err := cmd.getTemplateContent()
+	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
 
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(cmd.MaxChunkSize)).WriteFetchOutput(results, errCh, true)
+	pipeReader, pipeWriter := io.Pipe()
+	transformer := transform.NewGoTemplateTransform(templateContent)
+
+	go func() {
+		err = plugin.NewDSPlugin(plugin.WithOutputWriter(pipeWriter)).WriteFetchOutput(results, errCh)
+		if err != nil {
+			log.Printf("Could not write fetcher output %s", err.Error())
+		}
+
+		pipeWriter.Close()
+	}()
+
+	defer pipeReader.Close()
+
+	return cmd.exec(ctx, transformer, pipeReader)
+}
+
+func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, pipeReader io.Reader) error {
+	return transformer.Transform(ctx, pipeReader, os.Stdout, os.Stderr)
 }

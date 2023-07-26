@@ -1,8 +1,10 @@
 package app
 
 import (
+	"os"
+
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type ExportTransportCmd struct {
@@ -13,5 +15,7 @@ func (t *ExportTransportCmd) Run(context *kong.Context) error {
 	if err != nil {
 		return err
 	}
-	return plugin.NewDSPlugin(plugin.WithTemplate(templateContent)).ExportTransform()
+	transformer := transform.NewGoTemplateTransform(templateContent)
+
+	return transformer.ExportTransform(os.Stdout)
 }

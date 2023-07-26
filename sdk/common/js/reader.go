@@ -13,6 +13,8 @@ type JSONArrayReader struct {
 	decoder *json.Decoder
 }
 
+var ErrInvalidInput = errors.New("invalid input")
+
 func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 	decoder := json.NewDecoder(r)
 
@@ -23,11 +25,11 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 
 	delim, ok := tk.(json.Delim)
 	if !ok {
-		return nil, errors.Wrap(err, "first token not a delimiter")
+		return nil, errors.Wrap(ErrInvalidInput, "first token not a json delimiter")
 	}
 
 	if delim != json.Delim('[') {
-		return nil, errors.Wrap(err, "first token not a [")
+		return nil, errors.Wrapf(ErrInvalidInput, "unexpected delimiter. expected '['. found '%s'", delim)
 	}
 
 	return &JSONArrayReader{
