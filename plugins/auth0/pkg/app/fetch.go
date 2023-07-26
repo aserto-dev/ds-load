@@ -39,7 +39,7 @@ func (f *FetchCmd) Run(kongContext *kong.Context) error {
 	}
 
 	if f.UserEmail != "" {
-
+		return auth0Fetcher.FetchUserByEmail(timeoutCtx, f.UserEmail, os.Stdout, os.Stderr)
 	}
 
 	return auth0Fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)

@@ -3,11 +3,12 @@
   "objects": [
   {{ if contains $.kind "admin#directory#user" }}
     {
-      "key": "{{ $.id }}",
+      "key": "{{ $email }}",
       "type": "user",
       "displayName": "{{ $.name.fullName }}",
       "created_at":"{{ $.creationTime }}",
       "properties":{
+        "id": "{{ $.id }}",
         "email": "{{ $email }}",
         {{ if $.recoveryPhone }}
         "phone": "{{ $.recoveryPhone }}",
@@ -34,9 +35,13 @@
 
   {{ if contains $.kind "admin#directory#group" }}
     {
-      "key": "{{ $.id }}",
+      "key": "{{ $.email }}",
       "type": "group",
-      "displayName": "{{ $.name }}"
+      "displayName": "{{ $.name }}",
+      "properties": {
+        "email": "{{ $.email }}",
+        "id": "{{ $.id }}"
+      }
     }
   {{ end }}
   ],
@@ -46,7 +51,7 @@
       "relation": "identifier",
       "subject": {
         "type": "user",
-        "key": "{{$.id}}"
+        "key": "{{$email}}"
       },
       "object": {
         "type": "identity",
@@ -57,7 +62,7 @@
       "relation": "identifier",
       "subject": {
         "type": "user",
-        "key": "{{$.id}}"
+        "key": "{{$email}}"
       },
       "object": {
         "type": "identity",
@@ -82,11 +87,11 @@
         "relation": "member",
         "subject": {
             "type": "{{$subject_type}}",
-            "key": "{{$element.id}}"
+            "key": "{{$element.email}}"
         },
         "object": {
             "type": "group",
-            "key": "{{$.id}}"
+            "key": "{{$.email}}"
         }
       }
       {{ end }}
