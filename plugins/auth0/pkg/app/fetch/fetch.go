@@ -19,7 +19,7 @@ type Fetcher struct {
 	mgmt           *management.Management
 }
 
-func New(userPid, clientID, clientSecret, domain string) (*Fetcher, error) {
+func New(clientID, clientSecret, domain string) (*Fetcher, error) {
 	options := []management.Option{
 		management.WithClientCredentials(
 			clientID,
@@ -36,9 +36,56 @@ func New(userPid, clientID, clientSecret, domain string) (*Fetcher, error) {
 	}
 
 	return &Fetcher{
-		mgmt:    mgmt,
-		UserPID: userPid,
+		mgmt: mgmt,
 	}, nil
+}
+
+func (f *Fetcher) WithEmail(email string) *Fetcher {
+	f.UserEmail = email
+	return f
+}
+
+func (f *Fetcher) WithUserPID(userPID string) *Fetcher {
+	f.UserPID = userPID
+	return f
+}
+
+func (f *Fetcher) WithRoles(roles bool) *Fetcher {
+	f.Roles = roles
+	return f
+}
+
+func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User, bool, error) {
+	if f.UserPID != "" && f.UserEmail != "" {
+		return nil, false, errors.New("only one of user-pid or user-email can be specified")
+	}
+
+	if f.UserPID != "" {
+		// list only the user with the provided pid
+		user, err := f.mgmt.User.Read(f.UserPID)
+		if err != nil {
+			return nil, false, err
+		}
+		if user == nil {
+			return nil, false, errors.Wrapf(err, "failed to get user by pid %s", f.UserPID)
+		}
+		return []*management.User{user}, false, nil
+	} else if f.UserEmail != "" {
+		// List only users that have the provided email
+		users, err := f.mgmt.User.ListByEmail(f.UserEmail)
+		if err != nil {
+			return nil, false, err
+		}
+		return users, false, nil
+	} else {
+		// List all users
+		userList, err := f.mgmt.User.List(opts...)
+		if err != nil {
+			return nil, false, err
+		}
+
+		return userList.Users, userList.HasNext(), nil
+	}
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
@@ -49,26 +96,22 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer writer.Close()
 
 	page := 0
-	finished := false
 
 	for {
-		if finished {
-			break
-		}
-
 		opts := []management.RequestOption{management.Page(page)}
 		if f.ConnectionName != "" {
 			opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
 		}
-		ul, err := f.mgmt.User.List(opts...)
+
+		users, more, err := f.getUsers(opts)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
 			return err
 		}
 
-		for _, u := range ul.Users {
-			res, err := u.MarshalJSON()
+		for _, user := range users {
+			res, err := user.MarshalJSON()
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
@@ -82,7 +125,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 			if f.Roles {
-				roles, err := f.getRoles(*u.ID)
+				roles, err := f.getRoles(*user.ID)
 				if err != nil {
 					_, _ = errorWriter.Write([]byte(err.Error()))
 					common.SetExitCode(1)
@@ -95,8 +138,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				return err
 			}
 		}
-		if !ul.HasNext() {
-			finished = true
+		if !more {
+			break
 		}
 		page++
 	}
@@ -139,90 +182,4 @@ func (f *Fetcher) getRoles(uID string) ([]map[string]interface{}, error) {
 		page++
 	}
 	return results, nil
-}
-
-func (f *Fetcher) FetchUserByID(ctx context.Context, id string, outputWriter, errorWriter io.Writer) error {
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-
-	user, err := f.readByPID()
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-		common.SetExitCode(1)
-		return err
-	}
-	return writer.Write(user)
-}
-
-func (f *Fetcher) readByPID() (map[string]interface{}, error) {
-	user, err := f.mgmt.User.Read(f.UserPID)
-	if err != nil {
-		return nil, err
-	}
-	if user == nil {
-		return nil, errors.Wrapf(err, "failed to get user by pid %s", f.UserPID)
-	}
-	res, err := user.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	var obj map[string]interface{}
-	err = json.Unmarshal(res, &obj)
-	if err != nil {
-		return nil, err
-	}
-
-	return obj, nil
-}
-
-func (f *Fetcher) FetchUserByEmail(ctx context.Context, email string, outputWriter, errorWriter io.Writer) error {
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-
-	users, err := f.readByEmail()
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-		common.SetExitCode(1)
-		return err
-	}
-	for _, user := range users {
-		err = writer.Write(user)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (f *Fetcher) readByEmail() ([]map[string]interface{}, error) {
-	var users []map[string]interface{}
-
-	auth0Users, err := f.mgmt.User.ListByEmail(f.UserEmail)
-	if err != nil {
-		return nil, err
-	}
-	if len(auth0Users) < 1 {
-		return nil, errors.Wrapf(err, "failed to get user by emal %s", f.UserEmail)
-	}
-
-	for _, user := range auth0Users {
-		res, err := user.MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		var obj map[string]interface{}
-		err = json.Unmarshal(res, &obj)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, obj)
-	}
-
-	return users, nil
 }

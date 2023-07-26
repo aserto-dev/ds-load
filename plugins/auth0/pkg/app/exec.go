@@ -2,14 +2,15 @@ package app
 
 import (
 	"context"
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
-	"github.com/aserto-dev/ds-load/sdk/transform"
 	"io"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
+	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type ExecCmd struct {
@@ -23,10 +24,11 @@ func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 		cmd.UserPID = "auth0|" + cmd.UserPID
 	}
 
-	fetcher, err := fetch.New(cmd.UserPID, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
+	fetcher, err := fetch.New(cmd.ClientID, cmd.ClientSecret, cmd.Domain)
 	if err != nil {
 		return err
 	}
+	fetcher = fetcher.WithUserPID(cmd.UserPID).WithEmail(cmd.UserEmail).WithRoles(cmd.Roles)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {

@@ -26,21 +26,14 @@ func (f *FetchCmd) Run(kongContext *kong.Context) error {
 		f.UserPID = "auth0|" + f.UserPID
 	}
 
-	auth0Fetcher, err := fetch.New(f.UserPID, f.ClientID, f.ClientSecret, f.Domain)
+	fetcher, err := fetch.New(f.ClientID, f.ClientSecret, f.Domain)
 	if err != nil {
 		return err
 	}
+	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles)
 
 	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
 	defer cancel()
 
-	if f.UserPID != "" {
-		return auth0Fetcher.FetchUserByID(timeoutCtx, f.UserPID, os.Stdout, os.Stderr)
-	}
-
-	if f.UserEmail != "" {
-		return auth0Fetcher.FetchUserByEmail(timeoutCtx, f.UserEmail, os.Stdout, os.Stderr)
-	}
-
-	return auth0Fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
+	return fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
 }
