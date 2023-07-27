@@ -55,39 +55,6 @@ func (f *Fetcher) WithRoles(roles bool) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User, bool, error) {
-	if f.UserPID != "" && f.UserEmail != "" {
-		return nil, false, errors.New("only one of user-pid or user-email can be specified")
-	}
-
-	if f.UserPID != "" {
-		// list only the user with the provided pid
-		user, err := f.mgmt.User.Read(f.UserPID)
-		if err != nil {
-			return nil, false, err
-		}
-		if user == nil {
-			return nil, false, errors.Wrapf(err, "failed to get user by pid %s", f.UserPID)
-		}
-		return []*management.User{user}, false, nil
-	} else if f.UserEmail != "" {
-		// List only users that have the provided email
-		users, err := f.mgmt.User.ListByEmail(f.UserEmail)
-		if err != nil {
-			return nil, false, err
-		}
-		return users, false, nil
-	} else {
-		// List all users
-		userList, err := f.mgmt.User.List(opts...)
-		if err != nil {
-			return nil, false, err
-		}
-
-		return userList.Users, userList.HasNext(), nil
-	}
-}
-
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
 	writer, err := js.NewJSONArrayWriter(outputWriter)
 	if err != nil {
@@ -145,6 +112,39 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	return nil
+}
+
+func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User, bool, error) {
+	if f.UserPID != "" && f.UserEmail != "" {
+		return nil, false, errors.New("only one of user-pid or user-email can be specified")
+	}
+
+	if f.UserPID != "" {
+		// list only the user with the provided pid
+		user, err := f.mgmt.User.Read(f.UserPID)
+		if err != nil {
+			return nil, false, err
+		}
+		if user == nil {
+			return nil, false, errors.Wrapf(err, "failed to get user by pid %s", f.UserPID)
+		}
+		return []*management.User{user}, false, nil
+	} else if f.UserEmail != "" {
+		// List only users that have the provided email
+		users, err := f.mgmt.User.ListByEmail(f.UserEmail)
+		if err != nil {
+			return nil, false, err
+		}
+		return users, false, nil
+	} else {
+		// List all users
+		userList, err := f.mgmt.User.List(opts...)
+		if err != nil {
+			return nil, false, err
+		}
+
+		return userList.Users, userList.HasNext(), nil
+	}
 }
 
 func (f *Fetcher) getRoles(uID string) ([]map[string]interface{}, error) {

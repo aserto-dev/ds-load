@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-//go:generate mockgen -source=okta.go -destination=mock_okta.go -package=oktaclient --build_flags=--mod=mod
-
 type OktaClient interface {
 	CreateUser(ctx context.Context, body okta.CreateUserRequest, qp *query.Params) (*okta.User, *okta.Response, error)
 	UpdateUser(ctx context.Context, userID string, body okta.User, qp *query.Params) (*okta.User, *okta.Response, error)
