@@ -85,7 +85,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			return err
 		}
 		err = jsonWriter.Write(obj)
-		_, _ = errorWriter.Write([]byte(err.Error()))
+		if err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+		}
 	}
 
 	return nil

@@ -1,11 +1,9 @@
 package app
 
 import (
-	"context"
 	"os"
-	"time"
 
-	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
 )
 
@@ -16,15 +14,11 @@ type FetchCmd struct {
 	RefreshToken string `short:"r" help:"AzureAD Refresh Token" env:"AZUREAD_REFRESH_TOKEN" optional:""`
 }
 
-func (cmd *FetchCmd) Run(kongCtx *kong.Context) error {
-	ctx := context.Background()
-	timeoutCtx, cancel := context.WithTimeout(ctx, 1*time.Hour)
-	defer cancel()
-
-	fetcher, err := fetch.New(ctx, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
+	fetcher, err := fetch.New(ctx.Context, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
 	if err != nil {
 		return err
 	}
 
-	return fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

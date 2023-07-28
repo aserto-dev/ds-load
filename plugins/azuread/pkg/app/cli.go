@@ -14,6 +14,7 @@ type CLI struct {
 	Transform       TransformCmd       `cmd:"" help:"transform Azure AD data"`
 	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
 	Exec            ExecCmd            `cmd:"" help:"fetch and transform Azure AD data" default:"withargs"`
+	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
 }
 
 type VersionCmd struct {
