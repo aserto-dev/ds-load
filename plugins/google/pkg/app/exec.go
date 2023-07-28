@@ -9,7 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/fetch"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
-	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog"
 )
 
 type ExecCmd struct {
@@ -29,10 +29,10 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 	transformer := transform.NewGoTemplateTransform(templateContent)
-	return cmd.exec(ctx.Context, transformer, fetcher)
+	return cmd.exec(ctx.Context, ctx.Log, transformer, fetcher)
 }
 
-func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, fetcher plugin.Fetcher) error {
+func (cmd *ExecCmd) exec(ctx context.Context, log *zerolog.Logger, transformer plugin.Transformer, fetcher plugin.Fetcher) error {
 	pipeReader, pipeWriter := io.Pipe()
 	defer pipeReader.Close()
 
