@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"github.com/aserto-dev/ds-load/plugins/google/pkg/fetch"
 	"io"
 	"os"
 
@@ -18,41 +19,31 @@ type ExecCmd struct {
 
 func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
 	ctx := context.Background()
-	googleClient, err := createGoogleClient(cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
+	fetcher, err := fetch.New(ctx, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
 	if err != nil {
 		return err
 	}
-
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-	go func() {
-		Fetch(googleClient, cmd.Groups, results, errCh)
-		close(results)
-		close(errCh)
-	}()
+	fetcher = fetcher.WithGroups(cmd.Groups)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
-
-	pipeReader, pipeWriter := io.Pipe()
 	transformer := transform.NewGoTemplateTransform(templateContent)
+	return cmd.exec(ctx, transformer, fetcher)
+}
+
+func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, fetcher plugin.Fetcher) error {
+	pipeReader, pipeWriter := io.Pipe()
+	defer pipeReader.Close()
 
 	go func() {
-		err = plugin.NewDSPlugin(plugin.WithOutputWriter(pipeWriter)).WriteFetchOutput(results, errCh)
+		err := fetcher.Fetch(ctx, pipeWriter, os.Stderr)
 		if err != nil {
-			log.Printf("Could not write fetcher output %s", err.Error())
+			log.Printf("Could not fetch data %s", err.Error())
 		}
-
 		pipeWriter.Close()
 	}()
 
-	defer pipeReader.Close()
-
-	return cmd.exec(ctx, transformer, pipeReader)
-}
-
-func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, pipeReader io.Reader) error {
 	return transformer.Transform(ctx, pipeReader, os.Stdout, os.Stderr)
 }

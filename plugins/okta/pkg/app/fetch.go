@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 )
 
 type FetchCmd struct {
@@ -16,8 +15,6 @@ type FetchCmd struct {
 	Groups         bool   `env:"DS_OKTA_GROUPS" default:"true" negatable:""`
 	Roles          bool   `env:"DS_OKTA_ROLES" default:"true" negatable:""`
 	RequestTimeout int64  `default:"0" optional:""`
-
-	oktaClient oktaclient.OktaClient `kong:"-"`
 }
 
 func (f *FetchCmd) Run(kongCtx *kong.Context) error {
