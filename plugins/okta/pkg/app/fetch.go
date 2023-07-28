@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/okta/pkg/app/fetch"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
 )
 
 type FetchCmd struct {

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/app/fetch"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/fetch"
 )
 
 type FetchCmd struct {

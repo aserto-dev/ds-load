@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/okta/pkg/app/fetch"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 	"github.com/rs/zerolog/log"
