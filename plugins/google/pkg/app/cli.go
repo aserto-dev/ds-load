@@ -15,6 +15,7 @@ type CLI struct {
 	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
 	Exec            ExecCmd            `cmd:"" help:"fetch and transform google workspace data" default:"withargs"`
 	GetRefreshToken GetTokenCmd        `cmd:"" help:"obtain a refresh token from GCP"`
+	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
 }
 
 type VersionCmd struct {

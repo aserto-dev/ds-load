@@ -1,10 +1,9 @@
 package app
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/googleclient"
 )
 
@@ -14,9 +13,9 @@ type GetTokenCmd struct {
 	Port         int    `short:"p" help:"Port number to run callback server on" env:"GOOGLE_PORT" default:"8761"`
 }
 
-func (cmd *GetTokenCmd) Run(ctx *kong.Context) error {
+func (cmd *GetTokenCmd) Run(ctx *cc.CommonCtx) error {
 	refreshToken, err := googleclient.GetRefreshToken(
-		context.Background(),
+		ctx.Context,
 		cmd.ClientID,
 		cmd.ClientSecret,
 		cmd.Port)
