@@ -50,19 +50,19 @@ func NewAzureADClientWithRefreshToken(ctx context.Context, tenant, clientID, cli
 	return c, nil
 }
 
-func (c *AzureADClient) ListUsers() (models.UserCollectionResponseable, error) {
-	return c.listUsers("")
+func (c *AzureADClient) ListUsers(ctx context.Context) (models.UserCollectionResponseable, error) {
+	return c.listUsers(ctx, "")
 }
 
-func (c *AzureADClient) GetUserByID(id string) (models.UserCollectionResponseable, error) {
+func (c *AzureADClient) GetUserByID(ctx context.Context, id string) (models.UserCollectionResponseable, error) {
 	filter := fmt.Sprintf("id eq '%s'", id)
-	return c.listUsers(filter)
+	return c.listUsers(ctx, filter)
 }
 
-func (c *AzureADClient) GetUserByEmail(email string) (models.UserCollectionResponseable, error) {
+func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string) (models.UserCollectionResponseable, error) {
 	filter := fmt.Sprintf("mail eq '%s'", email)
 
-	aadUsers, err := c.listUsers(filter)
+	aadUsers, err := c.listUsers(ctx, filter)
 	if err != nil {
 		return aadUsers, err
 	}
@@ -70,18 +70,18 @@ func (c *AzureADClient) GetUserByEmail(email string) (models.UserCollectionRespo
 	azureadUsers := aadUsers.GetValue()
 	if len(azureadUsers) < 1 {
 		filter := fmt.Sprintf("userPrincipalName eq '%s'", email)
-		return c.listUsers(filter)
+		return c.listUsers(ctx, filter)
 	}
 	return aadUsers, err
 }
 
-func (c *AzureADClient) listUsers(filter string) (models.UserCollectionResponseable, error) {
+func (c *AzureADClient) listUsers(ctx context.Context, filter string) (models.UserCollectionResponseable, error) {
 	query := adusers.UsersRequestBuilderGetQueryParameters{
 		Select: []string{"displayName", "id", "mail", "createdDateTime", "mobilePhone", "userPrincipalName", "accountEnabled"},
 		Filter: &filter,
 	}
 	return c.appClient.Users().
-		Get(context.Background(),
+		Get(ctx,
 			&adusers.UsersRequestBuilderGetRequestConfiguration{
 				QueryParameters: &query,
 			})

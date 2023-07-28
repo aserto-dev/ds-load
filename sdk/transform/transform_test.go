@@ -97,6 +97,7 @@ func TestTransformEscapedChars(t *testing.T) {
 	contentReader := strings.NewReader(string(content))
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
+
 	transformer := transform.NewGoTemplateTransform(transformTemplate)
 	ctx := context.Background()
 

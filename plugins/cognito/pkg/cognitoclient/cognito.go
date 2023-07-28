@@ -15,7 +15,7 @@ type CognitoClient struct {
 	userPoolID    string
 }
 
-func NewCognitoClient(ctx context.Context, accessKey, secretKey, userPoolID, region string) (*CognitoClient, error) {
+func NewCognitoClient(accessKey, secretKey, userPoolID, region string) (*CognitoClient, error) {
 	c := &CognitoClient{}
 
 	// Create a new AWS session with access key and secret key
@@ -35,7 +35,7 @@ func NewCognitoClient(ctx context.Context, accessKey, secretKey, userPoolID, reg
 	return c, nil
 }
 
-func (c *CognitoClient) ListUsers() ([]*cognitoidentityprovider.UserType, error) {
+func (c *CognitoClient) ListUsers(ctx context.Context) ([]*cognitoidentityprovider.UserType, error) {
 	users := make([]*cognitoidentityprovider.UserType, 0)
 	var paginationToken *string
 
@@ -46,7 +46,7 @@ func (c *CognitoClient) ListUsers() ([]*cognitoidentityprovider.UserType, error)
 			Limit:           aws.Int64(60),
 		}
 
-		listUsersOutput, err := c.cognitoClient.ListUsers(listUsersInput)
+		listUsersOutput, err := c.cognitoClient.ListUsersWithContext(ctx, listUsersInput)
 		if err != nil {
 			fmt.Println("Failed to list users:", err)
 			return nil, err

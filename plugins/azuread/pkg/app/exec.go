@@ -1,14 +1,10 @@
 package app
 
 import (
-	"context"
-	"io"
-	"os"
-
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
-	"github.com/rs/zerolog/log"
 )
 
 type ExecCmd struct {
@@ -16,43 +12,16 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(kongCtx *kong.Context) error {
-	ctx := context.Background()
-	azureClient, err := createAzureAdClient(cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
+	fetcher, err := fetch.New(ctx.Context, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
 	if err != nil {
 		return err
 	}
-
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-	go func() {
-		Fetch(azureClient, results, errCh)
-		close(results)
-		close(errCh)
-	}()
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
-
-	pipeReader, pipeWriter := io.Pipe()
 	transformer := transform.NewGoTemplateTransform(templateContent)
-
-	go func() {
-		err = plugin.NewDSPlugin(plugin.WithOutputWriter(pipeWriter)).WriteFetchOutput(results, errCh)
-		if err != nil {
-			log.Printf("Could not write fetcher output %s", err.Error())
-		}
-
-		pipeWriter.Close()
-	}()
-
-	defer pipeReader.Close()
-
-	return cmd.exec(ctx, transformer, pipeReader)
-}
-
-func (cmd *ExecCmd) exec(ctx context.Context, transformer plugin.Transformer, pipeReader io.Reader) error {
-	return transformer.Transform(ctx, pipeReader, os.Stdout, os.Stderr)
+	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }

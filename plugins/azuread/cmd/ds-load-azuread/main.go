@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
@@ -31,9 +32,11 @@ func main() {
 		}),
 	}
 
-	ctx := kong.Parse(&cli, options...)
-	if err := ctx.Run(); err != nil {
-		ctx.FatalIfErrorf(err)
+	ctx := cc.NewCommonContext(cli.Verbosity, string(cli.Config))
+	kongCtx := kong.Parse(&cli, options...)
+	if err := kongCtx.Run(ctx); err != nil {
+		kongCtx.FatalIfErrorf(err)
 	}
+
 	os.Exit(common.GetExitCode())
 }
