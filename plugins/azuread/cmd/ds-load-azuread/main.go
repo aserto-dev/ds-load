@@ -33,7 +33,6 @@ func main() {
 	}
 
 	ctx := cc.NewCommonContext(cli.Verbosity, string(cli.Config))
-
 	kongCtx := kong.Parse(&cli, options...)
 	if err := kongCtx.Run(ctx); err != nil {
 		kongCtx.FatalIfErrorf(err)
