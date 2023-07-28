@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
+	"os"
+	"time"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
 )
 
 type FetchCmd struct {
@@ -17,76 +17,15 @@ type FetchCmd struct {
 	Groups     bool   `short:"g" help:"Retrieve Cognito groups" env:"AWS_COGNITO_GROUPS" default:"false" negatable:""`
 }
 
-func (cmd *FetchCmd) Run(ctx *kong.Context) error {
-	cognitoClient, err := createCognitoClient(cmd.AccessKey, cmd.SecretKey, cmd.UserPoolID, cmd.Region)
+func (cmd *FetchCmd) Run(kongCtx *kong.Context) error {
+	fetcher, err := fetch.New(cmd.AccessKey, cmd.SecretKey, cmd.UserPoolID, cmd.Region)
 	if err != nil {
 		return err
 	}
+	fetcher = fetcher.WithGroups(cmd.Groups)
 
-	results := make(chan map[string]interface{}, 1)
-	errors := make(chan error, 1)
-	go func() {
-		Fetch(cognitoClient, cmd.Groups, results, errors)
-		close(results)
-		close(errors)
-	}()
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
+	defer cancel()
 
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errors)
-}
-
-func Fetch(cognitoClient *cognitoclient.CognitoClient, fetchGroups bool, results chan map[string]interface{}, errors chan error) {
-	users, err := cognitoClient.ListUsers()
-	if err != nil {
-		errors <- err
-	}
-
-	for _, user := range users {
-		attributes := make(map[string]string)
-		for _, attr := range user.Attributes {
-			attributes[*attr.Name] = *attr.Value
-		}
-
-		userBytes, err := json.Marshal(user)
-		if err != nil {
-			errors <- err
-			return
-		}
-		var obj map[string]interface{}
-		err = json.Unmarshal(userBytes, &obj)
-		if err != nil {
-			errors <- err
-		}
-		obj["Attributes"] = attributes
-
-		if fetchGroups {
-			groups, err := cognitoClient.GetGroupsForUser(*user.Username)
-			if err != nil {
-				errors <- err
-				continue
-			}
-
-			groupBytes, err := json.Marshal(groups.Groups)
-			if err != nil {
-				errors <- err
-				return
-			}
-			var grps []map[string]string
-			err = json.Unmarshal(groupBytes, &grps)
-			if err != nil {
-				errors <- err
-			}
-			obj["Groups"] = grps
-		}
-
-		results <- obj
-	}
-}
-
-func createCognitoClient(accessKey, accessSecretKey, userPoolID, region string) (cognitoClient *cognitoclient.CognitoClient, err error) {
-	return cognitoclient.NewCognitoClient(
-		context.Background(),
-		accessKey,
-		accessSecretKey,
-		userPoolID,
-		region)
+	return fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
 }
