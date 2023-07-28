@@ -1,11 +1,9 @@
 package app
 
 import (
-	"context"
 	"os"
-	"time"
 
-	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
 )
 
@@ -17,15 +15,12 @@ type FetchCmd struct {
 	Groups     bool   `short:"g" help:"Retrieve Cognito groups" env:"AWS_COGNITO_GROUPS" default:"false" negatable:""`
 }
 
-func (cmd *FetchCmd) Run(kongCtx *kong.Context) error {
+func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	fetcher, err := fetch.New(cmd.AccessKey, cmd.SecretKey, cmd.UserPoolID, cmd.Region)
 	if err != nil {
 		return err
 	}
 	fetcher = fetcher.WithGroups(cmd.Groups)
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1*time.Hour)
-	defer cancel()
-
-	return fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

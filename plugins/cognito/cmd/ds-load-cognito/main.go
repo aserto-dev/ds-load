@@ -5,6 +5,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/app"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
@@ -37,6 +38,7 @@ func main() {
 	err := ctx.Run()
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
-		os.Exit(1)
 	}
+
+	os.Exit(common.GetExitCode())
 }
