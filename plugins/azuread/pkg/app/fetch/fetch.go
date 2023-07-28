@@ -3,11 +3,12 @@ package fetch
 import (
 	"context"
 	"encoding/json"
+	"io"
+
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	kiota "github.com/microsoft/kiota-serialization-json-go"
-	"io"
 )
 
 type Fetcher struct {
@@ -83,7 +84,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			common.SetExitCode(1)
 			return err
 		}
-		jsonWriter.Write(obj)
+		err = jsonWriter.Write(obj)
+		_, _ = errorWriter.Write([]byte(err.Error()))
 	}
 
 	return nil

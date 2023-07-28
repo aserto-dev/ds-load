@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app/fetch"
 	"io"
 	"os"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app/fetch"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 	"github.com/rs/zerolog/log"

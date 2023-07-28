@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
 	"os"
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
 )
 
 type FetchCmd struct {

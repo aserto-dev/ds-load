@@ -3,9 +3,10 @@ package fetch
 import (
 	"context"
 	"encoding/json"
+	"io"
+
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"io"
 )
 
 type Fetcher struct {
@@ -83,7 +84,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			obj["Groups"] = grps
 		}
 
-		writer.Write(obj)
+		err = writer.Write(obj)
+		_, _ = errorWriter.Write([]byte(err.Error()))
 	}
 
 	return nil

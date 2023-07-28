@@ -2,10 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app/fetch"
 	"os"
 	"time"
+
+	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/app/fetch"
 )
 
 type FetchCmd struct {

@@ -3,12 +3,13 @@ package fetch
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"net/http"
+
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"io"
-	"net/http"
 )
 
 type Fetcher struct {
@@ -57,7 +58,8 @@ func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
 			}
-			writer.Write(userResult)
+			err = writer.Write(userResult)
+			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 
 		if response != nil && response.HasNextPage() {
@@ -189,6 +191,6 @@ func (fetcher *Fetcher) getRoles(ctx context.Context, userID string, errorWriter
 
 func logIfRateLimitExceeded(resp *okta.Response, errorWriter io.Writer) {
 	if resp.Response != nil && resp.StatusCode == http.StatusTooManyRequests {
-		errorWriter.Write([]byte("Rate limit exceeded"))
+		_, _ = errorWriter.Write([]byte("Rate limit exceeded"))
 	}
 }

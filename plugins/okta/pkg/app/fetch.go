@@ -2,11 +2,11 @@ package app
 
 import (
 	"context"
-	"github.com/aserto-dev/ds-load/plugins/okta/pkg/app/fetch"
 	"os"
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/app/fetch"
 )
 
 type FetchCmd struct {
