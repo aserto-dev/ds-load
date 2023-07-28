@@ -1,12 +1,10 @@
 package app
 
 import (
-	"context"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/fetch"
 )
 
@@ -21,7 +19,7 @@ type FetchCmd struct {
 	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
 }
 
-func (f *FetchCmd) Run(kongContext *kong.Context) error {
+func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if f.UserPID != "" && !strings.HasPrefix(f.UserPID, "auth0|") {
 		f.UserPID = "auth0|" + f.UserPID
 	}
@@ -32,8 +30,5 @@ func (f *FetchCmd) Run(kongContext *kong.Context) error {
 	}
 	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles)
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
-	defer cancel()
-
-	return fetcher.Fetch(timeoutCtx, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }
