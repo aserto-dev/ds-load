@@ -7,6 +7,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/template"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
@@ -15,12 +16,12 @@ type TransformCmd struct {
 }
 
 func (t *TransformCmd) Run(ctx *cc.CommonCtx) error {
-	template, err := t.getTemplateContent()
+	templateContent, err := t.getTemplateContent()
 	if err != nil {
 		return err
 	}
 
-	goTemplateTransformer := transform.NewGoTemplateTransform(template)
+	goTemplateTransformer := transform.NewGoTemplateTransform(templateContent)
 	return t.transform(ctx.Context, goTemplateTransformer)
 }
 
@@ -29,18 +30,16 @@ func (t *TransformCmd) transform(ctx context.Context, transformer plugin.Transfo
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {
-	var templateContent []byte
-	var err error
-	if t.Template == "" {
-		templateContent, err = Assets().ReadFile("assets/transform_template.tmpl")
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		templateContent, err = os.ReadFile(t.Template)
-		if err != nil {
-			return nil, err
-		}
+	templateContent, err := Assets().ReadFile("assets/transform_template.tmpl")
+	if err != nil {
+		return nil, err
 	}
+
+	templateLoader := template.NewTemplateLoader(templateContent)
+	templateContent, err = templateLoader.Load(t.Template)
+	if err != nil {
+		return nil, err
+	}
+
 	return templateContent, nil
 }
