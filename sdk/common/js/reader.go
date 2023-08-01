@@ -48,6 +48,8 @@ func (r *JSONArrayReader) ReadProtoMessage(message proto.Message) error {
 		if err := UnmarshalNext(r.decoder, message); err != nil {
 			return err
 		}
+	} else {
+		return io.EOF
 	}
 	return nil
 }
@@ -78,106 +80,9 @@ func (r *JSONArrayReader) more() (bool, error) {
 	if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
 		return false, errors.Errorf("file does not contain a JSON array")
 	}
-	// check for next token in case of multiple json sources
-	tok, err = r.decoder.Token()
-	if err != nil {
-		return false, err
-	}
 
-	delim, ok := tok.(json.Delim)
-	if !ok {
-		return false, errors.Wrap(err, "first token not a delimiter")
-	}
-
-	if delim == json.Delim('[') {
-		return true, nil
-	} else {
-		return false, errors.Wrap(err, "first token not a [")
-	}
+	return false, nil
 }
-
-// func (r *JSONReader) Read(results chan any) error {
-// 	for {
-// 		tk, err := r.decoder.Token()
-// 		if err != nil {
-// 			return errors.Wrap(err, "could not read")
-// 		}
-
-// 		delim, ok := tk.(json.Delim)
-// 		if !ok {
-// 			return errors.Wrap(err, "first token not a delimiter")
-// 		}
-
-// 		if delim == json.Delim('{') {
-// 			results <- BatchBegin{}
-// 			for r.decoder.More() {
-// 				t, err := r.decoder.Token()
-// 				if err != nil {
-// 					return err
-// 				}
-
-// 				keyStr := ""
-// 				if key, ok := t.(string); ok {
-// 					keyStr = key
-// 				}
-
-// 				tok, err := r.decoder.Token()
-// 				if err != nil {
-// 					return err
-// 				}
-// 				if delim, ok := tok.(json.Delim); !ok && delim.String() != "[" {
-// 					return errors.Errorf("%s does not contain a JSON array", keyStr)
-// 				}
-
-// 				for r.decoder.More() {
-// 					switch keyStr {
-// 					case "objects":
-// 						var obj v2.Object
-// 						err := UnmarshalNext(r.decoder, &obj)
-// 						if err != nil {
-// 							return err
-// 						}
-// 						results <- obj
-// 					case "relations":
-// 						var rel v2.Relation
-// 						err := UnmarshalNext(r.decoder, &rel)
-// 						if err != nil {
-// 							return err
-// 						}
-// 						results <- rel
-// 					}
-// 				}
-
-// 				tok, err = r.decoder.Token()
-// 				if err != nil {
-// 					return err
-// 				}
-// 				if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
-// 					return errors.Errorf("%s does not contain a JSON array", keyStr)
-// 				}
-// 			}
-// 		}
-// 		if delim == json.Delim('}') {
-// 			results <- BatchEnd{}
-
-// 			tk, err := r.decoder.Token()
-// 			if err != nil {
-// 				return errors.Wrap(err, "could not read")
-// 			}
-
-// 			delim, ok := tk.(json.Delim)
-// 			if !ok {
-// 				return errors.Wrap(err, "first token not a delimiter")
-// 			}
-// 			if delim == json.Delim('}') {
-// 				// reached end of json
-// 				break
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 func UnmarshalNext(d *json.Decoder, m proto.Message) error {
 	var b json.RawMessage

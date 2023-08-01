@@ -9,7 +9,11 @@ import (
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
+	"github.com/aserto-dev/ds-load/cli/pkg/publish"
+	plug "github.com/aserto-dev/ds-load/sdk/plugin"
+
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
@@ -21,9 +25,9 @@ type ExecCmd struct {
 	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
 	PluginFolder string   `hidden:""`
 
-	execPlugin *plugin.Plugin          `kong:"-"`
-	pluginArgs []string                `kong:"-"`
-	dirClient  clients.DirectoryClient `kong:"-"`
+	execPlugin *plugin.Plugin `kong:"-"`
+	pluginArgs []string       `kong:"-"`
+	publisher  plug.Publisher `kong:"-"`
 }
 
 func (e *ExecCmd) Run(c *cc.CommonCtx) error {
@@ -65,11 +69,11 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	if !e.Print {
-		cli, err := clients.NewDirectoryImportClient(c, &e.Config)
+		directoryClient, err := clients.NewDirectoryImportClient(c.Context, &e.Config)
 		if err != nil {
 			return errors.Wrap(err, "Could not connect to the directory")
 		}
-		e.dirClient = cli
+		e.publisher = publish.NewPublisher(c, directoryClient)
 	}
 	return e.LaunchPlugin(c)
 }
@@ -115,7 +119,7 @@ func (e *ExecCmd) LaunchPlugin(c *cc.CommonCtx) error {
 	}
 
 	if !e.Print {
-		err = e.dirClient.HandleMessages(pStdout)
+		err = e.publisher.Publish(c.Context, pStdout)
 	}
 	if err != nil {
 		wg.Wait()
