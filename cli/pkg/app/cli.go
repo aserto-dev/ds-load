@@ -12,7 +12,7 @@ import (
 )
 
 type CLI struct {
-	Exec             ExecCmd             `cmd:"" help:"import data in directory" default:"withargs"`
+	Exec             ExecCmd             `cmd:"" help:"import data in directory by running fetch, transform and load" default:"withargs"`
 	Publish          PublishCmd          `cmd:"" help:"load data from stdin into directory"`
 	GetPlugin        GetPluginCmd        `cmd:"" help:"download plugin"`
 	SetDefaultPlugin SetDefaultPluginCmd `cmd:"" help:"sets a plugin as default"`
