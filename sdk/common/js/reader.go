@@ -81,7 +81,7 @@ func (r *JSONArrayReader) more() (bool, error) {
 		return false, errors.Errorf("file does not contain a JSON array")
 	}
 
-	return false, nil
+	return false, io.EOF
 }
 
 func UnmarshalNext(d *json.Decoder, m proto.Message) error {
