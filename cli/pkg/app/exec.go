@@ -73,7 +73,7 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 		if err != nil {
 			return errors.Wrap(err, "Could not connect to the directory")
 		}
-		e.publisher = publish.NewPublisher(c, directoryClient)
+		e.publisher = publish.NewDirectoryPublisher(c, directoryClient)
 	}
 	return e.LaunchPlugin(c)
 }

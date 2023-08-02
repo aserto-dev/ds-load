@@ -14,21 +14,21 @@ import (
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 )
 
-type Publisher struct {
+type DirectoryPublisher struct {
 	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsi.ImporterClient
 }
 
-func NewPublisher(commonCtx *cc.CommonCtx, importerClient dsi.ImporterClient) *Publisher {
-	return &Publisher{
+func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsi.ImporterClient) *DirectoryPublisher {
+	return &DirectoryPublisher{
 		UI:             commonCtx.UI,
 		Log:            commonCtx.Log,
 		importerClient: importerClient,
 	}
 }
 
-func (p *Publisher) Publish(ctx context.Context, reader io.Reader) error {
+func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) error {
 	jsonReader, err := js.NewJSONArrayReader(reader)
 	if err != nil {
 		return err
@@ -52,7 +52,7 @@ func (p *Publisher) Publish(ctx context.Context, reader io.Reader) error {
 	return nil
 }
 
-func (p *Publisher) publishMessages(ctx context.Context, message *msg.Transform) error {
+func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.Transform) error {
 	var sErr error
 	errGroup, iCtx := errgroup.WithContext(ctx)
 	stream, err := p.importerClient.Import(iCtx)

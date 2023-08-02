@@ -21,7 +21,7 @@ func (l *PublishCmd) Run(commonCtx *cc.CommonCtx) error {
 		return errors.Wrap(err, "Could not connect to the directory")
 	}
 
-	publisher := publish.NewPublisher(commonCtx, dirClient)
+	publisher := publish.NewDirectoryPublisher(commonCtx, dirClient)
 
 	return l.processMessagesFromStdIn(commonCtx, publisher)
 }
