@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -16,13 +17,25 @@ type Contact struct {
 }
 
 type Properties struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
-	Email     string `json:"email"`
-	Company   string `json:"company"`
-	Owner     string `json:"hubspot_owner_id"`
-	Phone     string `json:"phone"`
+	FirstName             string `json:"firstname"`
+	LastName              string `json:"lastname"`
+	Email                 string `json:"email"`
+	Company               string `json:"company"`
+	Owner                 string `json:"hubspot_owner_id"`
+	Phone                 string `json:"phone"`
+	DeveloperSetup        string `json:"developer_setup"`
+	Domain                string `json:"hs_email_domain"`
+	Title                 string `json:"jobtitle"`
+	OriginalSource        string `json:"hs_analytics_source"`
+	OriginalSourceData2   string `json:"hs_analytics_source_data_2"`
+	CreatedAccount        string `json:"created_account"`
+	CreatedOrganization   string `json:"created_organization"`
+	InvitedToOrganization string `json:"invited_to"`
+	FirstConversion       string `json:"first_conversion_event_name"`
+	RecentConversion      string `json:"recent_conversion_event_name"`
 }
+
+//	Event source- if apply- hs_analytics_source_data_2
 
 type Paging struct {
 	Next struct {
@@ -38,10 +51,27 @@ type ContactResponse struct {
 func (c *HubspotClient) ListContacts() ([]Contact, error) {
 	contacts := make([]Contact, 0)
 
-	params := "&properties=email&properties=firstname&properties=lastname&properties=company&properties=hubspot_owner_id&properties=phone&archived=false"
+	properties := []string{"firstname",
+		"lastname",
+		"email",
+		"company",
+		"hubspot_owner_id",
+		"phone",
+		"developer_setup",
+		"hs_email_domain",
+		"jobtitle",
+		"hs_analytics_source",
+		"hs_analytics_source_data_2",
+		"created_account",
+		"created_organization",
+		"invited_to",
+		"first_conversion_event_name",
+		"recent_conversion_event_name"}
+
+	params := strings.Join(properties, "&properties=")
 	after := ""
 	for {
-		req, err := http.NewRequest("GET", fmt.Sprintf("https://api.hubapi.com/crm/v3/objects/contacts?limit=100%s%s", params, after), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("https://api.hubapi.com/crm/v3/objects/contacts?limit=100&properties=%s%s", params, after), nil)
 		if err != nil {
 			return nil, err
 		}

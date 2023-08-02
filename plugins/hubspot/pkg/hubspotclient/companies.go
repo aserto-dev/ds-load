@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -16,12 +17,16 @@ type Company struct {
 }
 
 type CompanyProperties struct {
-	City     string `json:"city"`
-	Domain   string `json:"domain"`
-	Industry string `json:"industry"`
-	Name     string `json:"name"`
-	Phone    string `json:"phone"`
-	State    string `json:"state"`
+	City              string `json:"city"`
+	Domain            string `json:"domain"`
+	Industry          string `json:"industry"`
+	Name              string `json:"name"`
+	Phone             string `json:"phone"`
+	State             string `json:"state"`
+	LICompanyPage     string `json:"linkedin_company_page"`
+	NumberOfEmployees string `json:"numberofemployees"`
+	AnnualRevenue     string `json:"annualrevenue"`
+	OriginalSource    string `json:"hs_analytics_source"`
 }
 
 type CompaniesResponse struct {
@@ -32,10 +37,21 @@ type CompaniesResponse struct {
 func (c *HubspotClient) ListCompanies() ([]Company, error) {
 	companies := make([]Company, 0)
 
-	params := "&properties=domain&properties=name&properties=city&properties=industry&properties=phone&properties=state&archived=false"
+	properties := []string{"domain",
+		"name",
+		"city",
+		"industry",
+		"phone",
+		"state",
+		"linkedin_company_page",
+		"numberofemployees",
+		"annualrevenue",
+		"hs_analytics_source"}
+
+	params := strings.Join(properties, "&properties=")
 	after := ""
 	for {
-		req, err := http.NewRequest("GET", fmt.Sprintf("https://api.hubapi.com/crm/v3/objects/companies?limit=100%s%s", params, after), nil)
+		req, err := http.NewRequest("GET", fmt.Sprintf("https://api.hubapi.com/crm/v3/objects/companies?limit=100&properties=%s%s", params, after), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -67,11 +83,6 @@ func (c *HubspotClient) ListCompanies() ([]Company, error) {
 			break
 		}
 		after = fmt.Sprintf("&after=%s", response.Paging.Next.After)
-	}
-
-	// populate the map from company names to companies
-	for _, company := range companies {
-		c.companies[company.Properties.Name] = company
 	}
 
 	return companies, nil

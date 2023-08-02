@@ -15,6 +15,30 @@
         {{ if $.properties.company }}
         "company": "{{ $.properties.company }}",
         {{ end }}
+        {{ if $.properties.hs_email_domain }}
+        "domain": "{{ $.properties.hs_email_domain }}",
+        {{ end }}
+        {{ if $.properties.jobtitle }}
+        "title": "{{ $.properties.jobtitle }}",
+        {{ end }}
+        {{ if $.properties.developer_setup }}
+        "developer_setup": "{{ $.properties.developer_setup }}",
+        {{ end }}
+        {{ if $.properties.created_account }}
+        "created_account": "{{ $.properties.created_account }}",
+        {{ end }}
+        {{ if $.properties.created_organization }}
+        "created_organization": "{{ $.properties.created_organization }}",
+        {{ end }}
+        {{ if $.properties.invited_to }}
+        "invited_to": "{{ $.properties.invited_to }}",
+        {{ end }}
+        {{ if $.properties.first_conversion_event_name }}
+        "first_conversion_event_name": "{{ $.properties.first_conversion_event_name }}",
+        {{ end }}
+        {{ if $.properties.recent_conversion_event_name }}
+        "recent_conversion_event_name": "{{ $.properties.recent_conversion_event_name }}",
+        {{ end }}        
         "email": "{{ $.properties.email }}"
       }
     }
@@ -22,17 +46,38 @@
 
   {{ if contains $.type "company" }}
     {
-      "key": "{{ $.id }}",
+      "key": "{{ $.properties.domain }}",
       "type": "company",
       "displayName": "{{ $.properties.name }}",
       "created_at":"{{ $.createdAt }}",
       "updated_at":"{{ $.updatedAt }}",
       "properties": {
+        "id": "{{ $.id }}",
+        {{ if $.properties.city }}
         "city": "{{ $.properties.city }}",
+        {{ end }}
+        {{ if $.properties.state }}
         "state": "{{ $.properties.state }}",
-        "domain": "{{ $.properties.domain }}",
+        {{ end }}
+        {{ if $.properties.phone }}
+        "phone": "{{ $.properties.phone }}",
+        {{ end }}
+        {{ if $.properties.industry }}
         "industry": "{{ $.properties.industry }}",
-        "phone": "{{ $.properties.phone }}"
+        {{ end }}
+        {{ if $.properties.linkedin_company_page }}
+        "linkedin_company_page": "{{ $.properties.linkedin_company_page }}",
+        {{ end }}
+        {{ if $.properties.numberofemployees }}
+        "numberofemployees": "{{ $.properties.numberofemployees }}",
+        {{ end }}
+        {{ if $.properties.annualrevenue }}
+        "annualrevenue": "{{ $.properties.annualrevenue }}",
+        {{ end }}
+        {{ if $.properties.hs_analytics_source }}
+        "hs_analytics_source": "{{ $.properties.hs_analytics_source }}",
+        {{ end }}
+        "domain": "{{ $.properties.domain }}"
       }
     }
   {{ end }}
@@ -41,7 +86,7 @@
     {{ if contains $.type "contact" }}
       {{ if $.owner }}
       {  
-        "relation": "owner",
+        "relation": "contact-owner",
         "subject": {
           "type": "user",
           "key": "{{$.owner}}"
@@ -53,7 +98,7 @@
       }
       {{ end }}
       
-      {{ if $.companyId }}
+      {{ if $.properties.hs_email_domain }}
         {{ if $.owner }}
         ,
         {{ end }}
@@ -65,7 +110,7 @@
         },
         "object": {
           "type": "company",
-          "key": "{{$.companyId}}"
+          "key": "{{$.properties.hs_email_domain}}"
         }
       }
       {{ end }}

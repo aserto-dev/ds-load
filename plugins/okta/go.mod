@@ -15,10 +15,10 @@ require (
 	github.com/BurntSushi/toml v1.1.0 // indirect
 	github.com/aserto-dev/go-directory v0.21.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/dongri/phonenumber v0.0.0-20230428094603-9e2d44886294 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/patrickmn/go-cache v0.0.0-20180815053127-5633e0862627 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
