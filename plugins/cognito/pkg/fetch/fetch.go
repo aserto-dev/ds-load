@@ -14,18 +14,9 @@ type Fetcher struct {
 	groups        bool
 }
 
-func New(accessKey, secretKey, userPoolID, region string) (*Fetcher, error) {
-	cognitoClient, err := cognitoclient.NewCognitoClient(
-		accessKey,
-		secretKey,
-		userPoolID,
-		region)
-	if err != nil {
-		return nil, err
-	}
-
+func New(client *cognitoclient.CognitoClient) (*Fetcher, error) {
 	return &Fetcher{
-		cognitoClient: cognitoClient,
+		cognitoClient: client,
 	}, nil
 }
 

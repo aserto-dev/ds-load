@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 )
 
 type FetchCmd struct {
@@ -16,10 +17,15 @@ type FetchCmd struct {
 }
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	fetcher, err := fetch.New(ctx.Context, f.Domain, f.APIToken, f.RequestTimeout, f.Groups, f.Roles)
+	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, f.Domain, f.APIToken, f.RequestTimeout)
 	if err != nil {
 		return err
 	}
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	fetcher, err := fetch.New(ctx.Context, oktaClient)
+	if err != nil {
+		return err
+	}
+
+	return fetcher.WithGroups(f.Groups).WithRoles(f.Roles).Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

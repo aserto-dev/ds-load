@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/fetch"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
@@ -19,7 +20,12 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		cmd.UserPID = "auth0|" + cmd.UserPID
 	}
 
-	fetcher, err := fetch.New(cmd.ClientID, cmd.ClientSecret, cmd.Domain)
+	client, err := auth0client.New(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
+	if err != nil {
+		return err
+	}
+
+	fetcher, err := fetch.New(ctx.Context, client)
 	if err != nil {
 		return err
 	}

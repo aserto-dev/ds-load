@@ -13,39 +13,12 @@ import (
 
 type Fetcher struct {
 	azureClient *azureclient.AzureADClient
-
-	Tenant       string
-	ClientID     string
-	ClientSecret string
-	RefreshToken string
 }
 
-func New(ctx context.Context, tenant, clientID, clientSecret, refreshToken string) (*Fetcher, error) {
-	azureClient, err := createAzureAdClient(ctx, tenant, clientID, clientSecret, refreshToken)
-	if err != nil {
-		return nil, err
-	}
-
+func New(ctx context.Context, client *azureclient.AzureADClient) (*Fetcher, error) {
 	return &Fetcher{
-		azureClient: azureClient,
+		azureClient: client,
 	}, nil
-}
-
-func createAzureAdClient(ctx context.Context, tenant, clientID, clientSecret, refreshToken string) (azureClient *azureclient.AzureADClient, err error) {
-	if refreshToken != "" {
-		return azureclient.NewAzureADClientWithRefreshToken(
-			ctx,
-			tenant,
-			clientID,
-			clientSecret,
-			refreshToken)
-	}
-
-	return azureclient.NewAzureADClient(
-		ctx,
-		tenant,
-		clientID,
-		clientSecret)
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
