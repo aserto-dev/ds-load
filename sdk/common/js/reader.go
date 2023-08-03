@@ -41,17 +41,14 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 // returns io.EOF at the end of the input stream.
 func (r *JSONArrayReader) ReadProtoMessage(message proto.Message) error {
 	more, err := r.more()
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
-	}
-	if more {
-		if err := UnmarshalNext(r.decoder, message); err != nil {
-			return err
-		}
-	} else {
+	case more:
+		return UnmarshalNext(r.decoder, message)
+	default:
 		return io.EOF
 	}
-	return nil
 }
 
 func (r *JSONArrayReader) Read(message any) error {
