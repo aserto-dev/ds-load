@@ -63,7 +63,9 @@ func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.
 				common.SetExitCode(1)
 			}
 			err = writer.Write(userResult)
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+			}
 		}
 
 		if response != nil && response.HasNextPage() {
