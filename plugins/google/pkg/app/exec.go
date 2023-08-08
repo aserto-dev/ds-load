@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/fetch"
+	"github.com/aserto-dev/ds-load/plugins/google/pkg/googleclient"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
@@ -13,7 +14,12 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	fetcher, err := fetch.New(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
+	gClient, err := googleclient.NewGoogleClient(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
+	if err != nil {
+		return err
+	}
+
+	fetcher, err := fetch.New(gClient)
 	if err != nil {
 		return err
 	}

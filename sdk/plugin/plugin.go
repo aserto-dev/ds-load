@@ -14,6 +14,10 @@ type Fetcher interface {
 	Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error
 }
 
+type Verifier interface {
+	Verify(ctx context.Context) error
+}
+
 type Transformer interface {
 	Transform(ctx context.Context, reader io.Reader, outputWriter, errorWriter io.Writer) error
 }
@@ -25,6 +29,7 @@ type Publisher interface {
 type Plugin interface {
 	Fetcher
 	Transformer
+	Verifier
 }
 
 type DSPlugin struct {

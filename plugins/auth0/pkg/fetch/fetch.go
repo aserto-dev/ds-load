@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/auth0/go-auth0/management"
@@ -16,27 +17,12 @@ type Fetcher struct {
 	UserEmail      string
 	ConnectionName string
 	Roles          bool
-	mgmt           *management.Management
+	client         *auth0client.Auth0Client
 }
 
-func New(clientID, clientSecret, domain string) (*Fetcher, error) {
-	options := []management.Option{
-		management.WithClientCredentials(
-			clientID,
-			clientSecret,
-		),
-	}
-
-	mgmt, err := management.New(
-		domain,
-		options...,
-	)
-	if err != nil {
-		return nil, err
-	}
-
+func New(ctx context.Context, client *auth0client.Auth0Client) (*Fetcher, error) {
 	return &Fetcher{
-		mgmt: mgmt,
+		client: client,
 	}, nil
 }
 
@@ -121,7 +107,7 @@ func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User,
 
 	if f.UserPID != "" {
 		// list only the user with the provided pid
-		user, err := f.mgmt.User.Read(f.UserPID)
+		user, err := f.client.Mgmt.User.Read(f.UserPID)
 		if err != nil {
 			return nil, false, err
 		}
@@ -131,14 +117,14 @@ func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User,
 		return []*management.User{user}, false, nil
 	} else if f.UserEmail != "" {
 		// List only users that have the provided email
-		users, err := f.mgmt.User.ListByEmail(f.UserEmail)
+		users, err := f.client.Mgmt.User.ListByEmail(f.UserEmail)
 		if err != nil {
 			return nil, false, err
 		}
 		return users, false, nil
 	} else {
 		// List all users
-		userList, err := f.mgmt.User.List(opts...)
+		userList, err := f.client.Mgmt.User.List(opts...)
 		if err != nil {
 			return nil, false, err
 		}
@@ -159,7 +145,7 @@ func (f *Fetcher) getRoles(uID string) ([]map[string]interface{}, error) {
 		}
 
 		reqOpts := management.Page(page)
-		roles, err := f.mgmt.User.Roles(uID, reqOpts)
+		roles, err := f.client.Mgmt.User.Roles(uID, reqOpts)
 		if err != nil {
 			return nil, err
 		}

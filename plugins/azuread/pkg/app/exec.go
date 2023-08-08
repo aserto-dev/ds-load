@@ -13,7 +13,12 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	fetcher, err := fetch.New(ctx.Context, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+	azureClient, err := createAzureAdClient(ctx.Context, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+	if err != nil {
+		return err
+	}
+
+	fetcher, err := fetch.New(ctx.Context, azureClient)
 	if err != nil {
 		return err
 	}

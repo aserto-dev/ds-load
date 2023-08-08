@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
@@ -13,10 +14,17 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	fetcher, err := fetch.New(ctx.Context, cmd.Domain, cmd.APIToken, cmd.RequestTimeout, cmd.Groups, cmd.Roles)
+	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, cmd.Domain, cmd.APIToken, cmd.RequestTimeout)
 	if err != nil {
 		return err
 	}
+
+	fetcher, err := fetch.New(ctx.Context, oktaClient)
+	if err != nil {
+		return err
+	}
+
+	fetcher = fetcher.WithGroups(cmd.Groups).WithRoles(cmd.Roles)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {

@@ -18,17 +18,21 @@ type Fetcher struct {
 	Roles      bool
 }
 
-func New(ctx context.Context, domain, apiToken string, timeout int64, groups, roles bool) (*Fetcher, error) {
-	oktaClient, err := oktaclient.NewOktaClient(ctx, domain, apiToken, timeout)
-	if err != nil {
-		return nil, err
-	}
+func New(ctx context.Context, client oktaclient.OktaClient) (*Fetcher, error) {
 
 	return &Fetcher{
-		oktaClient: oktaClient,
-		Groups:     groups,
-		Roles:      roles,
+		oktaClient: client,
 	}, nil
+}
+
+func (fetcher *Fetcher) WithGroups(groups bool) *Fetcher {
+	fetcher.Groups = groups
+	return fetcher
+}
+
+func (fetcher *Fetcher) WithRoles(roles bool) *Fetcher {
+	fetcher.Roles = roles
+	return fetcher
 }
 
 func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {

@@ -15,20 +15,9 @@ type Fetcher struct {
 	Groups  bool
 }
 
-func New(ctx context.Context, clientID, clientSecret, refrestToken, customer string) (*Fetcher, error) {
-	gClent, err := googleclient.NewGoogleClient(
-		ctx,
-		clientID,
-		clientSecret,
-		refrestToken,
-		customer)
-
-	if err != nil {
-		return nil, err
-	}
-
+func New(client *googleclient.GoogleClient) (*Fetcher, error) {
 	return &Fetcher{
-		gClient: gClent,
+		gClient: client,
 	}, nil
 }
 
