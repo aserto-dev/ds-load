@@ -9,7 +9,8 @@ Usage: ds-load <command>
 Directory loader
 
 Commands:
-  exec                  import data in directory
+  exec                  import data in directory by running fetch, transform and publish
+  publish               load data from stdin into directory
   get-plugin            download plugin
   set-default-plugin    sets a plugin as default
   list-plugins          list available plugins
@@ -34,10 +35,10 @@ When running `ds-load auth0 --key`, `auth0` is a positional parameter, so `--key
 ```
 Usage: ds-load exec <command> ...
 
-import data in directory
+import data in directory by running fetch, transform and publish
 
 Arguments:
-  <command> ...    available commands are: auth0|okta
+  <command> ...    available commands are: auth0|azuread|cognito|google|okta
 
 Flags:
   -h, --help                  Show context-sensitive help.
@@ -167,5 +168,5 @@ ds-load -c ./config.yaml auth0
 ```
 ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > objs_and_rel.json
 
-cat objs_and_rel.json | ds-load load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
+cat objs_and_rel.json | ds-load publish --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
 ```
