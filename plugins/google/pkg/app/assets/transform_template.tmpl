@@ -10,6 +10,7 @@
       "properties":{
         "id": "{{ $.id }}",
         "email": "{{ $email }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         {{ if $.recoveryPhone }}
         "phone": "{{ $.recoveryPhone }}",
         {{ end }}
@@ -25,11 +26,23 @@
     },
     {
       "key": "{{ $email }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "google-workspace",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
     },
     {
       "key": "{{ $.id }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "google-workspace",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
     }
   {{ end }}
 
@@ -40,6 +53,7 @@
       "displayName": "{{ $.name }}",
       "properties": {
         "email": "{{ $.email }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "id": "{{ $.id }}"
       }
     }

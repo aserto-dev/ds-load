@@ -27,6 +27,7 @@
       "properties": {
         "verified": true,
         "provider": "azuread",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "kind": "IDENTITY_KIND_EMAIL"
       }
     },
@@ -36,6 +37,7 @@
       "properties": {
         "verified": true,
         "provider": "azuread",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "kind": "IDENTITY_KIND_PID"
       }
     }
@@ -47,6 +49,7 @@
           "properties": {
             "verified": false,
             "provider": "azuread",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
             "kind": "IDENTITY_KIND_PHONE"
           }
       }

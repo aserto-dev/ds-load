@@ -28,6 +28,7 @@
       "properties": {
         "kind": "IDENTITY_KIND_PID",
         "provider": "auth0",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "verified": true
       }
     },
@@ -37,6 +38,7 @@
         "properties": {
           "kind": "IDENTITY_KIND_EMAIL",
           "provider": "auth0",
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
           "verified": {{ .email_verified }}
         }
     }
@@ -49,6 +51,7 @@
           "properties": {
             "kind": "IDENTITY_KIND_USERNAME",
             "provider": "auth0",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
             "verified": true
           }
       }
@@ -62,6 +65,7 @@
           "properties": {
             "kind": "IDENTITY_KIND_PHONE",
             "provider": "auth0",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
             "verified": {{ .phone_verified }}
           }
       }
@@ -73,7 +77,10 @@
       {{ if $i }},{{ end }}
       {
         "key": "{{$element.name}}",
-        "type": "group"
+        "type": "group",
+        "properties":{
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
       }
     {{ end }}
   ],

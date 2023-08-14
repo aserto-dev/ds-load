@@ -37,6 +37,7 @@
       "properties": {
         "kind": "IDENTITY_KIND_PID",
         "provider": "okta",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "verified": true
       }
     }
@@ -48,6 +49,7 @@
           "properties": {
             "kind": "IDENTITY_KIND_EMAIL",
             "provider": "okta",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
             "verified": {{ $verified }}
           }
       }
@@ -61,6 +63,7 @@
           "properties": {
             "kind": "IDENTITY_KIND_PHONE",
             "provider": "okta",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
             "verified": {{ $verified }}
           }
       }
