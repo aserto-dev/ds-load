@@ -14,16 +14,28 @@
       "displayName": "{{ $name }}",
       "created_at":"{{ $.UserCreateDate }}",
       "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "email": "{{ $email }}"
       }
     },
     {
       "key": "{{ $email }}",
-      "type": "identity"
+      "type": "identity",
+        "properties": {
+          "kind": "IDENTITY_KIND_EMAIL",
+          "provider": "cognito",
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
     },
     {
       "key": "{{ $.Username }}",
-      "type": "identity"
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_USERNAME",
+        "provider": "cognito",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
     }
     {{ if $.Groups }}, {{ end }}
 
@@ -32,7 +44,10 @@
       {
         "key": "{{$element.GroupName}}",
         "displayName": "{{$element.Description}}",
-        "type": "group"
+        "type": "group",
+        "properties":{
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
       }
     {{ end }}
   ],
