@@ -1,5 +1,6 @@
 # ds-load
-CLI pipeline for populating the directory
+
+`ds-load` is a CLI pipeline for populating the Topaz directory (or directories that are contract-compatible, such as the Aserto directory).
 
 ## Arguments
 
@@ -21,16 +22,25 @@ Flags:
   -c, --config=CONFIG-FLAG    Path to the config file. Any argument provided to the CLI will take precedence.
   -v, --verbosity=INT         Use to increase output verbosity.
 ```
+
 The default command for ds-load is `exec`, so when running `ds-load` without any command, the exec parameters need to be passed.
-The CLI parameters need to be passed first, and then, an arbitrary list of positional parameters can be passed. The first positional parameter is the plugin name we want to invoke followed by the plugin parameters. `ds-load --host=<directory host> auth0 --domain=<auth0 domain>`.
 
-For viewing the plugin help: `ds-load auth0 --help`. 
+Note: the plugin examples below all use `auth0`, but every one of the plugins (`azuread`, `cognito`, `google`, `okta`, etc) follow the same patterns.
 
-### Parameter position
-When running `ds-load auth0 --key`, `auth0` is a positional parameter, so `--key` will be run in the context of the plugin. If we run `ds-load --key auth0`, `--key` would be a parameter to `ds-load exec`.
+### ds-load vs plugin parameters
+The ds-load CLI parameters need to be passed first, and can be followed by an arbitrary list of positional parameters. The first positional parameter is the plugin name we want to invoke followed by the plugin's parameters.
+
+Example: `ds-load --host=<directory host> auth0 --domain=<auth0 domain>`
+* `--host` is a CLI parameter for `ds-load`
+* `auth0` is the plugin name
+* `--domain` is a parameter for the `auth0` plugin
+
+For viewing the plugin help, use the following format: `ds-load auth0 --help`.
+
+Tip: when running `ds-load auth0 --key`, `auth0` is a positional parameter, so `--key` will be run in the context of the plugin. If we run `ds-load --key auth0`, `--key` would be a parameter to `ds-load exec`.
 
 ### ds-load exec
-`exec` is the default command. it will invoke a plugin with the specified parameters reading it's output and importing the resulting data into the directory.
+`exec` is the default command. it will invoke a plugin with the specified parameters reading its output and importing the resulting data into the directory.
 
 ```
 Usage: ds-load exec <command> ...
@@ -54,12 +64,12 @@ Flags:
 
 `-p/--print` is enabled by default when invoking a plugin with `fetch/version/export-transform/--help`
 
-### Env variables
-Parameters can also be passed by environment, as seen in the help message of each command, but the ones from config files and command line take precedence.
+### Environment variables
+Parameters can also be passed using environment variables, as seen in the help message of each command, but the ones from config files and command line take precedence.
 
 ## Config files
 
-config files are in yaml format:
+Config files are in yaml format:
 ```yaml
 ---
 arg: value
@@ -71,12 +81,12 @@ another-arg: value
 When passing custom config files to both the cli and the plugin, use `ds-load -c <config-path> <plugin-name> <command>` 
 
 ### CLI config
-default location: `~/.config/ds-load/cfg/config.yaml` can be overridden using `-c/--config`
+The default location for the configuration file is `~/.config/ds-load/cfg/config.yaml`. It can be overridden using the `-c/--config` flag.
 
 #### example with auth0 plugin
 ```yaml
 ---
-host: directory.eng.aserto.com:8443
+host: directory.prod.aserto.com:8443
 api-key: secretapikey
 tenant-id: your-tenant-id
 auth0:
@@ -87,7 +97,7 @@ auth0:
 ```
 
 ### Plugin config
-default location: `~/.config/ds-load/cfg/<plugin-name>.yaml` can be overridden using `-c/--config`
+The default location for plugin configuration files is `~/.config/ds-load/cfg/<plugin-name>.yaml`. It can be overridden using the `-c/--config` flag.
 
 #### example for auth0
 ```yaml
@@ -100,7 +110,7 @@ auth0:
 ```
 
 ## Transform
-The data received from the fetcher is being transformed using a transformation template, which is written as a go template and it outputs objects and relations.
+The data received from the fetcher is transformed into objects and relations using a transformation template, which is uses the go template syntax.
 
 The default transformation template can be exported using `ds-load <plugin-name> export-transform`.
 
@@ -117,28 +127,28 @@ Logs are printed to `stdout`. You can increase detail using the verbosity flag (
 ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret>
 ```
 
-### Import data with custom transformation file
+### Import data with a custom transformation file
 ```
 ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template-file=<template-path>
 ```
 
-### View data from auth0
+### Fetch data from auth0 without importing it
 ```
 ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret>
 ```
 
 ### Transform data from a previously saved auth0 fetch
-we use `-p` in order to just print the transform data
+Note: we use `-p` in order to just print the transform data.
 ```
-ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.data
-cat auth0.data | ds-load -p auth0 transform
+ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.json
+cat auth0.json | ds-load -p auth0 transform
 ```
 
 ### Transform and import data from a previously saved auth0 fetch
 ```
-ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.data
+ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.json
 
-cat auth0.data | ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 transform
+cat auth0.json | ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 transform
 ```
 
 ### Pipe data from fetch to transform
@@ -151,7 +161,7 @@ ds-load auth0 fetch --domain=<auth0-domain> --client-id=<auth0-client-id> --clie
 config.yaml
 ```yaml
 ---
-host: "directory.eng.aserto.com:8443"
+host: "directory.prod.aserto.com:8443"
 api-key: "secretapikey"
 tenant-id: "your-tenant-id"
 auth0:
@@ -166,7 +176,7 @@ ds-load -c ./config.yaml auth0
 
 ### Load directory data from a file
 ```
-ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > objs_and_rel.json
+ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> > auth0.json
 
-cat objs_and_rel.json | ds-load publish --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
+cat auth0.json | ds-load publish --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
 ```
