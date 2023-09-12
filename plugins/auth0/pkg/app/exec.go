@@ -16,7 +16,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
+	if cmd.UserPID != "" && !strings.Contains(cmd.UserPID, "|") {
 		cmd.UserPID = "auth0|" + cmd.UserPID
 	}
 
