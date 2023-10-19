@@ -15,10 +15,15 @@ type JSONArrayWriter struct {
 }
 
 func NewJSONArrayWriter(w io.Writer) (*JSONArrayWriter, error) {
+	_, err := w.Write([]byte{'['})
+	if err != nil {
+		return nil, err
+	}
+
 	return &JSONArrayWriter{
 		writer:           w,
 		addDelimiter:     false,
-		arrayInitialized: false,
+		arrayInitialized: true,
 	}, nil
 }
 
