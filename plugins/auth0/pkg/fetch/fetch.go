@@ -77,6 +77,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				common.SetExitCode(1)
 				continue
 			}
+			obj["email_verified"] = user.GetEmailVerified()
 			if f.Roles {
 				roles, err := f.getRoles(*user.ID)
 				if err != nil {
