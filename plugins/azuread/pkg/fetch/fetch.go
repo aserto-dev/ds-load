@@ -34,7 +34,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		common.SetExitCode(1)
 	}
 
-	for _, user := range aadUsers.GetValue() {
+	for _, user := range aadUsers {
 		writer := kiota.NewJsonSerializationWriter()
 		err := user.Serialize(writer)
 		if err != nil {
