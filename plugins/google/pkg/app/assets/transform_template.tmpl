@@ -86,17 +86,22 @@
     {{ end }}
 
     {{ if contains $.kind "admin#directory#group" }}
+      {{ $index := 0 }}
       {{ range $i, $element := $.users }}
 
-      {{ if $i }},{{ end }}
       {{ $subject_type := $element.type }}
 
       {{ if contains $element.type "USER" }}
         {{ $subject_type = "user" }}
-      {{ end }}
-      {{ if contains $element.type "GROUP" }}
+      {{ else if contains $element.type "GROUP"}}
         {{ $subject_type = "group" }}
+      {{ else }}
+        {{ continue }}
       {{ end }}
+      
+      {{ if $index }},{{ end }}
+      {{$index = add $index 1}}
+
       {
         "relation": "member",
         "subject": {

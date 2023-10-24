@@ -21,6 +21,9 @@ func customFunctions() map[string]any {
 		"marshal":      marshal,
 		"fromEnv":      fromEnv,
 		"phoneIso3166": phoneIso3166,
+		"add": func(a int, b int) int {
+			return a + b
+		},
 	}
 }
 
