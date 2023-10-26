@@ -6,6 +6,7 @@ import (
 
 	"github.com/aserto-dev/clui"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/rs/zerolog"
@@ -53,7 +54,6 @@ func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) erro
 }
 
 func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.Transform) error {
-	var sErr error
 	errGroup, iCtx := errgroup.WithContext(ctx)
 	stream, err := p.importerClient.Import(iCtx)
 	if err != nil {
@@ -64,21 +64,23 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	// import objects
 	for _, object := range message.Objects {
 		p.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
-		sErr = stream.Send(&dsi.ImportRequest{
+		sErr := stream.Send(&dsi.ImportRequest{
 			Msg: &dsi.ImportRequest_Object{
 				Object: object,
 			},
 		})
+		p.handleStreamError(sErr)
 	}
 
 	// import relations
 	for _, relation := range message.Relations {
 		p.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
-		sErr = stream.Send(&dsi.ImportRequest{
+		sErr := stream.Send(&dsi.ImportRequest{
 			Msg: &dsi.ImportRequest_Relation{
 				Relation: relation,
 			},
 		})
+		p.handleStreamError(sErr)
 	}
 
 	err = stream.CloseSend()
@@ -91,12 +93,16 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 		return err
 	}
 
-	// TODO handle stream errors
-	if sErr != nil {
-		p.Log.Err(sErr)
+	return nil
+}
+
+func (p *DirectoryPublisher) handleStreamError(err error) {
+	if err == nil {
+		return
 	}
 
-	return nil
+	p.Log.Err(err)
+	common.SetExitCode(1)
 }
 
 func receiver(stream dsi.Importer_ImportClient) func() error {
