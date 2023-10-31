@@ -55,7 +55,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter, t.template)
+		err = t.doTransform(idpData, jsonWriter, t.template, errorWriter)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 	return nil
 }
 
-func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
+func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte, errorWriter io.Writer) error {
 	output, err := t.transformToTemplate(idpData, string(transformTemplate))
 	if err != nil {
 		return errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
@@ -80,6 +80,7 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 	}
 	err = opts.Unmarshal([]byte(output), &dirV3msg)
 	if err != nil {
+		errorWriter.Write([]byte(err.Error()))
 		var dirV2msg msg.TransformV2
 		err = opts.Unmarshal([]byte(output), &dirV2msg)
 		if err != nil {
