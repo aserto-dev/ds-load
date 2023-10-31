@@ -47,6 +47,11 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 			return err
 		}
 
+		for _, r := range message.Relations {
+			if r.SubjectRelation != "" {
+				p.UI.Problem().Msgf("detected subject relation %s in v2 mode", r.SubjectRelation)
+			}
+		}
 		v2msg.Objects = convert.ObjectArrayToV2(message.Objects)
 		v2msg.Relations = convert.RelationArrayToV2(message.Relations)
 
