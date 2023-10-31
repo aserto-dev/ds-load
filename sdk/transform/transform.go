@@ -15,23 +15,23 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type ApiVersion int
+type APIVersion int
 
 const (
-	ApiVersionUnknown ApiVersion = 1
-	ApiVersionV2      ApiVersion = 2
-	ApiVersionV3      ApiVersion = 3
+	APIVersionUnknown APIVersion = 1
+	APIVersionV2      APIVersion = 2
+	APIVersionV3      APIVersion = 3
 )
 
 type GoTemplateTransform struct {
 	template []byte
-	version  ApiVersion
+	version  APIVersion
 }
 
 func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
 	return &GoTemplateTransform{
 		template: transformTemplate,
-		version:  ApiVersionUnknown,
+		version:  APIVersionUnknown,
 	}
 }
 
@@ -65,7 +65,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter, t.template, errorWriter)
+		err = t.doTransform(idpData, jsonWriter, t.template)
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 	return nil
 }
 
-func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte, errorWriter io.Writer) error {
+func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
 	output, err := t.transformToTemplate(idpData, string(transformTemplate))
 	if err != nil {
 		return errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
@@ -90,7 +90,7 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 	}
 
 	switch t.version {
-	case ApiVersionV2:
+	case APIVersionV2:
 		var dirV2msg msg.TransformV2
 		err = opts.Unmarshal([]byte(output), &dirV2msg)
 		if err != nil {
@@ -98,25 +98,24 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 		}
 		dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
 		dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
-	case ApiVersionV3:
+	case APIVersionV3:
 		err = opts.Unmarshal([]byte(output), &dirV3msg)
 		if err != nil {
 			return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
 		}
-	case ApiVersionUnknown:
+	case APIVersionUnknown:
 		err = opts.Unmarshal([]byte(output), &dirV3msg)
 		if err != nil {
-			errorWriter.Write([]byte(err.Error()))
 			var dirV2msg msg.TransformV2
-			err = opts.Unmarshal([]byte(output), &dirV2msg)
-			if err != nil {
-				return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
+			v2err := opts.Unmarshal([]byte(output), &dirV2msg)
+			if v2err != nil {
+				return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
 			}
 			dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
 			dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
-			t.version = ApiVersionV2
+			t.version = APIVersionV2
 		} else {
-			t.version = ApiVersionV3
+			t.version = APIVersionV3
 		}
 	}
 
