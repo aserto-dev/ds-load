@@ -15,13 +15,23 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+type ApiVersion int
+
+const (
+	ApiVersionUnknown ApiVersion = 1
+	ApiVersionV2      ApiVersion = 2
+	ApiVersionV3      ApiVersion = 3
+)
+
 type GoTemplateTransform struct {
 	template []byte
+	version  ApiVersion
 }
 
 func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
 	return &GoTemplateTransform{
 		template: transformTemplate,
+		version:  ApiVersionUnknown,
 	}
 }
 
@@ -78,16 +88,36 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 		AllowPartial:   false,
 		DiscardUnknown: false,
 	}
-	err = opts.Unmarshal([]byte(output), &dirV3msg)
-	if err != nil {
-		errorWriter.Write([]byte(err.Error()))
+
+	switch t.version {
+	case ApiVersionV2:
 		var dirV2msg msg.TransformV2
 		err = opts.Unmarshal([]byte(output), &dirV2msg)
 		if err != nil {
-			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory v2 objects and relations")
 		}
 		dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
 		dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
+	case ApiVersionV3:
+		err = opts.Unmarshal([]byte(output), &dirV3msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
+		}
+	case ApiVersionUnknown:
+		err = opts.Unmarshal([]byte(output), &dirV3msg)
+		if err != nil {
+			errorWriter.Write([]byte(err.Error()))
+			var dirV2msg msg.TransformV2
+			err = opts.Unmarshal([]byte(output), &dirV2msg)
+			if err != nil {
+				return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
+			}
+			dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
+			dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
+			t.version = ApiVersionV2
+		} else {
+			t.version = ApiVersionV3
+		}
 	}
 
 	err = jsonWriter.WriteProtoMessage(&dirV3msg)
