@@ -19,6 +19,8 @@ type DirectoryPublisher struct {
 	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsiv3.ImporterClient
+	objErr         int
+	relErr         int
 }
 
 func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsiv3.ImporterClient) *DirectoryPublisher {
@@ -48,6 +50,15 @@ func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) erro
 		if err != nil {
 			return err
 		}
+	}
+
+	if p.objErr != 0 {
+		p.UI.Problem().Msgf("failed to import %d objects", p.objErr)
+		common.SetExitCode(1)
+	}
+	if p.relErr != 0 {
+		p.UI.Problem().Msgf("failed to import %d relations", p.relErr)
+		common.SetExitCode(1)
 	}
 
 	return nil
@@ -108,9 +119,16 @@ func (p *DirectoryPublisher) handleStreamError(err error) {
 func (p *DirectoryPublisher) receiver(stream dsiv3.Importer_ImportClient) func() error {
 	return func() error {
 		for {
-			_, err := stream.Recv()
+			result, err := stream.Recv()
 			if err == io.EOF {
 				return nil
+			}
+
+			if result.Object.Error != 0 {
+				p.objErr += int(result.Object.Error)
+			}
+			if result.Relation.Error != 0 {
+				p.relErr += int(result.Relation.Error)
 			}
 
 			if err != nil {

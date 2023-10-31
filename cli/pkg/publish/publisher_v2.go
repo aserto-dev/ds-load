@@ -20,6 +20,8 @@ type DirectoryV2Publisher struct {
 	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsi.ImporterClient
+	objErr         int
+	relErr         int
 }
 
 func NewDirectoryV2Publisher(commonCtx *cc.CommonCtx, importerClient dsi.ImporterClient) *DirectoryV2Publisher {
@@ -59,6 +61,15 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 		if err != nil {
 			return err
 		}
+	}
+
+	if p.objErr != 0 {
+		p.UI.Problem().Msgf("failed to import %d objects", p.objErr)
+		common.SetExitCode(1)
+	}
+	if p.relErr != 0 {
+		p.UI.Problem().Msgf("failed to import %d relations", p.relErr)
+		common.SetExitCode(1)
 	}
 
 	return nil
@@ -111,7 +122,6 @@ func (p *DirectoryV2Publisher) handleStreamError(err error) {
 	if err == nil {
 		return
 	}
-
 	p.Log.Err(err)
 	common.SetExitCode(1)
 }
@@ -119,9 +129,16 @@ func (p *DirectoryV2Publisher) handleStreamError(err error) {
 func (p *DirectoryV2Publisher) receiver(stream dsi.Importer_ImportClient) func() error {
 	return func() error {
 		for {
-			_, err := stream.Recv()
+			result, err := stream.Recv()
 			if err == io.EOF {
 				return nil
+			}
+
+			if result.Object.Error != 0 {
+				p.objErr += int(result.Object.Error)
+			}
+			if result.Relation.Error != 0 {
+				p.relErr += int(result.Relation.Error)
 			}
 
 			if err != nil {
