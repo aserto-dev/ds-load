@@ -10,6 +10,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
+	convert "github.com/aserto-dev/go-directory/pkg/convert"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -71,14 +72,24 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 	if os.Getenv("DEBUG") != "" {
 		os.Stdout.WriteString(output)
 	}
-	var directoryObject msg.Transform
+	var dirV3msg msg.Transform
 
-	err = protojson.Unmarshal([]byte(output), &directoryObject)
+	opts := protojson.UnmarshalOptions{
+		AllowPartial:   false,
+		DiscardUnknown: false,
+	}
+	err = opts.Unmarshal([]byte(output), &dirV3msg)
 	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
+		var dirV2msg msg.TransformV2
+		err = opts.Unmarshal([]byte(output), &dirV2msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory objects and relations")
+		}
+		dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
+		dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
 	}
 
-	err = jsonWriter.WriteProtoMessage(&directoryObject)
+	err = jsonWriter.WriteProtoMessage(&dirV3msg)
 	if err != nil {
 		return errors.Wrap(err, "failed to write directory objects to output")
 	}

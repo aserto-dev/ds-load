@@ -20,7 +20,7 @@ import (
 )
 
 type ExecCmd struct {
-	clients.Config
+	PublishCmd
 	CommandArgs  []string `name:"command" passthrough:"" arg:"" help:"available commands are: ${plugins}"`
 	Print        bool     `name:"print" short:"p" help:"print output to stdout"`
 	PluginFolder string   `hidden:""`
@@ -69,11 +69,19 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	if !e.Print {
-		directoryClient, err := clients.NewDirectoryImportClient(c.Context, &e.Config)
-		if err != nil {
-			return errors.Wrap(err, "Could not connect to the directory")
+		if e.V2 {
+			dirClient, err := clients.NewDirectoryV2ImportClient(c.Context, &e.Config)
+			if err != nil {
+				return errors.Wrap(err, "Could not connect to the directory")
+			}
+			e.publisher = publish.NewDirectoryV2Publisher(c, dirClient)
+		} else {
+			dirClient, err := clients.NewDirectoryV3ImportClient(c.Context, &e.Config)
+			if err != nil {
+				return errors.Wrap(err, "Could not connect to the directory")
+			}
+			e.publisher = publish.NewDirectoryPublisher(c, dirClient)
 		}
-		e.publisher = publish.NewDirectoryPublisher(c, directoryClient)
 	}
 	return e.LaunchPlugin(c)
 }

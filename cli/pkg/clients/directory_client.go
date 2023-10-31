@@ -11,7 +11,8 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
+	dsiv2 "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
+	dsiv3 "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
 )
 
 const localhostDirectory = "localhost:9292"
@@ -23,7 +24,7 @@ type Config struct {
 	TenantID string `short:"t" env:"DIRECTORY_TENANT_ID" help:"Directory Tenant ID"`
 }
 
-func NewDirectoryImportClient(ctx context.Context, cfg *Config) (dsi.ImporterClient, error) {
+func NewDirectoryV2ImportClient(ctx context.Context, cfg *Config) (dsiv2.ImporterClient, error) {
 	if cfg.Host == "" {
 		cfg.Host = localhostDirectory
 	}
@@ -50,7 +51,37 @@ func NewDirectoryImportClient(ctx context.Context, cfg *Config) (dsi.ImporterCli
 		return nil, err
 	}
 
-	return dsi.NewImporterClient(conn.Conn), nil
+	return dsiv2.NewImporterClient(conn.Conn), nil
+}
+
+func NewDirectoryV3ImportClient(ctx context.Context, cfg *Config) (dsiv3.ImporterClient, error) {
+	if cfg.Host == "" {
+		cfg.Host = localhostDirectory
+	}
+
+	if err := validate(cfg); err != nil {
+		return nil, err
+	}
+
+	opts := []grpcClient.ConnectionOption{
+		grpcClient.WithAddr(cfg.Host),
+		grpcClient.WithInsecure(cfg.Insecure),
+	}
+
+	if cfg.APIKey != "" {
+		opts = append(opts, grpcClient.WithAPIKeyAuth(cfg.APIKey))
+	}
+
+	if cfg.TenantID != "" {
+		opts = append(opts, grpcClient.WithTenantID(cfg.TenantID))
+	}
+
+	conn, err := grpcClient.NewConnection(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	return dsiv3.NewImporterClient(conn.Conn), nil
 }
 
 func validate(cfg *Config) error {
