@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
+	"github.com/aserto-dev/go-directory/pkg/convert"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
@@ -36,7 +37,8 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 	}
 
 	for {
-		var message msg.TransformV2
+		var message msg.Transform
+		var v2msg msg.TransformV2
 		err := jsonReader.ReadProtoMessage(&message)
 		if err == io.EOF {
 			break
@@ -44,7 +46,11 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 		if err != nil {
 			return err
 		}
-		err = p.publishMessages(ctx, &message)
+
+		v2msg.Objects = convert.ObjectArrayToV2(message.Objects)
+		v2msg.Relations = convert.RelationArrayToV2(message.Relations)
+
+		err = p.publishMessages(ctx, &v2msg)
 		if err != nil {
 			return err
 		}
