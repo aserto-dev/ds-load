@@ -11,6 +11,7 @@ require (
 	github.com/aserto-dev/go-aserto v0.20.3
 	github.com/aserto-dev/go-directory v0.30.0
 	github.com/aserto-dev/logger v0.0.3
+	github.com/bufbuild/protovalidate-go v0.3.3
 	github.com/fullstorydev/grpcurl v1.8.7
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.31.0
@@ -22,12 +23,13 @@ require (
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20231017183020-0de7443d03cf.2 // indirect
+	github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/google/cel-go v0.18.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.0 // indirect
 	github.com/jhump/protoreflect v1.12.0 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible // indirect
 	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -37,6 +39,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/stoewer/go-strcase v1.3.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/term v0.13.0 // indirect

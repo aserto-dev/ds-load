@@ -10,9 +10,11 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/aserto-dev/go-directory/pkg/convert"
+	"github.com/bufbuild/protovalidate-go"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
+	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
 	dsi "github.com/aserto-dev/go-directory/aserto/directory/importer/v2"
 )
 
@@ -20,15 +22,19 @@ type DirectoryV2Publisher struct {
 	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsi.ImporterClient
+	validator      *protovalidate.Validator
 	objErr         int
 	relErr         int
 }
 
 func NewDirectoryV2Publisher(commonCtx *cc.CommonCtx, importerClient dsi.ImporterClient) *DirectoryV2Publisher {
+	v, _ := protovalidate.New()
+
 	return &DirectoryV2Publisher{
 		UI:             commonCtx.UI,
 		Log:            commonCtx.Log,
 		importerClient: importerClient,
+		validator:      v,
 	}
 }
 
@@ -40,7 +46,10 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 
 	for {
 		var message msg.Transform
-		var v2msg msg.TransformV2
+		v2msg := msg.TransformV2{
+			Objects:   []*v2.Object{},
+			Relations: []*v2.Relation{},
+		}
 		err := jsonReader.ReadProtoMessage(&message)
 		if err == io.EOF {
 			break
@@ -49,13 +58,27 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 			return err
 		}
 
-		for _, r := range message.Relations {
-			if r.SubjectRelation != "" {
-				p.UI.Problem().Msgf("detected subject relation %s in v2 mode", r.SubjectRelation)
+		for _, object := range message.Objects {
+			if err := p.validator.Validate(object); err != nil {
+				p.UI.Problem().Msgf("validation failed, object: [%s] type [%s]", object.Id, object.Type)
+				continue
 			}
+			v2msg.Objects = append(v2msg.Objects, convert.ObjectToV2(object))
 		}
-		v2msg.Objects = convert.ObjectArrayToV2(message.Objects)
-		v2msg.Relations = convert.RelationArrayToV2(message.Relations)
+
+		for _, relation := range message.Relations {
+			if relation.SubjectRelation != "" {
+				p.UI.Problem().Msgf("detected subject relation %s in v2 mode", relation.SubjectRelation)
+				continue
+			}
+
+			if err := p.validator.Validate(relation); err != nil {
+				p.UI.Problem().Msgf("validation failed, relation: [%s] obj: [%s] subj [%s]", relation.Relation, relation.ObjectId, relation.SubjectId)
+				continue
+			}
+
+			v2msg.Relations = append(v2msg.Relations, convert.RelationToV2(relation))
+		}
 
 		err = p.publishMessages(ctx, &v2msg)
 		if err != nil {
