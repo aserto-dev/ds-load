@@ -3,7 +3,7 @@
   "objects": [
   {{ if contains $.kind "admin#directory#user" }}
     {
-      "key": "{{ $email }}",
+      "id": "{{ $email }}",
       "type": "user",
       "displayName": "{{ $.name.fullName }}",
       "created_at":"{{ $.creationTime }}",
@@ -25,7 +25,7 @@
       }
     },
     {
-      "key": "{{ $email }}",
+      "id": "{{ $email }}",
       "type": "identity",
       "properties": {
         "kind": "IDENTITY_KIND_EMAIL",
@@ -35,7 +35,7 @@
       }
     },
     {
-      "key": "{{ $.id }}",
+      "id": "{{ $.id }}",
       "type": "identity",
       "properties": {
         "kind": "IDENTITY_KIND_PID",
@@ -48,7 +48,7 @@
 
   {{ if contains $.kind "admin#directory#group" }}
     {
-      "key": "{{ $.email }}",
+      "id": "{{ $.email }}",
       "type": "group",
       "displayName": "{{ $.name }}",
       "properties": {
@@ -61,27 +61,19 @@
   ],
   "relations":[  
     {{ if contains $.kind "admin#directory#user" }}
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$.id}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$email}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$.id}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$email}}"
     },
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$email}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$email}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$email}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$email}}"
     }
     {{ end }}
 
@@ -103,15 +95,11 @@
       {{$index = add $index 1}}
 
       {
+        "object_type": "group",
+        "object_id": "{{$.email}}",
         "relation": "member",
-        "subject": {
-            "type": "{{$subject_type}}",
-            "key": "{{$element.email}}"
-        },
-        "object": {
-            "type": "group",
-            "key": "{{$.email}}"
-        }
+        "subject_type": "{{$subject_type}}",
+        "subject_id": "{{$element.email}}"
       }
       {{ end }}
     {{ end }}

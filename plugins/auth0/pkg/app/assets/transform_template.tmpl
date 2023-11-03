@@ -7,7 +7,7 @@
 {
   "objects": [
     {
-      "key": "{{ $.email }}",
+      "id": "{{ $.email }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
       "created_at":"{{ $.created_at }}",
@@ -23,7 +23,7 @@
       }
     },
     {
-      "key": "{{ $.user_id }}",
+      "id": "{{ $.user_id }}",
       "type": "identity",
       "properties": {
         "kind": "IDENTITY_KIND_PID",
@@ -33,7 +33,7 @@
       }
     },
     {
-        "key": "{{ $.email }}",
+        "id": "{{ $.email }}",
         "type": "identity",
         "properties": {
           "kind": "IDENTITY_KIND_EMAIL",
@@ -46,7 +46,7 @@
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
-          "key": "{{ $.username }}",
+          "id": "{{ $.username }}",
           "type": "identity",
           "properties": {
             "kind": "IDENTITY_KIND_USERNAME",
@@ -60,7 +60,7 @@
     {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
-          "key": "{{ $.phone_number }}",
+          "id": "{{ $.phone_number }}",
           "type": "identity",
           "properties": {
             "kind": "IDENTITY_KIND_PHONE",
@@ -76,7 +76,7 @@
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
-        "key": "{{$element.name}}",
+        "id": "{{$element.name}}",
         "type": "group",
         "properties":{
           {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
@@ -86,55 +86,39 @@
   ],
   "relations":[
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.email }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.user_id }}"
-              }
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $.email }}",
+        "object_type": "identity",
+        "object_id": "{{ $.user_id }}"
       },
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.email }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.email }}"
-              }
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $.email }}",
+        "object_type": "identity",
+        "object_id": "{{ $.email }}"
       }
 
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.email }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.username }}"
-              }
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $.email }}",
+        "object_type": "identity",
+        "object_id": "{{ $.username }}"
       }
     {{ end }}
 
     {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.email }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.phone_number }}"
-              }
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $.email }}",
+        "object_type": "identity",
+        "object_id": "{{ $.phone_number }}"
       }
     {{ end }}
 
@@ -143,15 +127,11 @@
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
-      "relation": "member",
-              "subject": {
-                  "type": "user",
-                  "key": "{{$.email}}"
-              },
-              "object": {
-                  "type": "group",
-                  "key": "{{$element.name}}"
-              }
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{$.email}}",
+        "object_type": "group",
+        "object_id": "{{$element.name}}"
       }
     {{ end }}
   ]

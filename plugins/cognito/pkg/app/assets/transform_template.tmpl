@@ -9,7 +9,7 @@
 {{end}}
   "objects": [
     {
-      "key": "{{ $.Username }}",
+      "id": "{{ $.Username }}",
       "type": "user",
       "displayName": "{{ $name }}",
       "created_at":"{{ $.UserCreateDate }}",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "key": "{{ $email }}",
+      "id": "{{ $email }}",
       "type": "identity",
         "properties": {
           "kind": "IDENTITY_KIND_EMAIL",
@@ -28,7 +28,7 @@
         }
     },
     {
-      "key": "{{ $.Username }}",
+      "id": "{{ $.Username }}",
       "type": "identity",
       "properties": {
         "kind": "IDENTITY_KIND_USERNAME",
@@ -42,7 +42,7 @@
     {{ range $i, $element := $.Groups }}
       {{ if $i }},{{ end }}
       {
-        "key": "{{$element.GroupName}}",
+        "id": "{{$element.GroupName}}",
         "displayName": "{{$element.Description}}",
         "type": "group",
         "properties":{
@@ -52,27 +52,19 @@
     {{ end }}
   ],
   "relations":[  
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$.Username}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$.Username}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$.Username}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$.Username}}"
     },
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$email}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$.Username}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$email}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$.Username}}"
     }
 
     {{ if $.Groups }}, {{ end }}
@@ -80,15 +72,11 @@
     {{ range $i, $element := $.Groups }}
       {{ if $i }},{{ end }}
       {
-      "relation": "member",
-              "subject": {
-                  "type": "user",
-                  "key": "{{$.Username}}"
-              },
-              "object": {
-                  "type": "group",
-                  "key": "{{$element.GroupName}}"
-              }
+        "object_type": "group",
+        "object_id": "{{$element.GroupName}}",
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{$.Username}}"
       }
     {{ end }}
   ]

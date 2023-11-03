@@ -4,7 +4,7 @@
 {{ if eq $.status "deprovisioned" }}
 {{$status = "USER_STATUS_DEPROVISIONED"}}
 {{$verified := false}}
-{{ end }} 
+{{ end }}
 
 {{ if $.blocked}}
 {{$status = "USER_STATUS_SUSPENDED"}}
@@ -12,7 +12,7 @@
 {
   "objects": [
     {
-      "key": "{{ $.id }}",
+      "id": "{{ $.id }}",
       "type": "user",
       "displayName": "{{ $.profile.firstName }} {{ $.profile.lastName }}",
       "created_at":"{{ $.created }}",
@@ -32,7 +32,7 @@
       }
     },
     {
-      "key": "{{ $.id }}",
+      "id": "{{ $.id }}",
       "type": "identity",
       "properties": {
         "kind": "IDENTITY_KIND_PID",
@@ -44,7 +44,7 @@
     {{ if and (ne $.profile.email "") ($verified) }}
     ,
       {
-          "key": "{{ $.profile.email }}",
+          "id": "{{ $.profile.email }}",
           "type": "identity",
           "properties": {
             "kind": "IDENTITY_KIND_EMAIL",
@@ -58,7 +58,7 @@
     {{ if and ($.profile.mobilePhone) (ne $.profile.mobilePhone "") ($verified) }}
     ,
       {
-          "key": "{{ phoneIso3166 $.profile.mobilePhone }}",
+          "id": "{{ phoneIso3166 $.profile.mobilePhone }}",
           "type": "identity",
           "properties": {
             "kind": "IDENTITY_KIND_PHONE",
@@ -74,7 +74,7 @@
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
-        "key": "{{ $element.type }}",
+        "id": "{{ $element.type }}",
         "type": "group",
         "displayName": "{{ $element.type }}-group",
         "properties":{
@@ -85,44 +85,33 @@
   ],
   "relations":[
     {
+
+      "object_type": "identity",
+      "object_id": "{{ $.id }}",
       "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.id }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.id }}"
-              }
-      }
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
+    }
     {{ if and (ne $.profile.email "") ($verified) }}
     ,
-      {
+    {
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}",
       "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.id }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ $.profile.email }}"
-              }
+      "object_type": "identity",
+      "object_id": "{{ $.profile.email }}"
       }
     {{ end }}
 
     {{ if and ($.profile.mobilePhone) (ne $.profile.mobilePhone "") ($verified) }}
     ,
-      {
+    {
+      "object_type": "identity",
+      "object_id": "{{ phoneIso3166 $.profile.mobilePhone }}
       "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{ $.id }}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{ phoneIso3166 $.profile.mobilePhone }}"
-              }
-      }
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
+    }
     {{ end }}
 
     {{ if $.roles }}, {{ end }}
@@ -130,15 +119,11 @@
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
+      "object_type": "group",
+      "object_id": "{{$element.type}}",
       "relation": "member",
-              "subject": {
-                  "type": "user",
-                  "key": "{{$.id}}"
-              },
-              "object": {
-                  "type": "group",
-                  "key": "{{$element.type}}"
-              }
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
       }
     {{ end }}
   ]

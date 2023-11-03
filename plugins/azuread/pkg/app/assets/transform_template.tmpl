@@ -10,7 +10,7 @@
 {{end}}
   "objects": [
     {
-      "key": "{{ $.id }}",
+      "id": "{{ $.id }}",
       "type": "user",
       "displayName": "{{ $.displayName }}",
       "created_at":"{{ $.createdDateTime }}",
@@ -22,7 +22,7 @@
       }
     },
     {
-      "key": "{{ $email }}",
+      "id": "{{ $email }}",
       "type": "identity",
       "properties": {
         "verified": true,
@@ -32,7 +32,7 @@
       }
     },
     {
-      "key": "{{ $.id }}",
+      "id": "{{ $.id }}",
       "type": "identity",
       "properties": {
         "verified": true,
@@ -44,7 +44,7 @@
     {{ if $.mobilePhone }}
     ,
       {
-          "key": "{{ $.mobilePhone }}",
+          "id": "{{ $.mobilePhone }}",
           "type": "identity",
           "properties": {
             "verified": false,
@@ -56,40 +56,28 @@
     {{ end }}
   ],
   "relations":[  
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$.id}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$.id}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$.id}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$.id}}"
     },
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$email}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$.id}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$email}}"
-      }
+      "subject_type": "user",
+      "subject_id":  "{{$.id}}"
     }
     {{ if $.mobilePhone }}
     ,
-    {  
+    {
+      "object_type": "identity",
+      "object_id": "{{$.mobilePhone}}",
       "relation": "identifier",
-      "subject": {
-        "type": "user",
-        "key": "{{$.id}}"
-      },
-      "object": {
-        "type": "identity",
-        "key": "{{$.mobilePhone}}"
-      }
+      "subject_type": "user",
+      "subject_id": "{{$.id}}"
     }
     {{ end }}
   ]

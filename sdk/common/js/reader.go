@@ -88,6 +88,6 @@ func UnmarshalNext(d *json.Decoder, m proto.Message) error {
 	}
 
 	return protojson.UnmarshalOptions{
-		DiscardUnknown: true,
+		DiscardUnknown: false,
 	}.Unmarshal(b, m)
 }
