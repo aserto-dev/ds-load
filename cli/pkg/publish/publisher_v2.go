@@ -157,15 +157,17 @@ func (p *DirectoryV2Publisher) receiver(stream dsi.Importer_ImportClient) func()
 				return nil
 			}
 
-			if result.Object.Error != 0 {
-				p.objErr += int(result.Object.Error)
-			}
-			if result.Relation.Error != 0 {
-				p.relErr += int(result.Relation.Error)
-			}
-
 			if err != nil {
 				return err
+			}
+
+			if result != nil {
+				if result.Object != nil && result.Object.Error != 0 {
+					p.objErr += int(result.Object.Error)
+				}
+				if result.Relation != nil && result.Relation.Error != 0 {
+					p.relErr += int(result.Relation.Error)
+				}
 			}
 		}
 	}
