@@ -8,5 +8,6 @@ use (
 	./plugins/cognito
 	./plugins/google
 	./plugins/okta
+	./plugins/ldap
 	./sdk
 )
