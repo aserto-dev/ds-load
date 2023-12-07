@@ -15,7 +15,7 @@ type CLI struct {
 	ExportTransform ExportTransformCmd `cmd:"" help:"export default transform template"`
 	Exec            ExecCmd            `cmd:"" help:"fetch and transform auth0 data" default:"withargs"`
 	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
-	//Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
+	Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
 }
 
 type VersionCmd struct {
