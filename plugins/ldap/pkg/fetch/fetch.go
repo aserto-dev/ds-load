@@ -23,7 +23,7 @@ type Attribute struct {
 	Values []string
 }
 
-func New(ctx context.Context, ldapClient *ldapclient.LDAPClient) (*Fetcher, error) {
+func New(ldapClient *ldapclient.LDAPClient) (*Fetcher, error) {
 	return &Fetcher{
 		ldapClient: ldapClient,
 	}, nil

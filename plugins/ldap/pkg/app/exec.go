@@ -19,7 +19,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	fetcher, err := fetch.New(ctx.Context, client)
+	fetcher, err := fetch.New(client)
 	if err != nil {
 		return err
 	}

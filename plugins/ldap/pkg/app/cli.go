@@ -8,13 +8,13 @@ import (
 )
 
 type CLI struct {
-	Config    kong.ConfigFlag `help:"Configuration file path" short:"c"`
-	Version   VersionCmd      `cmd:"" help:"version information"`
-	Fetch     FetchCmd        `cmd:"" help:"fetch auth0 data"`
-	Transform TransformCmd    `cmd:"" help:"transform auth0 data"`
-	//ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
-	Exec      ExecCmd `cmd:"" help:"fetch and transform auth0 data" default:"withargs"`
-	Verbosity int     `short:"v" type:"counter" help:"Use to increase output verbosity."`
+	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`
+	Version         VersionCmd         `cmd:"" help:"version information"`
+	Fetch           FetchCmd           `cmd:"" help:"fetch auth0 data"`
+	Transform       TransformCmd       `cmd:"" help:"transform auth0 data"`
+	ExportTransform ExportTransformCmd `cmd:"" help:"export default transform template"`
+	Exec            ExecCmd            `cmd:"" help:"fetch and transform auth0 data" default:"withargs"`
+	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
 	//Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
 }
 

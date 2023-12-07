@@ -18,7 +18,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	ldapClient, err := ldapclient.NewLDAPClient(cmd.User, cmd.Password, cmd.Host)
 	defer ldapClient.Close()
 
-	fetcher, err := fetch.New(ctx.Context, ldapClient)
+	fetcher, err := fetch.New(ldapClient)
 	if err != nil {
 		return err
 	}
