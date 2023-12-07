@@ -13,9 +13,9 @@ import (
 func main() {
 	cli := app.CLI{}
 
-	defaultConfigPath := "~/.config/ds-load/cfg/auth0.yaml"
+	defaultConfigPath := "~/.config/ds-load/cfg/ldap.yaml"
 
-	yamlLoader := kongyaml.NewYAMLResolver("auth0")
+	yamlLoader := kongyaml.NewYAMLResolver("ldap")
 	options := []kong.Option{
 		kong.Name(app.AppName),
 		kong.Description(app.AppDescription),
