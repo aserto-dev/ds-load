@@ -10,7 +10,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	_, err := ldapclient.NewLDAPClient(v.User, v.Password, v.Host)
+	_, err := ldapclient.NewLDAPClient(v.User, v.Password, v.Host, v.BaseDn, v.UserFilter, v.GroupFilter)
 	if err != nil {
 		return err
 	}

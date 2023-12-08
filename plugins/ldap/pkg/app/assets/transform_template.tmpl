@@ -1,61 +1,97 @@
 {
-  "objects": [
-    {
-      "id": "{{ $.DN }}",
-      "type": "user",
-      "displayName": "{{ (index .Attributes.cn 0) }}",
-      "properties": {
-        "enabled": true
-        {{ range $key, $value := $.Attributes }}
-        ,"{{ $key }}": {{ marshal $value }}
+  {{ if eq $.EntryType "user" }}
+    "objects": [
+      {
+        "id": "{{ $.DN }}",
+        "type": "user",
+        {{ if $.Attributes.displayName }}
+        "displayName": "{{ (index .Attributes.displayName 0) }}",
         {{ end }}
-      }
-    },
-    {
-      "id": "{{ $.DN }}",
-      "type": "identity",
-      "properties": {
-          "verified": true,
-          "provider": "ldap",
-          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-          "kind": "IDENTITY_KIND_PID"
-      }
-    }
-    {{/* if there are emails, create an identity for each of them */}}
-    {{ if $.Attributes.mail}}
-      {{ range $email := $.Attributes.mail }}
-       ,{
-         "id": "{{ $email }}",
-         "type": "identity",
-         "properties": {
-           "verified": true,
-           "provider": "azuread",
-           {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-           "kind": "IDENTITY_KIND_EMAIL"
-         }
-       }
-      {{ end }}
-    {{end}}
-  ],
-  "relations":[
-    {
-      "object_type": "identity",
-      "object_id": "{{$.DN}}",
-      "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$.DN}}"
-    }
-    {{/* if there are emails, create an identity for each of them */}}
-    {{ if $.Attributes.mail}}
-      {{ range $email := $.Attributes.mail }}
-        ,{
-          "object_type": "identity",
-          "object_id": "{{ $email }}",
-          "relation": "identifier",
-          "subject_type": "user",
-          "subject_id": "{{$.DN}}"
+        "properties": {
+          "enabled": true
+          {{ range $key, $value := $.Attributes }}
+          ,"{{ $key }}": {{ marshal $value }}
+          {{ end }}
         }
-      {{ end }}
-    {{end}}
-  ]
+      },
+      {
+        "id": "{{ $.DN }}",
+        "type": "identity",
+        "properties": {
+            "verified": true,
+            "provider": "ldap",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "kind": "IDENTITY_KIND_PID"
+        }
+      }
+      {{/* if there are emails, create an identity for each of them */}}
+      {{ if $.Attributes.mail}}
+        {{ range $email := $.Attributes.mail }}
+         ,{
+           "id": "{{ $email }}",
+           "type": "identity",
+           "properties": {
+             "verified": true,
+             "provider": "ldap",
+             {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+             "kind": "IDENTITY_KIND_EMAIL"
+           }
+         }
+        {{ end }}
+      {{end}}
+    ],
+    "relations":[
+      {
+        "object_type": "identity",
+        "object_id": "{{$.DN}}",
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{$.DN}}"
+      }
+      {{/* if there are emails, create an identity for each of them */}}
+      {{ if $.Attributes.mail}}
+        {{ range $email := $.Attributes.mail }}
+          ,{
+            "object_type": "identity",
+            "object_id": "{{ $email }}",
+            "relation": "identifier",
+            "subject_type": "user",
+            "subject_id": "{{$.DN}}"
+          }
+        {{ end }}
+      {{end}}
+    ]
+  {{ end }}
+
+  {{ if eq $.EntryType "group" }}
+    "objects": [
+      {
+        "id": "{{ $.DN }}",
+        "type": "group",
+        {{ if $.Attributes.cn }}
+        "displayName": "{{ (index .Attributes.cn 0) }}",
+        {{ end }}
+        "properties": {
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          {{ range $key, $value := $.Attributes }}
+          ,"{{ $key }}": {{ marshal $value }}
+          {{ end }}
+        }
+      }
+    ],
+    "relations":[
+      {{ if $.Attributes.member }}
+        {{ range $i, $member := $.Attributes.member }}
+          {{ if $i }},{{ end }}
+          {
+            "object_type": "group",
+            "object_id": "{{ $.DN }}",
+            "relation": "member",
+            "subject_type": "user",
+            "subject_id": "{{ $member }}"
+          }
+        {{ end }}
+      {{end}}
+    ]
+  {{ end }}
 }

@@ -14,10 +14,13 @@ type Attribute struct {
 }
 
 type LDAPClient struct {
-	ldapConn *ldap.Conn
+	ldapConn    *ldap.Conn
+	baseDN      string
+	userFilter  string
+	groupFilter string
 }
 
-func NewLDAPClient(user, password, host string) (*LDAPClient, error) {
+func NewLDAPClient(user, password, host, baseDN, userFilter, groupFilter string) (*LDAPClient, error) {
 	ldapClient := &LDAPClient{}
 
 	ldapConn, err := ldapClient.initLDAPConnection(user, password, host)
@@ -25,6 +28,9 @@ func NewLDAPClient(user, password, host string) (*LDAPClient, error) {
 		return nil, err
 	}
 	ldapClient.ldapConn = ldapConn
+	ldapClient.baseDN = baseDN
+	ldapClient.userFilter = userFilter
+	ldapClient.groupFilter = groupFilter
 
 	return ldapClient, nil
 }
@@ -51,14 +57,19 @@ func (l *LDAPClient) Close() {
 }
 
 func (l *LDAPClient) ListUsers() []*ldap.Entry {
-	//baseDN := "dc=trial-1033352, dc=okta, dc=com"
-	baseDN := "dc=example,dc=org"
-	filter := "(&(objectClass=organizationalPerson))"
+	return l.search(l.userFilter)
+}
+
+func (l *LDAPClient) ListGroups() []*ldap.Entry {
+	return l.search(l.groupFilter)
+}
+
+func (l *LDAPClient) search(filter string) []*ldap.Entry {
 	attributes := []string{}
 
-	// Search for all users
+	// Search for all groups
 	searchRequest := ldap.NewSearchRequest(
-		baseDN,
+		l.baseDN,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		attributes,

@@ -14,6 +14,7 @@ type Fetcher struct {
 }
 
 type Entry struct {
+	EntryType  string
 	DN         string
 	Attributes map[string][]string
 }
@@ -36,17 +37,27 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 	defer jsonWriter.Close()
 
-	ldapEntries := f.ldapClient.ListUsers()
+	users := f.ldapClient.ListUsers()
+	err = writeEntries(users, jsonWriter, "user")
+	if err != nil {
+		return err
+	}
 
+	groups := f.ldapClient.ListGroups()
+	return writeEntries(groups, jsonWriter, "group")
+}
+
+func writeEntries(ldapEntries []*ldap.Entry, jsonWriter *js.JSONArrayWriter, entryType string) error {
 	for _, ldapEntry := range ldapEntries {
 		entry := Entry{
+			EntryType:  entryType,
 			DN:         ldapEntry.DN,
 			Attributes: transformAttributes(ldapEntry.Attributes),
 		}
 
-		err = jsonWriter.Write(entry)
+		err := jsonWriter.Write(entry)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			return err
 		}
 	}
 
