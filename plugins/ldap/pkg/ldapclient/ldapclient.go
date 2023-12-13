@@ -1,7 +1,6 @@
 package ldapclient
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 
@@ -39,7 +38,7 @@ func (l *LDAPClient) initLDAPConnection(username, password, host string) (*ldap.
 	//ldapConn, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", host, 1636))
 
 	//ldapConn, err := ldap.DialURL(fmt.Sprintf("ldap://%s:%d", "127.0.0.1", 1389), ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
-	ldapConn, err := ldap.DialURL(fmt.Sprintf("ldap://%s:%d", "127.0.0.1", 1389), ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	ldapConn, err := ldap.DialURL(fmt.Sprintf("ldap://%s:%d", host, 1389))
 	if err != nil {
 		return nil, err
 	}
