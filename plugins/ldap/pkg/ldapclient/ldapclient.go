@@ -1,44 +1,54 @@
 package ldapclient
 
 import (
-	"fmt"
+	"crypto/tls"
 	"log"
 
-	ldap "github.com/go-ldap/ldap/v3"
+	"github.com/go-ldap/ldap/v3"
 )
-
-type Attribute struct {
-	name   string
-	values []string
-}
 
 type LDAPClient struct {
 	ldapConn    *ldap.Conn
-	baseDN      string
-	userFilter  string
-	groupFilter string
+	credentials *Credentials
+	conOptions  *ConnectionOptions
 }
 
-func NewLDAPClient(user, password, host, baseDN, userFilter, groupFilter string) (*LDAPClient, error) {
+type Credentials struct {
+	User     string
+	Password string
+}
+
+type ConnectionOptions struct {
+	Host        string
+	Insecure    bool
+	BaseDN      string
+	UserFilter  string
+	GroupFilter string
+	UuidField   string
+}
+
+func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions) (*LDAPClient, error) {
 	ldapClient := &LDAPClient{}
 
-	ldapConn, err := ldapClient.initLDAPConnection(user, password, host)
+	ldapConn, err := ldapClient.initLDAPConnection(credentials.User, credentials.Password, conOptions.Host, conOptions.Insecure)
 	if err != nil {
 		return nil, err
 	}
 	ldapClient.ldapConn = ldapConn
-	ldapClient.baseDN = baseDN
-	ldapClient.userFilter = userFilter
-	ldapClient.groupFilter = groupFilter
+	ldapClient.credentials = credentials
+	ldapClient.conOptions = conOptions
 
 	return ldapClient, nil
 }
 
-func (l *LDAPClient) initLDAPConnection(username, password, host string) (*ldap.Conn, error) {
-	//ldapConn, err := ldap.Dial("tcp", fmt.Sprintf("%s:%d", host, 1636))
+func (l *LDAPClient) initLDAPConnection(username, password, host string, insecure bool) (*ldap.Conn, error) {
+	var dialOptions []ldap.DialOpt
 
-	//ldapConn, err := ldap.DialURL(fmt.Sprintf("ldap://%s:%d", "127.0.0.1", 1389), ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
-	ldapConn, err := ldap.DialURL(fmt.Sprintf("ldap://%s:%d", host, 1389))
+	if insecure {
+		dialOptions = append(dialOptions, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	}
+
+	ldapConn, err := ldap.DialURL(host, dialOptions...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,19 +66,18 @@ func (l *LDAPClient) Close() {
 }
 
 func (l *LDAPClient) ListUsers() []*ldap.Entry {
-	return l.search(l.userFilter)
+	return l.search(l.conOptions.UserFilter)
 }
 
 func (l *LDAPClient) ListGroups() []*ldap.Entry {
-	return l.search(l.groupFilter)
+	return l.search(l.conOptions.GroupFilter)
 }
 
 func (l *LDAPClient) search(filter string) []*ldap.Entry {
 	attributes := []string{}
 
-	// Search for all groups
 	searchRequest := ldap.NewSearchRequest(
-		l.baseDN,
+		l.conOptions.BaseDN,
 		ldap.ScopeWholeSubtree, ldap.NeverDerefAliases, 0, 0, false,
 		filter,
 		attributes,
@@ -85,12 +94,4 @@ func (l *LDAPClient) search(filter string) []*ldap.Entry {
 type Entry struct {
 	DN         string
 	Attributes map[string][]string
-}
-
-func (l *LDAPClient) GetUserByID(id string) {
-
-}
-
-func (l *LDAPClient) GetUserByEmail(email string) {
-
 }

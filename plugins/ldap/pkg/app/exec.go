@@ -14,7 +14,21 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	client, err := ldapclient.NewLDAPClient(cmd.User, cmd.Password, cmd.Host, cmd.BaseDn, cmd.UserFilter, cmd.GroupFilter)
+	credentials := &ldapclient.Credentials{
+		User:     cmd.User,
+		Password: cmd.Password,
+	}
+
+	conOptions := &ldapclient.ConnectionOptions{
+		Host:        cmd.Host,
+		BaseDN:      cmd.BaseDn,
+		UserFilter:  cmd.UserFilter,
+		GroupFilter: cmd.GroupFilter,
+		Insecure:    cmd.Insecure,
+		UuidField:   cmd.UuidField,
+	}
+
+	client, err := ldapclient.NewLDAPClient(credentials, conOptions)
 	if err != nil {
 		return err
 	}

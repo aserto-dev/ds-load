@@ -5,12 +5,10 @@ import (
 	"io"
 	"strings"
 
+	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/attribute"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/ldapclient"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
-	"github.com/google/uuid"
-	"golang.org/x/exp/slices"
 )
 
 type Fetcher struct {
@@ -53,7 +51,7 @@ func writeEntries(ldapEntries []*ldap.Entry, jsonWriter *js.JSONArrayWriter, ent
 		entry := Entry{
 			EntryType:  entryType,
 			DN:         normalizeDN(ldapEntry.DN),
-			Attributes: attributes(ldapEntry, distinguishedNames, entryType),
+			Attributes: attribute.Transform(ldapEntry, distinguishedNames, entryType),
 		}
 
 		err := jsonWriter.Write(entry)
@@ -75,66 +73,4 @@ func extractDNs(ldapEntries []*ldap.Entry) []string {
 		distinguishedNames = append(distinguishedNames, normalizeDN(entry.DN))
 	}
 	return distinguishedNames
-}
-
-func attributes(ldapEntry *ldap.Entry, distinguishedNames []string, entryType string) map[string][]string {
-	if entryType == "group" {
-		transformedAttributes := transformAttributes(ldapEntry)
-		return addMembersByType(transformedAttributes, distinguishedNames)
-	} else {
-		return transformAttributes(ldapEntry)
-	}
-}
-
-func transformAttributes(ldapEntry *ldap.Entry) map[string][]string {
-	var data = make(map[string][]string)
-	for _, attribute := range ldapEntry.Attributes {
-		if attribute.Name == "objectSid" {
-			data[attribute.Name] = []string{getObjectSid(ldapEntry)}
-			continue
-		}
-
-		if attribute.Name == "objectGUID" {
-			data[attribute.Name] = []string{getObjectGUID(ldapEntry)}
-			continue
-		}
-
-		data[attribute.Name] = attribute.Values
-	}
-	return data
-}
-
-func getObjectSid(entry *ldap.Entry) string {
-	rawObjectSid := entry.GetRawAttributeValue("objectSid")
-	if len(rawObjectSid) > 0 {
-		return objectsid.Decode(rawObjectSid).String()
-	}
-	return ""
-}
-
-func getObjectGUID(entry *ldap.Entry) string {
-	rawObjectGUID := entry.GetRawAttributeValue("objectGUID")
-	if len(rawObjectGUID) > 0 {
-		objectGUID := entry.GetRawAttributeValue("objectGUID")
-		u, err := uuid.FromBytes(objectGUID)
-		if err != nil {
-			return ""
-		}
-		return u.String()
-	}
-	return ""
-}
-
-func addMembersByType(attributes map[string][]string, groupDNs []string) map[string][]string {
-	if attributes["member"] != nil {
-		for _, member := range attributes["member"] {
-			if slices.Contains(groupDNs, normalizeDN(member)) {
-				attributes["memberGroup"] = append(attributes["memberGroup"], normalizeDN(member))
-			} else {
-				attributes["memberUser"] = append(attributes["memberUser"], normalizeDN(member))
-			}
-		}
-	}
-
-	return attributes
 }

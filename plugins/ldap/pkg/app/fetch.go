@@ -15,10 +15,26 @@ type FetchCmd struct {
 	BaseDn      string `short:"b" help:"LDAP base DN" env:"LDAP_BASE_DN" default:"dc=example,dc=org"`
 	UserFilter  string `short:"f" help:"LDAP user filter" env:"LDAP_USER_FILTER" default:"(&(objectClass=organizationalPerson))"`
 	GroupFilter string `short:"g" help:"LDAP group filter" env:"LDAP_GROUP_FILTER" default:"(&(objectClass=groupOfNames))"`
+	Insecure    bool   `short:"i" help:"Allow insecure LDAP connection" env:"LDAP_INSECURE" default:"false"`
+	UuidField   string `short:"U" help:"LDAP field to use as UUID" env:"LDAP_UUID_FIELD" default:"objectGUID"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	ldapClient, err := ldapclient.NewLDAPClient(cmd.User, cmd.Password, cmd.Host, cmd.BaseDn, cmd.UserFilter, cmd.GroupFilter)
+	credentials := &ldapclient.Credentials{
+		User:     cmd.User,
+		Password: cmd.Password,
+	}
+
+	conOptions := &ldapclient.ConnectionOptions{
+		Host:        cmd.Host,
+		BaseDN:      cmd.BaseDn,
+		UserFilter:  cmd.UserFilter,
+		GroupFilter: cmd.GroupFilter,
+		Insecure:    cmd.Insecure,
+		UuidField:   cmd.UuidField,
+	}
+
+	ldapClient, err := ldapclient.NewLDAPClient(credentials, conOptions)
 	defer ldapClient.Close()
 
 	fetcher, err := fetch.New(ldapClient)
