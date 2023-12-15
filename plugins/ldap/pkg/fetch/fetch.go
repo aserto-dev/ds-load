@@ -3,7 +3,6 @@ package fetch
 import (
 	"context"
 	"io"
-	"strings"
 
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/attribute"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/ldapclient"
@@ -17,7 +16,7 @@ type Fetcher struct {
 
 type Entry struct {
 	EntryType  string
-	DN         string
+	Key        string
 	Attributes map[string][]string
 }
 
@@ -35,23 +34,29 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer jsonWriter.Close()
 
 	groups := f.ldapClient.ListGroups()
-	err = writeEntries(groups, jsonWriter, "group")
+	users := f.ldapClient.ListUsers()
+	userDnTOKey := buildMapFromDNToKey(users, "objectGUID")
+	groupDnTOKey := buildMapFromDNToKey(groups, "objectGUID")
+
+	err = writeEntries(groups, jsonWriter, userDnTOKey, groupDnTOKey)
 	if err != nil {
 		return err
 	}
 
-	users := f.ldapClient.ListUsers()
-	return writeEntries(users, jsonWriter, "user")
+	return writeEntries(users, jsonWriter, userDnTOKey, groupDnTOKey)
 }
 
-func writeEntries(ldapEntries []*ldap.Entry, jsonWriter *js.JSONArrayWriter, entryType string) error {
-	distinguishedNames := extractDNs(ldapEntries)
+func writeEntries(ldapEntries []*ldap.Entry, jsonWriter *js.JSONArrayWriter, userDnTOKey, groupDnTOKey map[string]string) error {
+	dnToKey := userDnTOKey
+	for k, v := range groupDnTOKey {
+		dnToKey[k] = v
+	}
 
 	for _, ldapEntry := range ldapEntries {
 		entry := Entry{
-			EntryType:  entryType,
-			DN:         normalizeDN(ldapEntry.DN),
-			Attributes: attribute.Transform(ldapEntry, distinguishedNames, entryType),
+			EntryType:  entryType(ldapEntry, groupDnTOKey),
+			Key:        dnToKey[ldapEntry.DN],
+			Attributes: attribute.Transform(ldapEntry, userDnTOKey, groupDnTOKey),
 		}
 
 		err := jsonWriter.Write(entry)
@@ -63,14 +68,30 @@ func writeEntries(ldapEntries []*ldap.Entry, jsonWriter *js.JSONArrayWriter, ent
 	return nil
 }
 
-func normalizeDN(dn string) string {
-	return strings.ReplaceAll(dn, " ", "")
+func entryType(ldapEntry *ldap.Entry, groupDnToKey map[string]string) string {
+	if _, ok := groupDnToKey[ldapEntry.DN]; ok {
+		return "group"
+	} else {
+		return "user"
+	}
 }
 
-func extractDNs(ldapEntries []*ldap.Entry) []string {
-	var distinguishedNames []string
+func buildMapFromDNToKey(ldapEntries []*ldap.Entry, key string) map[string]string {
+	var mapDNToKey = make(map[string]string)
 	for _, entry := range ldapEntries {
-		distinguishedNames = append(distinguishedNames, normalizeDN(entry.DN))
+		mapDNToKey[entry.DN] = extractKey(key, entry)
 	}
-	return distinguishedNames
+	return mapDNToKey
+}
+
+func extractKey(key string, entry *ldap.Entry) string {
+	if key == "objectGUID" {
+		return attribute.ObjectGUID(entry)
+	}
+
+	if key == "objectSid" {
+		return attribute.ObjectSid(entry)
+	}
+
+	return entry.GetAttributeValue(key)
 }

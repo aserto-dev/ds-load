@@ -7,46 +7,46 @@ import (
 	"github.com/bwmarrin/go-objectsid"
 	"github.com/go-ldap/ldap/v3"
 	"github.com/google/uuid"
-	"golang.org/x/exp/slices"
 )
 
-func Transform(ldapEntry *ldap.Entry, distinguishedNames []string, entryType string) map[string][]string {
-	if entryType == "group" {
+func Transform(ldapEntry *ldap.Entry, userDnTOKey, groupDnTOKey map[string]string) map[string][]string {
+	if _, ok := groupDnTOKey[ldapEntry.DN]; ok {
 		transformedAttributes := decodeAttributes(ldapEntry)
-		return addMembersByType(transformedAttributes, distinguishedNames)
+		return addMembersByType(transformedAttributes, userDnTOKey, groupDnTOKey)
 	} else {
 		return decodeAttributes(ldapEntry)
 	}
 }
 
-func addMembersByType(attributes map[string][]string, groupDNs []string) map[string][]string {
-	if attributes["member"] != nil {
-		for _, member := range attributes["member"] {
-			if slices.Contains(groupDNs, normalizeDN(member)) {
-				attributes["memberGroup"] = append(attributes["memberGroup"], normalizeDN(member))
-			} else {
-				attributes["memberUser"] = append(attributes["memberUser"], normalizeDN(member))
-			}
+func addMembersByType(attributes map[string][]string, userDnTOKey, groupDnTOKey map[string]string) map[string][]string {
+	if attributes["member"] == nil {
+		return attributes
+	}
+
+	for _, member := range attributes["member"] {
+		if groupKey, ok := groupDnTOKey[member]; ok {
+			attributes["memberGroup"] = append(attributes["memberGroup"], groupKey)
+			continue
+		}
+
+		if userKey, ok := userDnTOKey[member]; ok {
+			attributes["memberUser"] = append(attributes["memberUser"], userKey)
 		}
 	}
 
 	return attributes
 }
 
-func normalizeDN(dn string) string {
-	return strings.ReplaceAll(dn, " ", "")
-}
-
 func decodeAttributes(ldapEntry *ldap.Entry) map[string][]string {
 	var data = make(map[string][]string)
 	for _, attribute := range ldapEntry.Attributes {
 		if attribute.Name == "objectSid" {
-			data[attribute.Name] = []string{getObjectSid(ldapEntry)}
+			data[attribute.Name] = []string{ObjectSid(ldapEntry)}
 			continue
 		}
 
 		if attribute.Name == "objectGUID" {
-			data[attribute.Name] = []string{getObjectGUID(ldapEntry)}
+			data[attribute.Name] = []string{ObjectGUID(ldapEntry)}
 			continue
 		}
 
@@ -58,7 +58,7 @@ func decodeAttributes(ldapEntry *ldap.Entry) map[string][]string {
 /*
 /* Extract the ObjectSid. This is specific to Active Directory
 */
-func getObjectSid(entry *ldap.Entry) string {
+func ObjectSid(entry *ldap.Entry) string {
 	rawObjectSid := entry.GetRawAttributeValue("objectSid")
 	if len(rawObjectSid) > 0 {
 		return objectsid.Decode(rawObjectSid).String()
@@ -69,7 +69,7 @@ func getObjectSid(entry *ldap.Entry) string {
 /*
 /* Extract the ObjectGUID. This is specific to Active Directory
 */
-func getObjectGUID(entry *ldap.Entry) string {
+func ObjectGUID(entry *ldap.Entry) string {
 	rawObjectGUID := entry.GetRawAttributeValue("objectGUID")
 	if len(rawObjectGUID) > 0 {
 		objectGUID := entry.GetRawAttributeValue("objectGUID")

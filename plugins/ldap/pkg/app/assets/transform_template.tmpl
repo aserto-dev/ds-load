@@ -2,10 +2,10 @@
   {{ if eq $.EntryType "user" }}
     "objects": [
       {
-        "id": "{{ $.DN }}",
+        "id": "{{ $.Key }}",
         "type": "user",
-        {{ if $.Attributes.displayName }}
-        "displayName": "{{ (index .Attributes.displayName 0) }}",
+        {{ if $.Attributes.cn }}
+        "displayName": "{{ (index .Attributes.cn 0) }}",
         {{ end }}
         "properties": {
           "enabled": true
@@ -15,7 +15,7 @@
         }
       },
       {
-        "id": "{{ $.DN }}",
+        "id": "{{ $.Key }}",
         "type": "identity",
         "properties": {
             "verified": true,
@@ -43,10 +43,10 @@
     "relations":[
       {
         "object_type": "identity",
-        "object_id": "{{$.DN}}",
+        "object_id": "{{$.Key}}",
         "relation": "identifier",
         "subject_type": "user",
-        "subject_id": "{{$.DN}}"
+        "subject_id": "{{$.Key}}"
       }
       {{/* if there are emails, create an identity for each of them */}}
       {{ if $.Attributes.mail}}
@@ -56,7 +56,7 @@
             "object_id": "{{ $email }}",
             "relation": "identifier",
             "subject_type": "user",
-            "subject_id": "{{$.DN}}"
+            "subject_id": "{{$.Key}}"
           }
         {{ end }}
       {{end}}
@@ -66,7 +66,7 @@
   {{ if eq $.EntryType "group" }}
     "objects": [
       {
-        "id": "{{ $.DN }}",
+        "id": "{{ $.Key }}",
         "type": "group",
         {{ if $.Attributes.cn }}
         "displayName": "{{ (index .Attributes.cn 0) }}",
@@ -85,7 +85,7 @@
           {{ if $i }},{{ end }}
           {
             "object_type": "group",
-            "object_id": "{{ $.DN }}",
+            "object_id": "{{ $.Key }}",
             "relation": "member",
             "subject_type": "user",
             "subject_id": "{{ $member }}"
@@ -102,7 +102,7 @@
           {{ if $i }},{{ end }}
           {
             "object_type": "group",
-            "object_id": "{{ $.DN }}",
+            "object_id": "{{ $.Key }}",
             "relation": "member",
             "subject_type": "group",
             "subject_id": "{{ $member }}"
