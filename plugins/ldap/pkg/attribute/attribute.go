@@ -56,7 +56,7 @@ func decodeAttributes(ldapEntry *ldap.Entry) map[string][]string {
 }
 
 /*
-/* Extract the ObjectSid. This is specific to Active Directory
+/* Extract the ObjectSid. This is specific to Active Directory.
 */
 func ObjectSid(entry *ldap.Entry) string {
 	rawObjectSid := entry.GetRawAttributeValue("objectSid")
@@ -67,7 +67,7 @@ func ObjectSid(entry *ldap.Entry) string {
 }
 
 /*
-/* Extract the ObjectGUID. This is specific to Active Directory
+/* Extract the ObjectGUID. This is specific to Active Directory.
 */
 func ObjectGUID(entry *ldap.Entry) string {
 	rawObjectGUID := entry.GetRawAttributeValue("objectGUID")
@@ -84,8 +84,8 @@ func ObjectGUID(entry *ldap.Entry) string {
 
 /*
 /* Transform the octal string in the com style GUID from Active Directory.
-/* The GUID is formed by splitting the octal string in groups of 2 symbols
-/* {3}{2}{1}{0}-{5}{4}-{7}{6}-{8}{9}-{10}{11}{12}{13}{14}{15}
+/* The GUID is formed by splitting the octal string in groups of 2 symbols and then re-arrange the groups.
+/* {3}{2}{1}{0}-{5}{4}-{7}{6}-{8}{9}-{10}{11}{12}{13}{14}{15} .
 */
 func uuidToComStyle(token string) string {
 	token = strings.ReplaceAll(token, "-", "")

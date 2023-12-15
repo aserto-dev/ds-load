@@ -21,13 +21,14 @@ func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
 		UserFilter:  v.UserFilter,
 		GroupFilter: v.GroupFilter,
 		Insecure:    v.Insecure,
-		UuidField:   v.UuidField,
+		UUIDField:   v.UUIDField,
 	}
 
-	_, err := ldapclient.NewLDAPClient(credentials, conOptions)
+	client, err := ldapclient.NewLDAPClient(credentials, conOptions, ctx.Log)
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 
 	return nil
 }

@@ -25,13 +25,14 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		UserFilter:  cmd.UserFilter,
 		GroupFilter: cmd.GroupFilter,
 		Insecure:    cmd.Insecure,
-		UuidField:   cmd.UuidField,
+		UUIDField:   cmd.UUIDField,
 	}
 
-	client, err := ldapclient.NewLDAPClient(credentials, conOptions)
+	client, err := ldapclient.NewLDAPClient(credentials, conOptions, ctx.Log)
 	if err != nil {
 		return err
 	}
+	defer client.Close()
 
 	fetcher, err := fetch.New(client)
 	if err != nil {

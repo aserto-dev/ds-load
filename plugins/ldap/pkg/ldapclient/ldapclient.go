@@ -5,12 +5,14 @@ import (
 	"log"
 
 	"github.com/go-ldap/ldap/v3"
+	"github.com/rs/zerolog"
 )
 
 type LDAPClient struct {
 	ldapConn    *ldap.Conn
 	credentials *Credentials
 	conOptions  *ConnectionOptions
+	logger      *zerolog.Logger
 }
 
 type Credentials struct {
@@ -24,10 +26,10 @@ type ConnectionOptions struct {
 	BaseDN      string
 	UserFilter  string
 	GroupFilter string
-	UuidField   string
+	UUIDField   string
 }
 
-func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions) (*LDAPClient, error) {
+func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions, logger *zerolog.Logger) (*LDAPClient, error) {
 	ldapClient := &LDAPClient{}
 
 	ldapConn, err := ldapClient.initLDAPConnection(credentials.User, credentials.Password, conOptions.Host, conOptions.Insecure)
@@ -37,6 +39,7 @@ func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions) (*LD
 	ldapClient.ldapConn = ldapConn
 	ldapClient.credentials = credentials
 	ldapClient.conOptions = conOptions
+	ldapClient.logger = logger
 
 	return ldapClient, nil
 }
@@ -44,8 +47,9 @@ func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions) (*LD
 func (l *LDAPClient) initLDAPConnection(username, password, host string, insecure bool) (*ldap.Conn, error) {
 	var dialOptions []ldap.DialOpt
 
-	if insecure {
-		dialOptions = append(dialOptions, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: true}))
+	// Disable the security check if insecure is true
+	if insecure { // #nosec G402
+		dialOptions = append(dialOptions, ldap.DialWithTLSConfig(&tls.Config{InsecureSkipVerify: insecure}))
 	}
 
 	ldapConn, err := ldap.DialURL(host, dialOptions...)
@@ -62,7 +66,10 @@ func (l *LDAPClient) initLDAPConnection(username, password, host string, insecur
 }
 
 func (l *LDAPClient) Close() {
-	l.ldapConn.Close()
+	err := l.ldapConn.Close()
+	if err != nil {
+		l.logger.Error().Err(err)
+	}
 }
 
 func (l *LDAPClient) ListUsers() []*ldap.Entry {
