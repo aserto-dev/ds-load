@@ -1,0 +1,114 @@
+{
+  {{ if eq $.EntryType "user" }}
+    "objects": [
+      {
+        "id": "{{ $.Key }}",
+        "type": "user",
+        {{ if $.Attributes.cn }}
+        "displayName": "{{ (index .Attributes.cn 0) }}",
+        {{ end }}
+        "properties": {
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          {{ range $key, $value := $.Attributes }}
+          ,"{{ $key }}": {{ marshal $value }}
+          {{ end }}
+        }
+      },
+      {
+        "id": "{{ $.Key }}",
+        "type": "identity",
+        "properties": {
+            "verified": true,
+            "provider": "ldap",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "kind": "IDENTITY_KIND_PID"
+        }
+      }
+      {{/* if there are emails, create an identity for each of them */}}
+      {{ if $.Attributes.mail}}
+        {{ range $email := $.Attributes.mail }}
+         ,{
+           "id": "{{ $email }}",
+           "type": "identity",
+           "properties": {
+             "verified": true,
+             "provider": "ldap",
+             {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+             "kind": "IDENTITY_KIND_EMAIL"
+           }
+         }
+        {{ end }}
+      {{end}}
+    ],
+    "relations":[
+      {
+        "object_type": "identity",
+        "object_id": "{{$.Key}}",
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{$.Key}}"
+      }
+      {{/* if there are emails, create an identity for each of them */}}
+      {{ if $.Attributes.mail}}
+        {{ range $email := $.Attributes.mail }}
+          ,{
+            "object_type": "identity",
+            "object_id": "{{ $email }}",
+            "relation": "identifier",
+            "subject_type": "user",
+            "subject_id": "{{$.Key}}"
+          }
+        {{ end }}
+      {{end}}
+    ]
+  {{ end }}
+
+  {{ if eq $.EntryType "group" }}
+    "objects": [
+      {
+        "id": "{{ $.Key }}",
+        "type": "group",
+        {{ if $.Attributes.cn }}
+        "displayName": "{{ (index .Attributes.cn 0) }}",
+        {{ end }}
+        "properties": {
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          {{ range $key, $value := $.Attributes }}
+          ,"{{ $key }}": {{ marshal $value }}
+          {{ end }}
+        }
+      }
+    ],
+    "relations":[
+      {{ if $.Attributes.memberUser }}
+        {{ range $i, $member := $.Attributes.memberUser }}
+          {{ if $i }},{{ end }}
+          {
+            "object_type": "group",
+            "object_id": "{{ $.Key }}",
+            "relation": "member",
+            "subject_type": "user",
+            "subject_id": "{{ $member }}"
+          }
+        {{ end }}
+      {{end}}
+
+      {{ if and $.Attributes.memberUser $.Attributes.memberGroup }}
+      ,
+      {{ end }}
+
+      {{ if $.Attributes.memberGroup }}
+        {{ range $i, $member := $.Attributes.memberGroup }}
+          {{ if $i }},{{ end }}
+          {
+            "object_type": "group",
+            "object_id": "{{ $.Key }}",
+            "relation": "member",
+            "subject_type": "group",
+            "subject_id": "{{ $member }}"
+          }
+        {{ end }}
+      {{end}}
+    ]
+  {{ end }}
+}

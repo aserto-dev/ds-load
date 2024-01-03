@@ -12,7 +12,7 @@ type CLI struct {
 	Version         VersionCmd         `cmd:"" help:"version information"`
 	Fetch           FetchCmd           `cmd:"" help:"fetch okta data"`
 	Transform       TransformCmd       `cmd:"" help:"transform okta data"`
-	ExportTransform ExportTransportCmd `cmd:"" help:"export default transform template"`
+	ExportTransform ExportTransformCmd `cmd:"" help:"export default transform template"`
 	Exec            ExecCmd            `cmd:"" help:"fetch and transform okta data" default:"withargs"`
 	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
 	Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`

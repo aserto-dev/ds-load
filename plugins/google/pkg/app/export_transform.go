@@ -7,10 +7,10 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
-type ExportTransportCmd struct {
+type ExportTransformCmd struct {
 }
 
-func (t *ExportTransportCmd) Run(ctx *cc.CommonCtx) error {
+func (t *ExportTransformCmd) Run(ctx *cc.CommonCtx) error {
 	templateContent, err := Assets().ReadFile("assets/transform_template.tmpl")
 	if err != nil {
 		return err
