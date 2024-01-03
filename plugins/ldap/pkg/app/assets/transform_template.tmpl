@@ -8,7 +8,7 @@
         "displayName": "{{ (index .Attributes.cn 0) }}",
         {{ end }}
         "properties": {
-          "enabled": true
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
           {{ range $key, $value := $.Attributes }}
           ,"{{ $key }}": {{ marshal $value }}
           {{ end }}
