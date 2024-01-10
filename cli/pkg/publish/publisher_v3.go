@@ -88,6 +88,7 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 			Msg: &dsiv3.ImportRequest_Object{
 				Object: object,
 			},
+			OpCode: dsiv3.Opcode_OPCODE_SET,
 		})
 		p.handleStreamError(sErr)
 	}
@@ -103,6 +104,7 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 			Msg: &dsiv3.ImportRequest_Relation{
 				Relation: relation,
 			},
+			OpCode: dsiv3.Opcode_OPCODE_SET,
 		})
 		p.handleStreamError(sErr)
 	}
