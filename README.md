@@ -121,6 +121,8 @@ The default transformation template can be exported using `ds-load <plugin-name>
 
 A custom transformation file can be provided when running the plugin in `exec` or `transform` mode via the `--template-file` parameter.
 
+More information on the transformation template language can be found in the [tranform template docs](./docs/templates.md).
+
 ## Logs
 
 Logs are printed to `stdout`. You can increase detail using the verbosity flag (e.g. `-vvv`).
