@@ -28,5 +28,5 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 	transformer := transform.NewGoTemplateTransform(templateContent)
-	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
+	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher.WithGroups(cmd.Groups))
 }

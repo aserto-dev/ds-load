@@ -20,5 +20,5 @@ func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return verifier.Verify(ctx.Context)
+	return verifier.WithGroups(v.Groups).Verify(ctx.Context)
 }
