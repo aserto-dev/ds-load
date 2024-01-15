@@ -1,3 +1,31 @@
+{{ $kind := index . "@odata.type" }}
+{{ if eq $kind "#microsoft.graph.group" }}
+{
+"objects": [
+  {
+    "id": "{{ $.id }}",
+    "type": "group",
+    "displayName": "{{ $.displayName }}",
+    "properties": {
+      {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+    }
+  }
+],
+"relations": [
+    {{ range $i, $element := $.memberOf }}
+      {{ if $i }},{{ end }}
+      {
+        "relation": "member",
+        "subject_type": "group",
+        "subject_id": "{{$.id}}",
+        "object_type": "group",
+        "object_id": "{{$element.id}}"
+      }
+    {{ end }}
+]
+}
+{{ else if eq $kind "#microsoft.graph.user" }}
+
 {{$status := "USER_STATUS_ACTIVE"}}
 {{ if ne $.accountEnabled true }}
 {{$status = "USER_STATUS_SUSPENDED"}}
@@ -80,5 +108,17 @@
       "subject_id": "{{$.id}}"
     }
     {{ end }}
+    {{ if $.memberOf }}, {{ end }}
+    {{ range $i, $element := $.memberOf }}
+      {{ if $i }},{{ end }}
+      {
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{$.id}}",
+        "object_type": "group",
+        "object_id": "{{$element.id}}"
+      }
+    {{ end }}
   ]
 }
+{{ end }}

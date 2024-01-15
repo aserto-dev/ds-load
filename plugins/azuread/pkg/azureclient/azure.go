@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	msgraphsdk "github.com/aserto-dev/msgraph-sdk-go"
+	adgroups "github.com/aserto-dev/msgraph-sdk-go/groups"
 	"github.com/aserto-dev/msgraph-sdk-go/models"
 	adusers "github.com/aserto-dev/msgraph-sdk-go/users"
 	abstractions "github.com/microsoft/kiota-abstractions-go"
@@ -54,34 +55,75 @@ func NewAzureADClientWithRefreshToken(ctx context.Context, tenant, clientID, cli
 	return c, nil
 }
 
-func (c *AzureADClient) ListUsers(ctx context.Context) ([]models.Userable, error) {
-	return c.listUsers(ctx, "")
+func (c *AzureADClient) ListUsers(ctx context.Context, groups bool) ([]models.Userable, error) {
+	return c.listUsers(ctx, "", groups)
 }
 
-func (c *AzureADClient) GetUserByID(ctx context.Context, id string) ([]models.Userable, error) {
+func (c *AzureADClient) GetUserByID(ctx context.Context, id string, groups bool) ([]models.Userable, error) {
 	filter := fmt.Sprintf("id eq '%s'", id)
-	return c.listUsers(ctx, filter)
+	return c.listUsers(ctx, filter, groups)
 }
 
-func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string) ([]models.Userable, error) {
+func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string, groups bool) ([]models.Userable, error) {
 	filter := fmt.Sprintf("mail eq '%s'", email)
 
-	azureadUsers, err := c.listUsers(ctx, filter)
+	azureadUsers, err := c.listUsers(ctx, filter, groups)
 	if err != nil {
 		return azureadUsers, err
 	}
 
 	if len(azureadUsers) < 1 {
 		filter := fmt.Sprintf("userPrincipalName eq '%s'", email)
-		return c.listUsers(ctx, filter)
+		return c.listUsers(ctx, filter, groups)
 	}
 	return azureadUsers, err
 }
 
-func (c *AzureADClient) listUsers(ctx context.Context, filter string) ([]models.Userable, error) {
+func (c *AzureADClient) ListGroups(ctx context.Context) ([]models.Groupable, error) {
+	result := make([]models.Groupable, 0)
+
+	groupsResp, err := c.appClient.Groups().
+		Get(ctx,
+			&adgroups.GroupsRequestBuilderGetRequestConfiguration{
+				QueryParameters: &adgroups.GroupsRequestBuilderGetQueryParameters{
+					Select: []string{"displayName", "id", "mail", "createdDateTime", "mailNickname"},
+					Expand: []string{"memberOf"},
+				},
+			})
+	if err != nil {
+		return nil, err
+	}
+
+	pageIterator, err := graphcore.NewPageIterator[*models.Group](
+		groupsResp,
+		c.requestAdaptor,
+		models.CreateGroupCollectionResponseFromDiscriminatorValue)
+	if err != nil {
+		return nil, err
+	}
+
+	// Iterate over all pages
+	err = pageIterator.Iterate(
+		ctx,
+		func(group *models.Group) bool {
+			result = append(result, group)
+			return true
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (c *AzureADClient) listUsers(ctx context.Context, filter string, groups bool) ([]models.Userable, error) {
 	query := adusers.UsersRequestBuilderGetQueryParameters{
 		Select: []string{"displayName", "id", "mail", "createdDateTime", "mobilePhone", "userPrincipalName", "accountEnabled"},
 		Filter: &filter,
+	}
+
+	if groups {
+		query.Expand = []string{"memberOf"}
 	}
 
 	result := make([]models.Userable, 0)

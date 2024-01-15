@@ -12,6 +12,7 @@ type FetchCmd struct {
 	ClientID     string `short:"i" help:"AzureAD Client ID" env:"AZUREAD_CLIENT_ID" required:""`
 	ClientSecret string `short:"s" help:"AzureAD Client Secret" env:"AZUREAD_CLIENT_SECRET" required:""`
 	RefreshToken string `short:"r" help:"AzureAD Refresh Token" env:"AZUREAD_REFRESH_TOKEN" optional:""`
+	Groups       bool   `short:"g" help:"Include groups" env:"AZUREAD_INCLUDE_GROUPS" optional:""`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
@@ -25,5 +26,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, os.Stderr)
 }
