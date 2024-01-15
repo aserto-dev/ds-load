@@ -39,7 +39,7 @@ func (f Finder) Find() ([]*Plugin, error) {
 	dirs := f.dirs
 	if f.env {
 		pathEnv := os.Getenv("PATH")
-		dirs = append(dirs, strings.Split(pathEnv, ":")...)
+		dirs = append(dirs, strings.Split(pathEnv, string(os.PathListSeparator))...)
 		pwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println(err)
