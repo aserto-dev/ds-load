@@ -3,6 +3,7 @@ package ldapclient
 import (
 	"crypto/tls"
 	"log"
+	"time"
 
 	"github.com/go-ldap/ldap/v3"
 	"github.com/rs/zerolog"
@@ -46,6 +47,9 @@ func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions, logg
 
 func (l *LDAPClient) initLDAPConnection(username, password, host string, insecure bool) (*ldap.Conn, error) {
 	var dialOptions []ldap.DialOpt
+
+	// Set default timeout for init connection
+	ldap.DefaultTimeout = 10 * time.Second
 
 	// Disable the security check if insecure is true
 	if insecure { // #nosec G402

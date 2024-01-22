@@ -12,7 +12,7 @@ type FetchCmd struct {
 	User        string `short:"u" help:"LDAP user" env:"LDAP_USER" required:""`
 	Password    string `short:"p" help:"LDAP password" env:"LDAP_PASSWORD" required:""`
 	Host        string `short:"s" help:"LDAP host" env:"LDAP_HOST" required:""`
-	BaseDn      string `short:"b" help:"LDAP base DN" env:"LDAP_BASE_DN" default:"dc=example,dc=org"`
+	BaseDn      string `short:"b" help:"LDAP base DN" env:"LDAP_BASE_DN" required:""`
 	UserFilter  string `short:"f" help:"LDAP user filter" env:"LDAP_USER_FILTER" default:"(&(objectClass=organizationalPerson))"`
 	GroupFilter string `short:"g" help:"LDAP group filter" env:"LDAP_GROUP_FILTER" default:"(&(objectClass=groupOfNames))"`
 	Insecure    bool   `short:"i" help:"Allow insecure LDAP connection" env:"LDAP_INSECURE" default:"false"`
