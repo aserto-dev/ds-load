@@ -34,10 +34,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	}
 	defer client.Close()
 
-	fetcher, err := fetch.New(client)
-	if err != nil {
-		return err
-	}
+	fetcher := fetch.New(client, cmd.UUIDField)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {

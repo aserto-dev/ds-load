@@ -40,10 +40,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	}
 	defer ldapClient.Close()
 
-	fetcher, err := fetch.New(ldapClient)
-	if err != nil {
-		return err
-	}
+	fetcher := fetch.New(ldapClient, cmd.UUIDField)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }
