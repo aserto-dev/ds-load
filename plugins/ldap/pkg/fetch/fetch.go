@@ -12,7 +12,7 @@ import (
 
 type Fetcher struct {
 	ldapClient *ldapclient.LDAPClient
-	uuidField  string
+	idField    string
 }
 
 type Entry struct {
@@ -21,10 +21,10 @@ type Entry struct {
 	Attributes map[string][]string
 }
 
-func New(ldapClient *ldapclient.LDAPClient, uuidField string) *Fetcher {
+func New(ldapClient *ldapclient.LDAPClient, idField string) *Fetcher {
 	return &Fetcher{
 		ldapClient: ldapClient,
-		uuidField:  uuidField,
+		idField:    idField,
 	}
 }
 
@@ -37,8 +37,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 	groups := f.ldapClient.ListGroups()
 	users := f.ldapClient.ListUsers()
-	userDnTOKey := buildMapFromDNToKey(users, f.uuidField)
-	groupDnTOKey := buildMapFromDNToKey(groups, f.uuidField)
+	userDnTOKey := buildMapFromDNToKey(users, f.idField)
+	groupDnTOKey := buildMapFromDNToKey(groups, f.idField)
 
 	err = writeEntries(groups, jsonWriter, userDnTOKey, groupDnTOKey)
 	if err != nil {

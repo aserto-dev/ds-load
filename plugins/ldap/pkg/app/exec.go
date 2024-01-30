@@ -25,7 +25,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		UserFilter:  cmd.UserFilter,
 		GroupFilter: cmd.GroupFilter,
 		Insecure:    cmd.Insecure,
-		UUIDField:   cmd.UUIDField,
+		IDField:     cmd.IDField,
 	}
 
 	client, err := ldapclient.NewLDAPClient(credentials, conOptions, ctx.Log)
@@ -34,7 +34,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	}
 	defer client.Close()
 
-	fetcher := fetch.New(client, cmd.UUIDField)
+	fetcher := fetch.New(client, cmd.IDField)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {

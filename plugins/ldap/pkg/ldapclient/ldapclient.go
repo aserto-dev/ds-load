@@ -27,7 +27,7 @@ type ConnectionOptions struct {
 	BaseDN      string
 	UserFilter  string
 	GroupFilter string
-	UUIDField   string
+	IDField     string
 }
 
 func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions, logger *zerolog.Logger) (*LDAPClient, error) {
