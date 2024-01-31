@@ -16,7 +16,7 @@ type FetchCmd struct {
 	UserFilter  string `short:"f" help:"LDAP user filter" env:"LDAP_USER_FILTER" default:"(&(objectClass=organizationalPerson))"`
 	GroupFilter string `short:"g" help:"LDAP group filter" env:"LDAP_GROUP_FILTER" default:"(&(objectClass=groupOfNames))"`
 	Insecure    bool   `short:"i" help:"Allow insecure LDAP connection" env:"LDAP_INSECURE" default:"false"`
-	UUIDField   string `short:"U" help:"LDAP field to use as UUID" env:"LDAP_UUID_FIELD" default:"objectGUID"`
+	IDField     string `short:"U" help:"LDAP field to use as ID" env:"LDAP_ID_FIELD" default:"objectGUID"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
@@ -31,7 +31,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		UserFilter:  cmd.UserFilter,
 		GroupFilter: cmd.GroupFilter,
 		Insecure:    cmd.Insecure,
-		UUIDField:   cmd.UUIDField,
+		IDField:     cmd.IDField,
 	}
 
 	ldapClient, err := ldapclient.NewLDAPClient(credentials, conOptions, ctx.Log)
@@ -40,10 +40,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	}
 	defer ldapClient.Close()
 
-	fetcher, err := fetch.New(ldapClient)
-	if err != nil {
-		return err
-	}
+	fetcher := fetch.New(ldapClient, cmd.IDField)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

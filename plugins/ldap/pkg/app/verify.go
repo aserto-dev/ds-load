@@ -21,7 +21,7 @@ func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
 		UserFilter:  v.UserFilter,
 		GroupFilter: v.GroupFilter,
 		Insecure:    v.Insecure,
-		UUIDField:   v.UUIDField,
+		IDField:     v.IDField,
 	}
 
 	client, err := ldapclient.NewLDAPClient(credentials, conOptions, ctx.Log)
