@@ -71,10 +71,7 @@ func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, er
 
 	wg.Add(1)
 	go func() {
-		writer, err := js.NewJSONArrayWriter(plugin.outWriter)
-		if err != nil {
-			log.Printf("Could not createJSONArrayWriter")
-		}
+		writer := js.NewJSONArrayWriter(plugin.outWriter)
 		defer writer.Close()
 		for result := range results {
 			err := writer.Write(result)
