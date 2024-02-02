@@ -42,10 +42,7 @@ func (f *Fetcher) WithRoles(roles bool) *Fetcher {
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	page := 0

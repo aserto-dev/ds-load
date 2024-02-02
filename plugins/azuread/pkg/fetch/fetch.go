@@ -28,10 +28,7 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
-	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 
 	if f.Groups {

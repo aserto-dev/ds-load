@@ -46,10 +46,7 @@ func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
 }
 
 func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
-	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 	reader, err := js.NewJSONArrayReader(ioReader)
 	if err != nil {

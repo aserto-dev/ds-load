@@ -14,17 +14,12 @@ type JSONArrayWriter struct {
 	arrayInitialized bool
 }
 
-func NewJSONArrayWriter(w io.Writer) (*JSONArrayWriter, error) {
-	_, err := w.Write([]byte{'['})
-	if err != nil {
-		return nil, err
-	}
-
+func NewJSONArrayWriter(w io.Writer) *JSONArrayWriter {
 	return &JSONArrayWriter{
 		writer:           w,
 		addDelimiter:     false,
-		arrayInitialized: true,
-	}, nil
+		arrayInitialized: false,
+	}
 }
 
 func (w *JSONArrayWriter) WriteProtoMessage(message protoreflect.ProtoMessage) error {
@@ -61,11 +56,16 @@ func (w *JSONArrayWriter) Write(message any) error {
 
 func (w *JSONArrayWriter) Close() error {
 	if w.writer != nil {
-		if w.arrayInitialized {
-			_, err := w.writer.Write([]byte{']', '\n'})
+		if !w.arrayInitialized {
+			_, err := w.writer.Write([]byte{'['})
 			if err != nil {
 				return err
 			}
+		}
+
+		_, err := w.writer.Write([]byte{']', '\n'})
+		if err != nil {
+			return err
 		}
 		w.addDelimiter = false
 		w.writer = nil
