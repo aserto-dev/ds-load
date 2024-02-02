@@ -26,10 +26,7 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	users, err := f.cognitoClient.ListUsers(ctx)

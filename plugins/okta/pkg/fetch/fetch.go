@@ -40,10 +40,7 @@ func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.
 	var users []*okta.User
 	var err error
 
-	writer, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	users, response, err = fetcher.oktaClient.ListUsers(ctx, nil)
