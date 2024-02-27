@@ -4,15 +4,23 @@
 {{ else if $.blocked}}
   {{$status = "USER_STATUS_SUSPENDED"}}
 {{end}}
+
+{{$user_object_id := $.email}}
+{{ if not $.email }}
+{{$user_object_id = $.user_id}}
+{{end}}
+
 {
   "objects": [
     {
-      "id": "{{ $.email }}",
+      "id": "{{ $user_object_id }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
       "created_at":"{{ $.created_at }}",
       "properties":{
+        {{ if $.email }}
         "email": "{{ $.email }}",
+        {{ end }}
         "enabled": true,
         "picture": "{{ $.picture }}",
         {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
@@ -31,7 +39,9 @@
         {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "verified": true
       }
-    },
+    }
+    {{ if $.email }}
+    ,
     {
         "id": "{{ $.email }}",
         "type": "identity",
@@ -42,7 +52,7 @@
           "verified": {{ .email_verified }}
         }
     }
-    
+    {{ end }}
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
@@ -56,7 +66,6 @@
           }
       }
     {{ end }}
-
     {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
@@ -70,9 +79,7 @@
           }
       }
     {{ end }}
-
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
@@ -88,48 +95,47 @@
       {
         "relation": "identifier",
         "subject_type": "user",
-        "subject_id": "{{ $.email }}",
+        "subject_id": "{{ $user_object_id }}",
         "object_type": "identity",
         "object_id": "{{ $.user_id }}"
-      },
+      }
+    {{ if $.email }}
+    ,
       {
         "relation": "identifier",
         "subject_type": "user",
-        "subject_id": "{{ $.email }}",
+        "subject_id": "{{ $user_object_id }}",
         "object_type": "identity",
         "object_id": "{{ $.email }}"
       }
-
+    {{ end }}
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
         "relation": "identifier",
         "subject_type": "user",
-        "subject_id": "{{ $.email }}",
+        "subject_id": "{{ $user_object_id }}",
         "object_type": "identity",
         "object_id": "{{ $.username }}"
       }
     {{ end }}
-
     {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
         "relation": "identifier",
         "subject_type": "user",
-        "subject_id": "{{ $.email }}",
+        "subject_id": "{{ $user_object_id }}",
         "object_type": "identity",
         "object_id": "{{ $.phone_number }}"
       }
     {{ end }}
-
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
         "relation": "member",
         "subject_type": "user",
-        "subject_id": "{{$.email}}",
+        "subject_id": "{{ $user_object_id }}",
         "object_type": "group",
         "object_id": "{{$element.name}}"
       }
