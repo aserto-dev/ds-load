@@ -99,6 +99,9 @@
         "object_id": "{{$.email}}",
         "relation": "member",
         "subject_type": "{{$subject_type}}",
+        {{ if contains $element.type "GROUP" }}
+        "subject_relation": "member",
+        {{ end }}
         "subject_id": "{{$element.email}}"
       }
       {{ end }}
