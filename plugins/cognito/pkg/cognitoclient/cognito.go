@@ -32,6 +32,7 @@ func NewCognitoClient(accessKey, secretKey, userPoolID, region string) (*Cognito
 
 	c.cognitoClient = cognitoidentityprovider.New(sess)
 	c.userPoolID = userPoolID
+
 	return c, nil
 }
 
@@ -64,12 +65,18 @@ func (c *CognitoClient) ListUsers(ctx context.Context) ([]*cognitoidentityprovid
 	return users, nil
 }
 
-func (c *CognitoClient) ListGroups() (*cognitoidentityprovider.ListGroupsOutput, error) {
+func (c *CognitoClient) ListGroups() ([]*cognitoidentityprovider.GroupType, error) {
 	listGroupsInput := &cognitoidentityprovider.ListGroupsInput{
 		UserPoolId: aws.String(c.userPoolID),
 	}
 
-	return c.cognitoClient.ListGroups(listGroupsInput)
+	resp, err := c.cognitoClient.ListGroups(listGroupsInput)
+	if err != nil {
+		fmt.Println("Failed to list groups:", err)
+		return nil, err
+	}
+
+	return resp.Groups, nil
 }
 
 func (c *CognitoClient) GetGroupsForUser(user string) (*cognitoidentityprovider.AdminListGroupsForUserOutput, error) {

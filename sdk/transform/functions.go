@@ -24,6 +24,14 @@ func customFunctions() map[string]any {
 		"add": func(a int, b int) int {
 			return a + b
 		},
+		"array_contains": func(a []interface{}, b string) bool {
+			for _, x := range a {
+				if x.(string) == b {
+					return true
+				}
+			}
+			return false
+		},
 	}
 }
 
