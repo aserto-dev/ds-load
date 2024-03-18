@@ -6,11 +6,17 @@
 {{$verified := false}}
 {{ end }}
 
+{{$object_type := "user"}}
+{{ if array_contains .objectClass "okta:user_group" }}
+{{$object_type = "group"}}
+{{ end }}
+
 {{ if $.blocked}}
 {{$status = "USER_STATUS_SUSPENDED"}}
 {{end}}
 {
   "objects": [
+  {{ if eq $object_type "user" }}
     {
       "id": "{{ $.id }}",
       "type": "user",
@@ -68,9 +74,18 @@
           }
       }
     {{ end }}
-
+  {{ else if eq $object_type "group"}}
+    {
+      "id": "{{ $.id }}",
+      "type": "group",
+      "displayName": "{{ $.profile.name }}",
+      "created_at":"{{ $.created }}",
+      "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+      }
+    }
+  {{ end }}
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
@@ -84,6 +99,7 @@
     {{ end }}
   ],
   "relations":[
+  {{ if eq $object_type "user" }}
     {
 
       "object_type": "identity",
@@ -113,9 +129,7 @@
       "subject_id": "{{ $.id }}"
     }
     {{ end }}
-
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
@@ -126,5 +140,32 @@
       "subject_id": "{{ $.id }}"
       }
     {{ end }}
+    {{ if $.groups }}, {{ end }}
+    {{ range $i, $element := $.groups }}
+      {{ if $i }},{{ end }}
+      {
+      "object_type": "group",
+      "object_id": "{{$element.id}}",
+      "relation": "member",
+      "subject_type": "user",
+      {{ if eq $object_type "group" }}
+      "subject_relation": "member",
+      {{ end}}
+      "subject_id": "{{ $.id }}"
+      }
+    {{ end }}
+  {{ else if eq $object_type "group"}}
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+      "object_type": "group",
+      "object_id": "{{$element.type}}",
+      "relation": "member",
+      "subject_relation": "member",
+      "subject_type": "{{ "group" }}",
+      "subject_id": "{{ $.id }}"
+      }
+    {{ end }}
+  {{ end }}
   ]
 }

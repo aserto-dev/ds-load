@@ -61,6 +61,44 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
+	if f.Roles {
+		page := 0
+
+		for f.Roles {
+			opts := []management.RequestOption{management.Page(page)}
+			if f.ConnectionName != "" {
+				opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
+			}
+
+			roles, more, err := f.getRoles(ctx, opts)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+				common.SetExitCode(1)
+				return err
+			}
+
+			for _, role := range roles {
+				res := role.String()
+				var obj map[string]interface{}
+				err = json.Unmarshal([]byte(res), &obj)
+				if err != nil {
+					_, _ = errorWriter.Write([]byte(err.Error()))
+					common.SetExitCode(1)
+					continue
+				}
+				obj["object_type"] = "role"
+				err = writer.Write(obj)
+				if err != nil {
+					return err
+				}
+			}
+			if !more {
+				break
+			}
+			page++
+		}
+	}
+
 	page := 0
 
 	for {
@@ -91,8 +129,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 			obj["email_verified"] = user.GetEmailVerified()
+			obj["object_type"] = "user"
 			if f.Roles {
-				roles, err := f.getRoles(ctx, *user.ID)
+				roles, err := f.getUserRoles(ctx, *user.ID)
 				if err != nil {
 					_, _ = errorWriter.Write([]byte(err.Error()))
 					common.SetExitCode(1)
@@ -165,7 +204,19 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 	}
 }
 
-func (f *Fetcher) getRoles(ctx context.Context, uID string) ([]map[string]interface{}, error) {
+func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption) ([]*management.Role, bool, error) {
+	roles, err := f.client.Mgmt.Role.List(ctx, opts...)
+	if err != nil {
+		return nil, false, err
+	}
+	if roles == nil {
+		return nil, false, errors.Wrap(err, "failed to get roles")
+	}
+
+	return roles.Roles, roles.HasNext(), nil
+}
+
+func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]interface{}, error) {
 	page := 0
 	finished := false
 

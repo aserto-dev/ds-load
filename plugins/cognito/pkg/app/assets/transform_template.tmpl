@@ -1,4 +1,3 @@
-{
 {{$email := $.Attributes.email}}
 {{ if not $.Attributes.email}}
 {{$email = $.Username}}
@@ -7,7 +6,13 @@
 {{ if not $.Attributes.name}}
 {{$name = $email}}
 {{end}}
+{{$object_type := "user"}}
+{{ if .GroupName }}
+{{$object_type = "group"}}
+{{ end }}
+{
   "objects": [
+  {{ if eq $object_type "user" }}
     {
       "id": "{{ $.Username }}",
       "type": "user",
@@ -37,21 +42,21 @@
         "verified": true
       }
     }
-    {{ if $.Groups }}, {{ end }}
-
-    {{ range $i, $element := $.Groups }}
-      {{ if $i }},{{ end }}
+  {{ else if eq $object_type "group"}}
       {
-        "id": "{{$element.GroupName}}",
-        "displayName": "{{$element.Description}}",
+        "id": "{{.GroupName}}",
+        {{ if $.Description }}
+        "displayName": "{{.Description}}",
+        {{ end }}
         "type": "group",
         "properties":{
           {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
         }
       }
-    {{ end }}
+  {{ end }}
   ],
-  "relations":[  
+  "relations":[
+  {{ if eq $object_type "user" }}
     {
       "object_type": "identity",
       "object_id": "{{$.Username}}",
@@ -78,6 +83,7 @@
         "subject_type": "user",
         "subject_id": "{{$.Username}}"
       }
+    {{ end }}
     {{ end }}
   ]
 }
