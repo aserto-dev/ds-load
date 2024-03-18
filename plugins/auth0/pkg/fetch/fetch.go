@@ -62,49 +62,22 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer writer.Close()
 
 	if f.Roles {
-		page := 0
-
-		for f.Roles {
-			opts := []management.RequestOption{management.Page(page)}
-			if f.ConnectionName != "" {
-				opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
-			}
-
-			roles, more, err := f.getRoles(ctx, opts)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
-				return err
-			}
-
-			for _, role := range roles {
-				res := role.String()
-				var obj map[string]interface{}
-				err = json.Unmarshal([]byte(res), &obj)
-				if err != nil {
-					_, _ = errorWriter.Write([]byte(err.Error()))
-					common.SetExitCode(1)
-					continue
-				}
-				obj["object_type"] = "role"
-				err = writer.Write(obj)
-				if err != nil {
-					return err
-				}
-			}
-			if !more {
-				break
-			}
-			page++
+		err := f.fetchGroups(ctx, writer, errorWriter)
+		if err != nil {
+			return err
 		}
 	}
 
+	return f.fetchUsers(ctx, writer, errorWriter)
+}
+
+func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
 	page := 0
 
 	for {
 		opts := []management.RequestOption{management.Page(page)}
 		if f.ConnectionName != "" {
-			opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
+			opts = append(opts, management.Query(f.getConnectionQuery()))
 		}
 
 		users, more, err := f.getUsers(ctx, opts)
@@ -149,7 +122,47 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				}
 			}
 
-			err = writer.Write(obj)
+			err = outputWriter.Write(obj)
+			if err != nil {
+				return err
+			}
+		}
+		if !more {
+			break
+		}
+		page++
+	}
+
+	return nil
+}
+
+func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+	page := 0
+
+	for f.Roles {
+		opts := []management.RequestOption{management.Page(page)}
+		if f.ConnectionName != "" {
+			opts = append(opts, management.Query(f.getConnectionQuery()))
+		}
+
+		roles, more, err := f.getRoles(ctx, opts)
+		if err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+			common.SetExitCode(1)
+			return err
+		}
+
+		for _, role := range roles {
+			res := role.String()
+			var obj map[string]interface{}
+			err = json.Unmarshal([]byte(res), &obj)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+				common.SetExitCode(1)
+				continue
+			}
+			obj["object_type"] = "role"
+			err = outputWriter.Write(obj)
 			if err != nil {
 				return err
 			}
@@ -289,6 +302,13 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 	}
 
 	return results, nil
+}
+
+func (f *Fetcher) getConnectionQuery() string {
+	if f.ConnectionName == "" {
+		return ""
+	}
+	return `identities.connection:"` + f.ConnectionName + `"`
 }
 
 // Specialized SAML user list function
