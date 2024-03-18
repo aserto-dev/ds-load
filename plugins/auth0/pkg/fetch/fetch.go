@@ -49,43 +49,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer writer.Close()
 
 	if f.Roles {
-		page := 0
-
-		for f.Roles {
-			opts := []management.RequestOption{management.Page(page)}
-			if f.ConnectionName != "" {
-				opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
-			}
-
-			roles, more, err := f.getRoles(opts)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
-				return err
-			}
-
-			for _, role := range roles {
-				res := role.String()
-				var obj map[string]interface{}
-				err = json.Unmarshal([]byte(res), &obj)
-				if err != nil {
-					_, _ = errorWriter.Write([]byte(err.Error()))
-					common.SetExitCode(1)
-					continue
-				}
-				obj["object_type"] = "role"
-				err = writer.Write(obj)
-				if err != nil {
-					return err
-				}
-			}
-			if !more {
-				break
-			}
-			page++
+		err := f.fetchGroups(writer, errorWriter)
+		if err != nil {
+			return err
 		}
 	}
 
+	return f.fetchUsers(writer, errorWriter)
+}
+
+func (f *Fetcher) fetchUsers(outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
 	page := 0
 
 	for {
@@ -126,7 +99,47 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 					obj["roles"] = roles
 				}
 			}
-			err = writer.Write(obj)
+			err = outputWriter.Write(obj)
+			if err != nil {
+				return err
+			}
+		}
+		if !more {
+			break
+		}
+		page++
+	}
+
+	return nil
+}
+
+func (f *Fetcher) fetchGroups(outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+	page := 0
+
+	for f.Roles {
+		opts := []management.RequestOption{management.Page(page)}
+		if f.ConnectionName != "" {
+			opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
+		}
+
+		roles, more, err := f.getRoles(opts)
+		if err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+			common.SetExitCode(1)
+			return err
+		}
+
+		for _, role := range roles {
+			res := role.String()
+			var obj map[string]interface{}
+			err = json.Unmarshal([]byte(res), &obj)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+				common.SetExitCode(1)
+				continue
+			}
+			obj["object_type"] = "role"
+			err = outputWriter.Write(obj)
 			if err != nil {
 				return err
 			}
