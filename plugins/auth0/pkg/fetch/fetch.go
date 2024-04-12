@@ -227,7 +227,9 @@ func (u *User) UnmarshalJSON(b []byte) error {
 	type tTmpUser User
 	var tmpUser tTmpUser
 
-	json.Unmarshal(buf, &tmpUser)
+	if err := json.Unmarshal(buf, &tmpUser); err != nil {
+		return err
+	}
 	tmpUser.VerifyEmail = &verified
 
 	*u = User(tmpUser)
