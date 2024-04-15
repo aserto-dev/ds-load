@@ -93,6 +93,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 					obj["roles"] = roles
 				}
 			}
+			if f.Orgs {
+				orgs, err := f.getOrgs(ctx, *user.ID)
+				if err != nil {
+					_, _ = errorWriter.Write([]byte(err.Error()))
+					common.SetExitCode(1)
+				} else {
+					obj["orgs"] = orgs
+				}
+			}
+
 			err = writer.Write(obj)
 			if err != nil {
 				return err
