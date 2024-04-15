@@ -1,0 +1,12 @@
+FROM alpine
+
+RUN apk add --no-cache bash ca-certificates
+
+RUN mkdir /config
+VOLUME ["/config"]
+
+WORKDIR /app
+
+ENV PATH /app:$PATH
+
+COPY --chmod=755 ds-load* /app/

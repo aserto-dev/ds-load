@@ -12,8 +12,8 @@ type Auth0Client struct {
 
 func New(ctx context.Context, clientID, clientSecret, domain string) (*Auth0Client, error) {
 	options := []management.Option{
-		management.WithContext(ctx),
 		management.WithClientCredentials(
+			ctx,
 			clientID,
 			clientSecret,
 		),
