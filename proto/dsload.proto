@@ -1,32 +1,18 @@
 syntax = "proto3";
 
-option go_package = "github.com/aserto-dev/ds-load/pkg/msg;msg";
+option go_package = "github.com/aserto-dev/ds-load/sdk/common/msg;msg";
 
 package aserto.dsload;
 
-import "google/rpc/status.proto";
 import "aserto/directory/common/v2/common.proto";
+import "aserto/directory/common/v3/common.proto";
 
-enum BatchType {
-    NONE  = 0;
-    BEGIN = 1;
-    END   = 2;
-}
-
-message Batch {
-   BatchType type = 1;
-}
-
-message PluginMessage{
-    oneof data {
-        aserto.directory.common.v2.Object object        = 1;
-        aserto.directory.common.v2.Relation relation    = 2;
-        Batch batch                                     = 3;
-        google.rpc.Status error                         = 4;
-    }
+message TransformV2 {
+    repeated aserto.directory.common.v2.Object objects     = 1;
+    repeated aserto.directory.common.v2.Relation relations = 2;
 }
 
 message Transform {
-    repeated aserto.directory.common.v2.Object objects     = 1;
-    repeated aserto.directory.common.v2.Relation relations = 2;
+    repeated aserto.directory.common.v3.Object objects     = 1;
+    repeated aserto.directory.common.v3.Relation relations = 2;
 }

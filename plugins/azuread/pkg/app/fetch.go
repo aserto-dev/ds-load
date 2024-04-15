@@ -1,81 +1,30 @@
 package app
 
 import (
-	"context"
-	"encoding/json"
+	"os"
 
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
-	kiota "github.com/microsoft/kiota-serialization-json-go"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
 )
 
 type FetchCmd struct {
-	Tenant       string `short:"t" help:"AzureAD tenant" env:"AZUREAD_TENANT" required:""`
+	Tenant       string `short:"a" help:"AzureAD tenant" env:"AZUREAD_TENANT" required:""`
 	ClientID     string `short:"i" help:"AzureAD Client ID" env:"AZUREAD_CLIENT_ID" required:""`
 	ClientSecret string `short:"s" help:"AzureAD Client Secret" env:"AZUREAD_CLIENT_SECRET" required:""`
 	RefreshToken string `short:"r" help:"AzureAD Refresh Token" env:"AZUREAD_REFRESH_TOKEN" optional:""`
+	Groups       bool   `short:"g" help:"Include groups" env:"AZUREAD_INCLUDE_GROUPS" optional:""`
 }
 
-func (cmd *FetchCmd) Run(ctx *kong.Context) error {
-	azureClient, err := createAzureAdClient(cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
+func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
+	azureClient, err := createAzureAdClient(ctx.Context, cmd.Tenant, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken)
 	if err != nil {
 		return err
 	}
 
-	results := make(chan map[string]interface{}, 1)
-	errors := make(chan error, 1)
-	go func() {
-		Fetch(azureClient, results, errors)
-		close(results)
-		close(errors)
-	}()
-	return plugin.NewDSPlugin().WriteFetchOutput(results, errors, false)
-}
-
-func Fetch(azureClient *azureclient.AzureADClient, results chan map[string]interface{}, errors chan error) {
-	aadUsers, err := azureClient.ListUsers()
+	fetcher, err := fetch.New(ctx.Context, azureClient)
 	if err != nil {
-		errors <- err
+		return err
 	}
 
-	for _, user := range aadUsers.GetValue() {
-		writer := kiota.NewJsonSerializationWriter()
-		err := user.Serialize(writer)
-		if err != nil {
-			errors <- err
-			return
-		}
-		userBytes, err := writer.GetSerializedContent()
-		if err != nil {
-			errors <- err
-			return
-		}
-
-		userString := "{" + string(userBytes) + "}"
-		var obj map[string]interface{}
-		err = json.Unmarshal([]byte(userString), &obj)
-		if err != nil {
-			errors <- err
-			return
-		}
-		results <- obj
-	}
-}
-
-func createAzureAdClient(tenant, clientID, clientSecret, refreshToken string) (azureClient *azureclient.AzureADClient, err error) {
-	if refreshToken != "" {
-		return azureclient.NewAzureADClientWithRefreshToken(
-			context.Background(),
-			tenant,
-			clientID,
-			clientSecret,
-			refreshToken)
-	}
-
-	return azureclient.NewAzureADClient(
-		context.Background(),
-		tenant,
-		clientID,
-		clientSecret)
+	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

@@ -1,17 +1,21 @@
 package app
 
 import (
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"os"
+
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
-type ExportTransportCmd struct {
+type ExportTransformCmd struct {
 }
 
-func (t *ExportTransportCmd) Run(context *kong.Context) error {
+func (t *ExportTransformCmd) Run(ctx *cc.CommonCtx) error {
 	templateContent, err := Assets().ReadFile("assets/transform_template.tmpl")
 	if err != nil {
 		return err
 	}
-	return plugin.NewDSPlugin(plugin.WithTemplate(templateContent)).ExportTransform()
+	transformer := transform.NewGoTemplateTransform(templateContent)
+
+	return transformer.ExportTransform(os.Stdout)
 }

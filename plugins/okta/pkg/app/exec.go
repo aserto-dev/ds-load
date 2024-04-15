@@ -1,11 +1,11 @@
 package app
 
 import (
-	"context"
-
-	"github.com/alecthomas/kong"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/exec"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type ExecCmd struct {
@@ -13,24 +13,23 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(ctx *kong.Context) error {
-	oktaClient, err := oktaclient.NewOktaClient(context.Background(), cmd.Domain, cmd.APIToken)
+func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
+	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, cmd.Domain, cmd.APIToken, cmd.RequestTimeout)
 	if err != nil {
 		return err
 	}
 
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-	go func() {
-		cmd.Fetch(oktaClient, results, errCh)
-		close(results)
-		close(errCh)
-	}()
-
-	content, err := cmd.getTemplateContent()
+	fetcher, err := fetch.New(ctx.Context, oktaClient)
 	if err != nil {
 		return err
 	}
 
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(cmd.MaxChunkSize)).WriteFetchOutput(results, errCh, true)
+	fetcher = fetcher.WithGroups(cmd.Groups).WithRoles(cmd.Roles)
+
+	templateContent, err := cmd.getTemplateContent()
+	if err != nil {
+		return err
+	}
+	transformer := transform.NewGoTemplateTransform(templateContent)
+	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }

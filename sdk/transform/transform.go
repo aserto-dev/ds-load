@@ -2,107 +2,133 @@ package transform
 
 import (
 	"bytes"
-	"reflect"
-	"strings"
+	"context"
+	"io"
+	"log"
+	"os"
 	"text/template"
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
-
-	v2 "github.com/aserto-dev/go-directory/aserto/directory/common/v2"
+	convert "github.com/aserto-dev/go-directory/pkg/convert"
+	"github.com/pkg/errors"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type Transformer struct {
-	MaxChunkSize int
+type APIVersion int
+
+const (
+	APIVersionUnknown APIVersion = 1
+	APIVersionV2      APIVersion = 2
+	APIVersionV3      APIVersion = 3
+)
+
+type GoTemplateTransform struct {
+	template []byte
+	version  APIVersion
 }
 
-func NewTransformer(chunkSize int) *Transformer {
-	return &Transformer{
-		MaxChunkSize: chunkSize,
+func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
+	return &GoTemplateTransform{
+		template: transformTemplate,
+		version:  APIVersionUnknown,
 	}
 }
 
-func (t *Transformer) WriteChunks(writer *js.JSONArrayWriter, chunks []*msg.Transform) error {
-	for _, chunk := range chunks {
-		err := t.writeProtoMessage(writer, chunk)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (t *Transformer) writeProtoMessage(writer *js.JSONArrayWriter, message *msg.Transform) error {
-	err := writer.WriteProtoMessage(message)
+func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
+	_, err := outputWriter.Write(t.template)
 	if err != nil {
+		log.Fatalf("cannot write to output: %s", err.Error())
 		return err
 	}
 
 	return nil
 }
 
-func (t *Transformer) PrepareChunks(directoryObject *msg.Transform) []*msg.Transform {
-	var chunks []*msg.Transform
-	var freeChunk *msg.Transform
-
-	for _, obj := range directoryObject.Objects {
-		freeChunk, chunks = t.nextFreeChunk(chunks)
-		freeChunk.Objects = append(freeChunk.Objects, obj)
+func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
+	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
+	if err != nil {
+		return err
+	}
+	defer jsonWriter.Close()
+	reader, err := js.NewJSONArrayReader(ioReader)
+	if err != nil {
+		return err
 	}
 
-	for _, rel := range directoryObject.Relations {
-		freeChunk, chunks = t.nextFreeChunk(chunks)
-		freeChunk.Relations = append(freeChunk.Relations, rel)
-	}
-
-	return chunks
-}
-
-func (t *Transformer) nextFreeChunk(chunks []*msg.Transform) (*msg.Transform, []*msg.Transform) {
-	if len(chunks) == 0 {
-		chunks = t.addEmptyChunk(chunks)
-	}
-
-	lastChunk := chunks[len(chunks)-1]
-	if t.isRoomInChunk(lastChunk) {
-		return lastChunk, chunks
-	}
-
-	chunks = t.addEmptyChunk(chunks)
-
-	return chunks[len(chunks)-1], chunks
-}
-
-func (t *Transformer) isRoomInChunk(chunk *msg.Transform) bool {
-	return len(chunk.Objects)+len(chunk.Relations) < t.MaxChunkSize
-}
-
-func (t *Transformer) addEmptyChunk(chunks []*msg.Transform) []*msg.Transform {
-	return append(chunks, &msg.Transform{Objects: []*v2.Object{}, Relations: []*v2.Relation{}})
-}
-
-var fns = template.FuncMap{
-	"last": func(x int, a interface{}) bool {
-		return x == reflect.ValueOf(a).Len()-1
-	},
-	"contains":  strings.Contains,
-	"separator": separator,
-}
-
-func separator(s string) func() string {
-	i := -1
-	return func() string {
-		i++
-		if i == 0 {
-			return ""
+	for {
+		var idpData map[string]interface{}
+		err := reader.Read(&idpData)
+		if err == io.EOF {
+			break
 		}
-		return s
+		if err != nil {
+			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
+		}
+		err = t.doTransform(idpData, jsonWriter, t.template)
+		if err != nil {
+			return err
+		}
 	}
+
+	return nil
 }
 
-func (t *Transformer) TransformToTemplate(input map[string]interface{}, templateString string) (string, error) {
-	temp := template.New("transform")
-	parsed, err := temp.Funcs(fns).Parse(templateString)
+func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
+	output, err := t.transformToTemplate(idpData, string(transformTemplate))
+	if err != nil {
+		return errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
+	}
+	if os.Getenv("DEBUG") != "" {
+		os.Stdout.WriteString(output)
+	}
+	var dirV3msg msg.Transform
+
+	opts := protojson.UnmarshalOptions{
+		AllowPartial:   false,
+		DiscardUnknown: false,
+	}
+
+	switch t.version {
+	case APIVersionV2:
+		var dirV2msg msg.TransformV2
+		err = opts.Unmarshal([]byte(output), &dirV2msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory v2 objects and relations")
+		}
+		dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
+		dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
+	case APIVersionV3:
+		err = opts.Unmarshal([]byte(output), &dirV3msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
+		}
+	case APIVersionUnknown:
+		err = opts.Unmarshal([]byte(output), &dirV3msg)
+		if err != nil {
+			var dirV2msg msg.TransformV2
+			v2err := opts.Unmarshal([]byte(output), &dirV2msg)
+			if v2err != nil {
+				return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
+			}
+			dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
+			dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
+			t.version = APIVersionV2
+		} else {
+			t.version = APIVersionV3
+		}
+	}
+
+	err = jsonWriter.WriteProtoMessage(&dirV3msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to write directory objects to output")
+	}
+	return nil
+}
+
+func (t *GoTemplateTransform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+	temp := template.New("GoTemplateTransform")
+	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)
 	if err != nil {
 		return "", err
 	}

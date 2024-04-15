@@ -1,0 +1,83 @@
+{
+{{$email := $.Attributes.email}}
+{{ if not $.Attributes.email}}
+{{$email = $.Username}}
+{{end}}
+{{$name := $.Attributes.name}}
+{{ if not $.Attributes.name}}
+{{$name = $email}}
+{{end}}
+  "objects": [
+    {
+      "id": "{{ $.Username }}",
+      "type": "user",
+      "displayName": "{{ $name }}",
+      "created_at":"{{ $.UserCreateDate }}",
+      "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "email": "{{ $email }}"
+      }
+    },
+    {
+      "id": "{{ $email }}",
+      "type": "identity",
+        "properties": {
+          "kind": "IDENTITY_KIND_EMAIL",
+          "provider": "cognito",
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
+    },
+    {
+      "id": "{{ $.Username }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_USERNAME",
+        "provider": "cognito",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
+    }
+    {{ if $.Groups }}, {{ end }}
+
+    {{ range $i, $element := $.Groups }}
+      {{ if $i }},{{ end }}
+      {
+        "id": "{{$element.GroupName}}",
+        "displayName": "{{$element.Description}}",
+        "type": "group",
+        "properties":{
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
+      }
+    {{ end }}
+  ],
+  "relations":[  
+    {
+      "object_type": "identity",
+      "object_id": "{{$.Username}}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{$.Username}}"
+    },
+    {
+      "object_type": "identity",
+      "object_id": "{{$email}}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{$.Username}}"
+    }
+
+    {{ if $.Groups }}, {{ end }}
+
+    {{ range $i, $element := $.Groups }}
+      {{ if $i }},{{ end }}
+      {
+        "object_type": "group",
+        "object_id": "{{$element.GroupName}}",
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{$.Username}}"
+      }
+    {{ end }}
+  ]
+}

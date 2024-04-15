@@ -1,13 +1,13 @@
 package app
 
 import (
-	"net/http"
 	"strings"
 
-	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/httpclient"
-	"github.com/aserto-dev/ds-load/sdk/plugin"
-	"github.com/auth0/go-auth0/management"
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
+	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/exec"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type ExecCmd struct {
@@ -15,45 +15,26 @@ type ExecCmd struct {
 	TransformCmd
 }
 
-func (cmd *ExecCmd) Run(context *kong.Context) error {
-	if cmd.UserPID != "" && !strings.HasPrefix(cmd.UserPID, "auth0|") {
+func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
+	if cmd.UserPID != "" && !strings.Contains(cmd.UserPID, "|") {
 		cmd.UserPID = "auth0|" + cmd.UserPID
 	}
 
-	options := []management.Option{
-		management.WithClientCredentials(
-			cmd.ClientID,
-			cmd.ClientSecret,
-		),
-	}
-	if cmd.RateLimit {
-		client := http.DefaultClient
-		client.Transport = httpclient.NewTransport(http.DefaultTransport)
-		options = append(options, management.WithClient(client))
-	}
-
-	mgmt, err := management.New(
-		cmd.Domain,
-		options...,
-	)
+	client, err := auth0client.New(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.Domain)
 	if err != nil {
 		return err
 	}
 
-	cmd.mgmt = mgmt
-
-	results := make(chan map[string]interface{}, 1)
-	errCh := make(chan error, 1)
-	go func() {
-		cmd.Fetch(results, errCh)
-		close(results)
-		close(errCh)
-	}()
-
-	content, err := cmd.getTemplateContent()
+	fetcher, err := fetch.New(ctx.Context, client)
 	if err != nil {
 		return err
 	}
+	fetcher = fetcher.WithUserPID(cmd.UserPID).WithEmail(cmd.UserEmail).WithRoles(cmd.Roles)
 
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(cmd.MaxChunkSize)).WriteFetchOutput(results, errCh, true)
+	templateContent, err := cmd.getTemplateContent()
+	if err != nil {
+		return err
+	}
+	transformer := transform.NewGoTemplateTransform(templateContent)
+	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }

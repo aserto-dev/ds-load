@@ -11,15 +11,9 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/version"
 )
 
-type Context struct {
-	Config    string
-	Verbosity int
-	Insecure  bool
-}
-
 type CLI struct {
-	Exec             ExecCmd             `cmd:"" help:"import data in directory" default:"withargs"`
-	Load             LoadCmd             `cmd:"" help:"load data from stdin into directory"`
+	Exec             ExecCmd             `cmd:"" help:"import data in directory by running fetch, transform and publish" default:"withargs"`
+	Publish          PublishCmd          `cmd:"" help:"load data from stdin into directory"`
 	GetPlugin        GetPluginCmd        `cmd:"" help:"download plugin"`
 	SetDefaultPlugin SetDefaultPluginCmd `cmd:"" help:"sets a plugin as default"`
 	ListPlugins      ListPluginsCmd      `cmd:"" help:"list available plugins"`

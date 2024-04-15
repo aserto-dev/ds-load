@@ -21,9 +21,3 @@ func WithErrorWriter(writer io.Writer) PluginOption {
 		d.errWriter = writer
 	}
 }
-
-func WithMaxChunkSize(chunkSize int) PluginOption {
-	return func(d *DSPlugin) {
-		d.maxChunkSize = chunkSize
-	}
-}

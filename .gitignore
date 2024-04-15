@@ -13,5 +13,6 @@
 /.vscode/tasks.json
 
 # IDE speciffic
-/.idea/
+.idea/
 .run/
+go.work.sum

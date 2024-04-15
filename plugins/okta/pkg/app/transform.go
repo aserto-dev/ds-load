@@ -2,23 +2,34 @@
 package app
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
+	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 
 type TransformCmd struct {
-	Template     string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
-	MaxChunkSize int    `name:"max-chunk-size" env:"DS_MAX_CHUNK_SIZE" help:"maximum chunk size" default:"20" optional:""`
+	Template string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
 }
 
-func (t *TransformCmd) Run(context *kong.Context) error {
-	content, err := t.getTemplateContent()
+func (t *TransformCmd) Run(kongContext *kong.Context) error {
+	template, err := t.getTemplateContent()
 	if err != nil {
 		return err
 	}
-	return plugin.NewDSPlugin(plugin.WithTemplate(content), plugin.WithMaxChunkSize(t.MaxChunkSize)).Transform()
+
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	defer cancel()
+
+	goTemplateTransformer := transform.NewGoTemplateTransform(template)
+	return t.transform(timeoutCtx, goTemplateTransformer)
+}
+
+func (t *TransformCmd) transform(ctx context.Context, transformer plugin.Transformer) error {
+	return transformer.Transform(ctx, os.Stdin, os.Stdout, os.Stderr)
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {

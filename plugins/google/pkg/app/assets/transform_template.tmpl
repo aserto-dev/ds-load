@@ -1,0 +1,110 @@
+{
+{{$email := $.primaryEmail}}
+  "objects": [
+  {{ if contains $.kind "admin#directory#user" }}
+    {
+      "id": "{{ $email }}",
+      "type": "user",
+      "displayName": "{{ $.name.fullName }}",
+      "created_at":"{{ $.creationTime }}",
+      "properties":{
+        "id": "{{ $.id }}",
+        "email": "{{ $email }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        {{ if $.recoveryPhone }}
+        "phone": "{{ $.recoveryPhone }}",
+        {{ end }}
+        {{ if $.thumbnailPhotoUrl }}
+        "picture": "{{ $.thumbnailPhotoUrl }}",
+        {{ end }}
+        {{ if $.isAdmin }}
+        "isAdmin": true
+        {{ else }}
+        "isAdmin": false
+        {{ end }}
+      }
+    },
+    {
+      "id": "{{ $email }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "google-workspace",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
+    },
+    {
+      "id": "{{ $.id }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "google-workspace",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
+    }
+  {{ end }}
+
+  {{ if contains $.kind "admin#directory#group" }}
+    {
+      "id": "{{ $.email }}",
+      "type": "group",
+      "displayName": "{{ $.name }}",
+      "properties": {
+        "email": "{{ $.email }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "id": "{{ $.id }}"
+      }
+    }
+  {{ end }}
+  ],
+  "relations":[  
+    {{ if contains $.kind "admin#directory#user" }}
+    {
+      "object_type": "identity",
+      "object_id": "{{$.id}}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{$email}}"
+    },
+    {
+      "object_type": "identity",
+      "object_id": "{{$email}}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{$email}}"
+    }
+    {{ end }}
+
+    {{ if contains $.kind "admin#directory#group" }}
+      {{ $index := 0 }}
+      {{ range $i, $element := $.users }}
+
+      {{ $subject_type := $element.type }}
+
+      {{ if contains $element.type "USER" }}
+        {{ $subject_type = "user" }}
+      {{ else if contains $element.type "GROUP"}}
+        {{ $subject_type = "group" }}
+      {{ else }}
+        {{ continue }}
+      {{ end }}
+      
+      {{ if $index }},{{ end }}
+      {{$index = add $index 1}}
+
+      {
+        "object_type": "group",
+        "object_id": "{{$.email}}",
+        "relation": "member",
+        "subject_type": "{{$subject_type}}",
+        {{ if contains $element.type "GROUP" }}
+        "subject_relation": "member",
+        {{ end }}
+        "subject_id": "{{$element.email}}"
+      }
+      {{ end }}
+    {{ end }}
+  ]
+}

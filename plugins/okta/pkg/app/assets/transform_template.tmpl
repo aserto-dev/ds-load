@@ -1,45 +1,130 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{$verified := true}}
+
+{{ if eq $.status "deprovisioned" }}
+{{$status = "USER_STATUS_DEPROVISIONED"}}
+{{$verified := false}}
+{{ end }}
+
+{{ if $.blocked}}
+{{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
 {
   "objects": [
-    {{ if $._links.self }}
-      {{ if contains $._links.self.href "users" }}
-       {
-        "key": "{{ $.id }}",
-        "displayName": "{{$.profile.email}}",
-        "type": "user"
-       },
-       {
-        "key": "{{$.id}}",
-        "type": "identity"
-       }
-      {{ end }}
+    {
+      "id": "{{ $.id }}",
+      "type": "user",
+      "displayName": "{{ $.profile.firstName }} {{ $.profile.lastName }}",
+      "created_at":"{{ $.created }}",
+      "properties":{
+        "enabled": true,
+        "status": "{{ $status }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        {{ range $key, $value := $.profile }}
+        ,"{{ $key }}": {{ marshal $value }}
+        {{ end }}
+        ,"groups": [
+          {{$s := separator ", "}}{{ range $index, $value := $.groups }}{{call $s}}"{{ $value.profile.name }}"{{ end }}
+        ]
+        ,"roles": [
+          {{$s := separator ", "}}{{ range $index, $value := $.roles }}{{call $s}}"{{ $value.type }}"{{ end }}
+        ]
+      }
+    },
+    {
+      "id": "{{ $.id }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "okta",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
+    }
+    {{ if and (ne $.profile.email "") ($verified) }}
+    ,
+      {
+          "id": "{{ $.profile.email }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_EMAIL",
+            "provider": "okta",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "verified": {{ $verified }}
+          }
+      }
     {{ end }}
 
-    {{ if $._links.apps }}
-      {{ if contains $._links.apps.href "groups" }}
-       {
-        "key": "{{$.id}}",
-        "type": "group",
-        "displayName": "{{ $.profile.name }}"
+    {{ if and ($.profile.mobilePhone) (ne $.profile.mobilePhone "") ($verified) }}
+    ,
+      {
+          "id": "{{ phoneIso3166 $.profile.mobilePhone }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_PHONE",
+            "provider": "okta",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "verified": {{ $verified }}
+          }
       }
-      {{ end }}
+    {{ end }}
+
+    {{ if $.roles }}, {{ end }}
+
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+        "id": "{{ $element.type }}",
+        "type": "group",
+        "displayName": "{{ $element.type }}-group",
+        "properties":{
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
+      }
     {{ end }}
   ],
   "relations":[
-    {{ if $._links.self }}
-      {{ if contains $._links.self.href "users" }}
-      {
-       "relation": "identifier",
-            "subject": {
-                "type": "user",
-                "key": "{{$.id}}"
-            },
-            "object": {
-                "type": "identity",
-                "key": "{{$.id}}"
-            }
+    {
+
+      "object_type": "identity",
+      "object_id": "{{ $.id }}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
+    }
+    {{ if and (ne $.profile.email "") ($verified) }}
+    ,
+    {
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}",
+      "relation": "identifier",
+      "object_type": "identity",
+      "object_id": "{{ $.profile.email }}"
       }
-      {{ end }}
     {{ end }}
-    
+
+    {{ if and ($.profile.mobilePhone) (ne $.profile.mobilePhone "") ($verified) }}
+    ,
+    {
+      "object_type": "identity",
+      "object_id": "{{ phoneIso3166 $.profile.mobilePhone }}
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
+    }
+    {{ end }}
+
+    {{ if $.roles }}, {{ end }}
+
+    {{ range $i, $element := $.roles }}
+      {{ if $i }},{{ end }}
+      {
+      "object_type": "group",
+      "object_id": "{{$element.type}}",
+      "relation": "member",
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
+      }
+    {{ end }}
   ]
 }

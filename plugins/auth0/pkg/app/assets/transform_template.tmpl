@@ -1,63 +1,143 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if not $.email_verified }}
+  {{$status = "USER_STATUS_PROVISIONED"}}
+{{ else if $.blocked}}
+  {{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
+
+{{$user_object_id := $.email}}
+{{ if not $.email }}
+{{$user_object_id = $.user_id}}
+{{end}}
+
 {
   "objects": [
     {
-      "key": "{{ $.user_id }}",
+      "id": "{{ $user_object_id }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
       "created_at":"{{ $.created_at }}",
       "properties":{
+        {{ if $.email }}
         "email": "{{ $.email }}",
-        "picture": "{{ $.picture }}"
+        {{ end }}
+        "enabled": true,
+        "picture": "{{ $.picture }}",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "status": "{{ $status }}"
+        {{ range $key, $value := $.user_metadata }}
+        ,"{{ $key }}": {{ marshal $value }}
+        {{ end }}
       }
     },
-    {{ range $index, $element := $.identities }}
-      {{ if $index }},{{ end }}
+    {
+      "id": "{{ $.user_id }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "auth0",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": true
+      }
+    }
+    {{ if $.email }}
+    ,
+    {
+        "id": "{{ $.email }}",
+        "type": "identity",
+        "properties": {
+          "kind": "IDENTITY_KIND_EMAIL",
+          "provider": "auth0",
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+          "verified": {{ .email_verified }}
+        }
+    }
+    {{ end }}
+    {{ if and ($.username) (ne $.username "") }}
+    ,
       {
-        "key": "{{$element.user_id}}",
-        "type": "identity"
+          "id": "{{ $.username }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_USERNAME",
+            "provider": "auth0",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "verified": true
+          }
       }
     {{ end }}
-
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
+    ,
+      {
+          "id": "{{ $.phone_number }}",
+          "type": "identity",
+          "properties": {
+            "kind": "IDENTITY_KIND_PHONE",
+            "provider": "auth0",
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+            "verified": {{ .phone_verified }}
+          }
+      }
+    {{ end }}
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
-        "key": "{{$element.name}}",
-        "type": "group"
+        "id": "{{$element.name}}",
+        "type": "group",
+        "properties":{
+          {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+        }
       }
     {{ end }}
   ],
-  "relations":[    
-    {{ range $i,$element := $.identities }} 
-      {{ if $i }},{{ end }}
+  "relations":[
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{$.user_id}}"
-              },
-              "object": {
-                  "type": "identity",
-                  "key": "{{$element.user_id}}"
-              }
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $user_object_id }}",
+        "object_type": "identity",
+        "object_id": "{{ $.user_id }}"
+      }
+    {{ if $.email }}
+    ,
+      {
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $user_object_id }}",
+        "object_type": "identity",
+        "object_id": "{{ $.email }}"
       }
     {{ end }}
-
+    {{ if and ($.username) (ne $.username "") }}
+    ,
+      {
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $user_object_id }}",
+        "object_type": "identity",
+        "object_id": "{{ $.username }}"
+      }
+    {{ end }}
+    {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
+    ,
+      {
+        "relation": "identifier",
+        "subject_type": "user",
+        "subject_id": "{{ $user_object_id }}",
+        "object_type": "identity",
+        "object_id": "{{ $.phone_number }}"
+      }
+    {{ end }}
     {{ if $.roles }}, {{ end }}
-
     {{ range $i, $element := $.roles }}
       {{ if $i }},{{ end }}
       {
-      "relation": "identifier",
-              "subject": {
-                  "type": "user",
-                  "key": "{{$.user_id}}"
-              },
-              "object": {
-                  "type": "group",
-                  "key": "{{$element.name}}"
-              }
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{ $user_object_id }}",
+        "object_type": "group",
+        "object_id": "{{$element.name}}"
       }
     {{ end }}
   ]
