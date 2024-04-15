@@ -21,6 +21,7 @@ func New(ctx context.Context, client *auth0client.Auth0Client) (*Verifier, error
 
 func (v *Verifier) Verify(ctx context.Context) error {
 	_, err := v.client.Mgmt.User.List(
+		ctx,
 		management.Page(0),
 		management.PerPage(1),
 	)

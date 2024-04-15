@@ -56,7 +56,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			opts = append(opts, management.Query(`identities.connection:"`+f.ConnectionName+`"`))
 		}
 
-		users, more, err := f.getUsers(opts)
+		users, more, err := f.getUsers(ctx, opts)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
@@ -79,7 +79,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			}
 			obj["email_verified"] = user.GetEmailVerified()
 			if f.Roles {
-				roles, err := f.getRoles(*user.ID)
+				roles, err := f.getRoles(ctx, *user.ID)
 				if err != nil {
 					_, _ = errorWriter.Write([]byte(err.Error()))
 					common.SetExitCode(1)
@@ -101,14 +101,14 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	return nil
 }
 
-func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User, bool, error) {
+func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption) ([]*management.User, bool, error) {
 	if f.UserPID != "" && f.UserEmail != "" {
 		return nil, false, errors.New("only one of user-pid or user-email can be specified")
 	}
 
 	if f.UserPID != "" {
 		// list only the user with the provided pid
-		user, err := f.client.Mgmt.User.Read(f.UserPID)
+		user, err := f.client.Mgmt.User.Read(ctx, f.UserPID)
 		if err != nil {
 			return nil, false, err
 		}
@@ -118,14 +118,14 @@ func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User,
 		return []*management.User{user}, false, nil
 	} else if f.UserEmail != "" {
 		// List only users that have the provided email
-		users, err := f.client.Mgmt.User.ListByEmail(f.UserEmail)
+		users, err := f.client.Mgmt.User.ListByEmail(ctx, f.UserEmail)
 		if err != nil {
 			return nil, false, err
 		}
 		return users, false, nil
 	} else {
 		// List all users
-		userList, err := f.client.Mgmt.User.List(opts...)
+		userList, err := f.client.Mgmt.User.List(ctx, opts...)
 		if err != nil {
 			return nil, false, err
 		}
@@ -134,7 +134,7 @@ func (f *Fetcher) getUsers(opts []management.RequestOption) ([]*management.User,
 	}
 }
 
-func (f *Fetcher) getRoles(uID string) ([]map[string]interface{}, error) {
+func (f *Fetcher) getRoles(ctx context.Context, uID string) ([]map[string]interface{}, error) {
 	page := 0
 	finished := false
 
@@ -146,7 +146,7 @@ func (f *Fetcher) getRoles(uID string) ([]map[string]interface{}, error) {
 		}
 
 		reqOpts := management.Page(page)
-		roles, err := f.client.Mgmt.User.Roles(uID, reqOpts)
+		roles, err := f.client.Mgmt.User.Roles(ctx, uID, reqOpts)
 		if err != nil {
 			return nil, err
 		}

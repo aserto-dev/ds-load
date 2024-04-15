@@ -8,13 +8,13 @@ require (
 	github.com/alecthomas/kong v0.7.1
 	github.com/aserto-dev/ds-load/cli v0.0.0-20231031085256-cf380a2fab03
 	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
-	github.com/auth0/go-auth0 v0.17.2
+	github.com/auth0/go-auth0 v1.4.1
 	github.com/pkg/errors v0.9.1
 )
 
 require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.31.0-20231017183020-0de7443d03cf.2 // indirect
-	github.com/PuerkitoBio/rehttp v1.1.0 // indirect
+	github.com/PuerkitoBio/rehttp v1.3.0 // indirect
 	github.com/aserto-dev/clui v0.8.1 // indirect
 	github.com/aserto-dev/go-directory v0.30.0 // indirect
 	github.com/aserto-dev/logger v0.0.3 // indirect
@@ -30,10 +30,10 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	golang.org/x/net v0.17.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/oauth2 v0.17.0 // indirect
+	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20231012201019-e917dd12ba7a // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b // indirect
