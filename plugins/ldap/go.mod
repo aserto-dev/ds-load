@@ -9,7 +9,7 @@ require (
 	github.com/aserto-dev/ds-load/cli v0.0.0-20231031085256-cf380a2fab03
 	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
 	github.com/bwmarrin/go-objectsid v0.0.0-20191126144531-5fee401a2f37
-	github.com/go-ldap/ldap/v3 v3.4.7
+	github.com/go-ldap/ldap/v3 v3.4.8
 	github.com/google/uuid v1.6.0
 	github.com/rs/zerolog v1.32.0
 )
@@ -35,7 +35,7 @@ require (
 	github.com/samber/lo v1.39.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8 // indirect
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect
