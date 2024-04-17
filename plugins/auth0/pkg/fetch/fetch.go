@@ -3,13 +3,17 @@ package fetch
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
+	"strconv"
 
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/auth0/go-auth0/management"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 )
 
 type Fetcher struct {
@@ -17,6 +21,7 @@ type Fetcher struct {
 	UserEmail      string
 	ConnectionName string
 	Roles          bool
+	SAML           bool
 	client         *auth0client.Auth0Client
 }
 
@@ -38,6 +43,11 @@ func (f *Fetcher) WithUserPID(userPID string) *Fetcher {
 
 func (f *Fetcher) WithRoles(roles bool) *Fetcher {
 	f.Roles = roles
+	return f
+}
+
+func (f *Fetcher) WithSAML(saml bool) *Fetcher {
+	f.SAML = saml
 	return f
 }
 
@@ -125,12 +135,20 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 		return users, false, nil
 	} else {
 		// List all users
-		userList, err := f.client.Mgmt.User.List(ctx, opts...)
-		if err != nil {
-			return nil, false, err
-		}
 
-		return userList.Users, userList.HasNext(), nil
+		if !f.SAML {
+			userList, err := f.client.Mgmt.User.List(ctx, opts...)
+			if err != nil {
+				return nil, false, err
+			}
+			return userList.Users, userList.HasNext(), nil
+		} else {
+			ul := &UserList{}
+			if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
+				return nil, false, err
+			}
+			return ul.UserList(), ul.HasNext(), nil
+		}
 	}
 }
 
@@ -169,4 +187,86 @@ func (f *Fetcher) getRoles(ctx context.Context, uID string) ([]map[string]interf
 		page++
 	}
 	return results, nil
+}
+
+type User struct {
+	management.User
+}
+
+type UserList struct {
+	management.List
+	Users []*User `json:"users"`
+}
+
+func (ul UserList) UserList() []*management.User {
+	return lo.Map(ul.Users, func(v *User, i int) *management.User { return &v.User })
+}
+
+func (u *User) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+
+	verified := false
+	if emailVerified, ok := raw["emailVerified"]; ok {
+		verified, _ = strconv.ParseBool(emailVerified.(string))
+	}
+
+	delete(raw, "emailVerified")
+	delete(raw, "email_verified")
+
+	buf, err := json.Marshal(raw)
+	if err != nil {
+		return err
+	}
+
+	type tTmpUser User
+	var tmpUser tTmpUser
+
+	if err := json.Unmarshal(buf, &tmpUser); err != nil {
+		return err
+	}
+	tmpUser.VerifyEmail = &verified
+
+	*u = User(tmpUser)
+
+	return nil
+}
+
+func ListUsers(ctx context.Context, m *management.Management, payload interface{}, options ...management.RequestOption) error {
+	options = append(options,
+		management.PerPage(100),
+		management.IncludeTotals(true),
+	)
+
+	request, err := m.NewRequest(ctx, "GET", m.URI("users"), payload, options...)
+	if err != nil {
+		return fmt.Errorf("failed to create a new request: %w", err)
+	}
+
+	response, err := m.Do(request)
+	if err != nil {
+		return fmt.Errorf("failed to send the request: %w", err)
+	}
+	defer response.Body.Close()
+
+	// If the response contains a client or a server error then return the error.
+	if response.StatusCode >= http.StatusBadRequest {
+		return err // newError(response) //TODO create correct error based on response
+	}
+
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read the response body: %w", err)
+	}
+
+	if len(responseBody) > 0 && string(responseBody) != "{}" {
+		if err = json.Unmarshal(responseBody, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal response payload: %w", err)
+		}
+	}
+
+	return nil
 }
