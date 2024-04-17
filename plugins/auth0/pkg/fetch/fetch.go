@@ -21,6 +21,7 @@ type Fetcher struct {
 	UserEmail      string
 	ConnectionName string
 	Roles          bool
+	Orgs           bool
 	SAML           bool
 	client         *auth0client.Auth0Client
 }
@@ -43,6 +44,11 @@ func (f *Fetcher) WithUserPID(userPID string) *Fetcher {
 
 func (f *Fetcher) WithRoles(roles bool) *Fetcher {
 	f.Roles = roles
+	return f
+}
+
+func (f *Fetcher) WithOrgs(orgs bool) *Fetcher {
+	f.Orgs = orgs
 	return f
 }
 
@@ -97,6 +103,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 					obj["roles"] = roles
 				}
 			}
+			if f.Orgs {
+				orgs, err := f.getOrgs(ctx, *user.ID)
+				if err != nil {
+					_, _ = errorWriter.Write([]byte(err.Error()))
+					common.SetExitCode(1)
+				} else {
+					obj["orgs"] = orgs
+				}
+			}
+
 			err = writer.Write(obj)
 			if err != nil {
 				return err
@@ -135,7 +151,6 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 		return users, false, nil
 	} else {
 		// List all users
-
 		if !f.SAML {
 			userList, err := f.client.Mgmt.User.List(ctx, opts...)
 			if err != nil {
@@ -143,6 +158,7 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 			}
 			return userList.Users, userList.HasNext(), nil
 		} else {
+			// Use special SAML user list, to avoid known unmarshal errors, see notes below.
 			ul := &UserList{}
 			if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
 				return nil, false, err
@@ -189,6 +205,57 @@ func (f *Fetcher) getRoles(ctx context.Context, uID string) ([]map[string]interf
 	return results, nil
 }
 
+func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interface{}, error) {
+	page := 0
+	finished := false
+
+	var results []map[string]interface{}
+
+	for {
+		if finished {
+			break
+		}
+
+		reqOpts := management.Page(page)
+		orgs, err := f.client.Mgmt.User.Organizations(ctx, uID, reqOpts)
+		if err != nil {
+			return nil, err
+		}
+		for _, org := range orgs.Organizations {
+			res, err := json.Marshal(org)
+			if err != nil {
+				return nil, err
+			}
+			var obj map[string]interface{}
+			err = json.Unmarshal(res, &obj)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, obj)
+		}
+		if !orgs.HasNext() {
+			finished = true
+		}
+
+		page++
+	}
+
+	return results, nil
+}
+
+// Specialized SAML user list function
+//
+// The Auth0 golang SDK does not properly handle the unmarshal of the returned payload into a management.UserList.
+//
+// The returned payload contains:
+// "email":"user@domain.com",
+// "emailVerified":"true",
+// "email_verified":"user@domain.com"
+//
+// Which results in an unmarshal error when calling `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
+// resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
+//
+// The implementation below works around the issues by using custom JSON marshaling to map the values into the management.User instances.
 type User struct {
 	management.User
 }
