@@ -1,4 +1,19 @@
+project_name: ds-load
+
+env:
+  # https://goreleaser.com/customization/env/
+  - REGISTRY=ghcr.io
+  - ORG=aserto-dev
+  - REPO=ds-load
+  - DESCRIPTION="Aserto Directory Loader"
+  - LICENSE=Apache-2.0
+
+before:
+  # https://goreleaser.com/customization/hooks/
+  hooks:
+
 builds:
+  # https://goreleaser.com/customization/build/
   - id: ds-load
     main: ./cli/cmd/ds-load
     binary: ds-load
@@ -17,9 +32,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/sdk/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 
@@ -41,9 +56,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-okta
@@ -64,9 +79,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-azuread
@@ -87,9 +102,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-cognito
@@ -110,9 +125,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-google
@@ -133,9 +148,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
   - id: ds-load-ldap
@@ -156,14 +171,14 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.ver={{.Version}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.commit={{.ShortCommit}}
-      - -X github.com/aserto-dev/ds-load/sdk/common/version.date={{.Date}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
+  # https://goreleaser.com/customization/archive/
   - format: zip
-    rlcp: true
     files:
       - LICENSE
       - README.md
@@ -171,26 +186,45 @@ archives:
       ds-load_{{.Version}}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}
 
 checksum:
+  # https://goreleaser.com/customization/checksum/
   name_template: "checksums.txt"
 
 snapshot:
+  # https://goreleaser.com/customization/snapshots/
   name_template: "{{ .Tag }}"
 
+source:
+  # https://goreleaser.com/customization/source/
+  enabled: false
+
+changelog:
+  # https://goreleaser.com/customization/changelog/
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
 release:
+  # https://goreleaser.com/customization/release/
   github:
-    owner: aserto-dev
-    name: ds-load
+    owner: "{{ .Env.ORG }}"
+    name: "{{ .Env.REPO }}"
 
   draft: false
   prerelease: auto
-  name_template: "ds-load {{.Tag}}"
+  name_template: "{{.ProjectName}}4 {{.Tag}}"
+
+blobs:
+  # https://goreleaser.com/customization/blob/
 
 brews:
+  # https://goreleaser.com/customization/homebrew/
   -
     name: ds-load
 
-    tap:
-      owner: aserto-dev
+    repository:
+      owner: "{{ .Env.ORG }}"
       name: homebrew-tap
       token: "{{ .Env.ASERTO_TAP }}"
 
@@ -220,3 +254,50 @@ brews:
       bin.install "ds-load-google"
       bin.install "ds-load-okta"
       bin.install "ds-load-ldap"
+
+dockers:
+  # https://goreleaser.com/customization/docker/
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - &amd64-image "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Version }}-amd64"
+    skip_push: false
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "--label=org.opencontainers.image.description={{ .Env.DESCRIPTION }}"
+      - "--label=org.opencontainers.image.licenses={{ .Env.LICENSE }}"
+
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - &arm64-image "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Version }}-arm64"
+    skip_push: false
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source=https://github.com/{{ .Env.ORG }}/{{ .Env.REPO }}"
+      - "--label=org.opencontainers.image.description={{ .Env.DESCRIPTION }}"
+      - "--label=org.opencontainers.image.licenses={{ .Env.LICENSE }}"
+
+docker_manifests:
+  # https://goreleaser.com/customization/docker_manifest/
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:latest"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}.{{ .Minor }}"
+    image_templates: [*amd64-image, *arm64-image]
+  - name_template: "{{ .Env.REGISTRY }}/{{ .Env.ORG }}/{{ .Env.REPO }}:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    image_templates: [*amd64-image, *arm64-image]

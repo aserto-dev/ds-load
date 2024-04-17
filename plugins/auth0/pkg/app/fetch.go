@@ -23,7 +23,7 @@ type FetchCmd struct {
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if f.UserPID != "" && !strings.Contains(f.UserPID, "|") {
-		f.UserPID = "auth0|" + f.UserPID
+		f.UserPID = auth0prefix + f.UserPID
 	}
 
 	client, err := auth0client.New(ctx.Context, f.ClientID, f.ClientSecret, f.Domain)
