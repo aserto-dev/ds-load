@@ -199,9 +199,7 @@ type UserList struct {
 }
 
 func (ul UserList) UserList() []*management.User {
-	mul := []*management.User{}
-	mul = append(mul, lo.Map(ul.Users, func(v *User, i int) *management.User { return &v.User })...)
-	return mul
+	return lo.Map(ul.Users, func(v *User, i int) *management.User { return &v.User })
 }
 
 func (u *User) UnmarshalJSON(b []byte) error {
