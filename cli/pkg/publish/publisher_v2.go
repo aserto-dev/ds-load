@@ -11,6 +11,7 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
 	"github.com/aserto-dev/go-directory/pkg/convert"
 	"github.com/bufbuild/protovalidate-go"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 
@@ -105,6 +106,7 @@ func (p *DirectoryV2Publisher) publishMessages(ctx context.Context, message *msg
 		return err
 	}
 	errGroup.Go(p.receiver(stream))
+	errGroup.Go(p.doneHandler(stream.Context()))
 
 	// import objects
 	for _, object := range message.Objects {
@@ -170,5 +172,17 @@ func (p *DirectoryV2Publisher) receiver(stream dsi.Importer_ImportClient) func()
 				}
 			}
 		}
+	}
+}
+
+func (p *DirectoryV2Publisher) doneHandler(ctx context.Context) func() error {
+	return func() error {
+		<-ctx.Done()
+		err := ctx.Err()
+		if err != nil && !errors.Is(err, context.Canceled) {
+			p.Log.Trace().Err(err).Msg("subscriber-doneHandler")
+			return err
+		}
+		return nil
 	}
 }

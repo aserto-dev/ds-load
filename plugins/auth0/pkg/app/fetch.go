@@ -17,12 +17,14 @@ type FetchCmd struct {
 	UserPID        string `name:"user-pid" env:"AUTH0_USER_PID" help:"auth0 user PID of the user you want to read" optional:""`
 	UserEmail      string `name:"user-email" env:"AUTH0_USER_EMAIL" help:"auth0 user email of the user you want to read" optional:""`
 	Roles          bool   `name:"roles" env:"AUTH0_ROLES" default:"false" negatable:"" help:"include roles"`
+	Orgs           bool   `name:"orgs" env:"AUTH0_ORGS" default:"false" negatable:"" help:"include organizations"`
 	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
+	SAML           bool   `name:"saml" default:"false" help:"use SAML data loader"`
 }
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if f.UserPID != "" && !strings.Contains(f.UserPID, "|") {
-		f.UserPID = "auth0|" + f.UserPID
+		f.UserPID = auth0prefix + f.UserPID
 	}
 
 	client, err := auth0client.New(ctx.Context, f.ClientID, f.ClientSecret, f.Domain)
@@ -34,7 +36,7 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
-	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles)
+	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles).WithOrgs(f.Orgs).WithSAML(f.SAML)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }
