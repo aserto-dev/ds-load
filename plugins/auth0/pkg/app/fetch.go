@@ -19,6 +19,7 @@ type FetchCmd struct {
 	Roles          bool   `name:"roles" env:"AUTH0_ROLES" default:"false" negatable:"" help:"include roles"`
 	Orgs           bool   `name:"orgs" env:"AUTH0_ORGS" default:"false" negatable:"" help:"include organizations"`
 	RateLimit      bool   `name:"rate-limit" default:"true" help:"enable http client rate limiter" negatable:""`
+	SAML           bool   `name:"saml" default:"false" help:"use SAML data loader"`
 }
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
@@ -35,7 +36,7 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
-	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles).WithOrgs(f.Orgs)
+	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles).WithOrgs(f.Orgs).WithSAML(f.SAML)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

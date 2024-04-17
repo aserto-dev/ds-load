@@ -3,13 +3,17 @@ package fetch
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"net/http"
+	"strconv"
 
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/auth0/go-auth0/management"
 	"github.com/pkg/errors"
+	"github.com/samber/lo"
 )
 
 type Fetcher struct {
@@ -18,6 +22,7 @@ type Fetcher struct {
 	ConnectionName string
 	Roles          bool
 	Orgs           bool
+	SAML           bool
 	client         *auth0client.Auth0Client
 }
 
@@ -44,6 +49,11 @@ func (f *Fetcher) WithRoles(roles bool) *Fetcher {
 
 func (f *Fetcher) WithOrgs(orgs bool) *Fetcher {
 	f.Orgs = orgs
+	return f
+}
+
+func (f *Fetcher) WithSAML(saml bool) *Fetcher {
+	f.SAML = saml
 	return f
 }
 
@@ -141,12 +151,20 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 		return users, false, nil
 	} else {
 		// List all users
-		userList, err := f.client.Mgmt.User.List(ctx, opts...)
-		if err != nil {
-			return nil, false, err
+		if !f.SAML {
+			userList, err := f.client.Mgmt.User.List(ctx, opts...)
+			if err != nil {
+				return nil, false, err
+			}
+			return userList.Users, userList.HasNext(), nil
+		} else {
+			// Use special SAML user list, to avoid known unmarshal errors, see notes below.
+			ul := &UserList{}
+			if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
+				return nil, false, err
+			}
+			return ul.UserList(), ul.HasNext(), nil
 		}
-
-		return userList.Users, userList.HasNext(), nil
 	}
 }
 
@@ -223,4 +241,99 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 	}
 
 	return results, nil
+}
+
+// Specialized SAML user list function
+//
+// The Auth0 golang SDK does not properly handle the unmarshal of the returned payload into a management.UserList.
+//
+// The returned payload contains:
+// "email":"user@domain.com",
+// "emailVerified":"true",
+// "email_verified":"user@domain.com"
+//
+// Which results in an unmarshal error when calling `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
+// resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
+//
+// The implementation below works around the issues by using custom JSON marshalling to map the values into the management.User instances.
+type User struct {
+	management.User
+}
+
+type UserList struct {
+	management.List
+	Users []*User `json:"users"`
+}
+
+func (ul UserList) UserList() []*management.User {
+	return lo.Map(ul.Users, func(v *User, i int) *management.User { return &v.User })
+}
+
+func (u *User) UnmarshalJSON(b []byte) error {
+	var raw map[string]interface{}
+
+	if err := json.Unmarshal(b, &raw); err != nil {
+		return err
+	}
+
+	verified := false
+	if emailVerified, ok := raw["emailVerified"]; ok {
+		verified, _ = strconv.ParseBool(emailVerified.(string))
+	}
+
+	delete(raw, "emailVerified")
+	delete(raw, "email_verified")
+
+	buf, err := json.Marshal(raw)
+	if err != nil {
+		return err
+	}
+
+	type tTmpUser User
+	var tmpUser tTmpUser
+
+	if err := json.Unmarshal(buf, &tmpUser); err != nil {
+		return err
+	}
+	tmpUser.VerifyEmail = &verified
+
+	*u = User(tmpUser)
+
+	return nil
+}
+
+func ListUsers(ctx context.Context, m *management.Management, payload interface{}, options ...management.RequestOption) error {
+	options = append(options,
+		management.PerPage(100),
+		management.IncludeTotals(true),
+	)
+
+	request, err := m.NewRequest(ctx, "GET", m.URI("users"), payload, options...)
+	if err != nil {
+		return fmt.Errorf("failed to create a new request: %w", err)
+	}
+
+	response, err := m.Do(request)
+	if err != nil {
+		return fmt.Errorf("failed to send the request: %w", err)
+	}
+	defer response.Body.Close()
+
+	// If the response contains a client or a server error then return the error.
+	if response.StatusCode >= http.StatusBadRequest {
+		return err // newError(response) //TODO create correct error based on response
+	}
+
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("failed to read the response body: %w", err)
+	}
+
+	if len(responseBody) > 0 && string(responseBody) != "{}" {
+		if err = json.Unmarshal(responseBody, &payload); err != nil {
+			return fmt.Errorf("failed to unmarshal response payload: %w", err)
+		}
+	}
+
+	return nil
 }
