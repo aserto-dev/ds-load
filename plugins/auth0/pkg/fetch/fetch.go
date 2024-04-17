@@ -255,7 +255,7 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 // Which results in an unmarshal error when calling `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
 // resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
 //
-// The implementation below works around the issues by using custom JSON marshalling to map the values into the management.User instances.
+// The implementation below works around the issues by using custom JSON marshaling to map the values into the management.User instances.
 type User struct {
 	management.User
 }
