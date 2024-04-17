@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aserto-dev/mage-loot v0.8.15
-	github.com/itchyny/gojq v0.12.13
+	github.com/itchyny/gojq v0.12.15
 	github.com/magefile/mage v1.15.0
 )
 

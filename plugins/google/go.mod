@@ -10,8 +10,7 @@ require (
 	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	golang.org/x/oauth2 v0.19.0
-	google.golang.org/api v0.172.0
-
+	google.golang.org/api v0.173.0
 )
 
 require (
@@ -49,7 +48,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8 // indirect
+	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/term v0.19.0 // indirect

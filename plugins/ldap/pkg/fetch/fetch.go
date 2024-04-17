@@ -29,10 +29,7 @@ func New(ldapClient *ldapclient.LDAPClient, idField string) *Fetcher {
 }
 
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
-	jsonWriter, err := js.NewJSONArrayWriter(outputWriter)
-	if err != nil {
-		return err
-	}
+	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 
 	groups := f.ldapClient.ListGroups()
@@ -40,7 +37,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	userDnTOKey := buildMapFromDNToKey(users, f.idField)
 	groupDnTOKey := buildMapFromDNToKey(groups, f.idField)
 
-	err = writeEntries(groups, jsonWriter, userDnTOKey, groupDnTOKey)
+	err := writeEntries(groups, jsonWriter, userDnTOKey, groupDnTOKey)
 	if err != nil {
 		return err
 	}
