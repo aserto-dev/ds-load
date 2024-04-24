@@ -1,6 +1,6 @@
 FROM alpine
 
-RUN apk add --no-cache bash ca-certificates
+RUN apk add --no-cache bash
 
 RUN mkdir /config
 VOLUME ["/config"]
