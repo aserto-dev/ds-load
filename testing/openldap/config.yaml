@@ -1,0 +1,9 @@
+ldap:
+  base-dn: "dc=example,dc=org"
+  user: "cn=admin,dc=example,dc=org"
+  password: "adminpassword"
+  host: "ldap://localhost:1389"
+  user-filter: "(&(objectClass=organizationalPerson))"
+  group-filter: "(&(objectClass=groupOfNames))"
+  insecure: false
+  id-field: "uid"
