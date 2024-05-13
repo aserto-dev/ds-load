@@ -50,7 +50,6 @@ func NewDirectoryV2ImportClient(ctx context.Context, cfg *Config) (dsiv2.Importe
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = conn.Close() }()
 
 	return dsiv2.NewImporterClient(conn), nil
 }
@@ -81,7 +80,6 @@ func NewDirectoryV3ImportClient(ctx context.Context, cfg *Config) (dsiv3.Importe
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = conn.Close() }()
 
 	return dsiv3.NewImporterClient(conn), nil
 }
