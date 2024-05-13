@@ -51,7 +51,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter, t.template)
+		err = t.doTransform(idpData, jsonWriter)
 		if err != nil {
 			return err
 		}
@@ -60,10 +60,23 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 	return nil
 }
 
-func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter, transformTemplate []byte) error {
-	output, err := t.transformToTemplate(idpData, string(transformTemplate))
+func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
+	dirV3msg, err := t.TransformObject(idpData)
 	if err != nil {
-		return errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
+		return errors.Wrap(err, "failed to transform idpData into directory objects and relations")
+	}
+
+	err = jsonWriter.WriteProtoMessage(dirV3msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to write directory objects to output")
+	}
+	return nil
+}
+
+func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*msg.Transform, error) {
+	output, err := t.transformToTemplate(idpData, string(t.template))
+	if err != nil {
+		return nil, errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
 	}
 	if os.Getenv("DEBUG") != "" {
 		os.Stdout.WriteString(output)
@@ -77,14 +90,10 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 
 	err = opts.Unmarshal([]byte(output), &dirV3msg)
 	if err != nil {
-		return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
+		return nil, errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
 	}
 
-	err = jsonWriter.WriteProtoMessage(&dirV3msg)
-	if err != nil {
-		return errors.Wrap(err, "failed to write directory objects to output")
-	}
-	return nil
+	return &dirV3msg, nil
 }
 
 func (t *GoTemplateTransform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
