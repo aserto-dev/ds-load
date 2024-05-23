@@ -1,0 +1,8 @@
+ldap:
+  base-dn: "dc=aserto,dc=com"
+  user: "CN=asert,CN=Users,DC=aserto,DC=com"
+  password: "<password>"
+  host: "ldap://localhost:1389"
+  user-filter: "(&(objectClass=organizationalPerson))"
+  group-filter: "(&(objectClass=group))"
+  id-field: "objectGUID"
