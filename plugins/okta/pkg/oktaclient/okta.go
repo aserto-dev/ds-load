@@ -5,24 +5,16 @@ import (
 	"fmt"
 
 	"github.com/okta/okta-sdk-golang/v2/okta"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-type OktaClient interface {
-	CreateUser(ctx context.Context, body okta.CreateUserRequest, qp *query.Params) (*okta.User, *okta.Response, error)
-	UpdateUser(ctx context.Context, userID string, body okta.User, qp *query.Params) (*okta.User, *okta.Response, error)
-	DeactivateOrDeleteUser(ctx context.Context, userID string, qp *query.Params) (*okta.Response, error)
-	DeactivateUser(ctx context.Context, userID string, qp *query.Params) (*okta.Response, error)
-
-	GetUser(ctx context.Context, userID string) (*okta.User, *okta.Response, error)
-	ListUsers(ctx context.Context, qp *query.Params) ([]*okta.User, *okta.Response, error)
-	ListUserGroups(ctx context.Context, userID string) ([]*okta.Group, *okta.Response, error)
-	ListAssignedRolesForUser(ctx context.Context, userID string, qp *query.Params) ([]*okta.Role, *okta.Response, error)
+type OktaClient struct {
+	User  *okta.UserResource
+	Group *okta.GroupResource
 }
 
-func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int64) (OktaClient, error) {
+func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int64) (*OktaClient, error) {
 	_, client, err := okta.NewClient(
 		ctx,
 		okta.WithOrgUrl(fmt.Sprintf("https://%s", domain)),
@@ -37,5 +29,8 @@ func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int
 		return nil, status.Errorf(codes.Internal, "failed to connect to Okta: %s", err.Error())
 	}
 
-	return client.User, nil
+	return &OktaClient{
+		User:  client.User,
+		Group: client.Group,
+	}, nil
 }

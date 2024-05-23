@@ -10,8 +10,14 @@
 {{$user_object_id = $.user_id}}
 {{end}}
 
+{{$object_type := "user"}}
+{{ if eq .object_type "role" }}
+{{$object_type = "group"}}
+{{ end }}
+
 {
   "objects": [
+  {{ if eq $object_type "user" }}
     {
       "id": "{{ $user_object_id }}",
       "type": "user",
@@ -79,19 +85,18 @@
           }
       }
     {{ end }}
-    {{ if $.roles }}, {{ end }}
-    {{ range $i, $element := $.roles }}
-      {{ if $i }},{{ end }}
+  {{ else if eq $object_type "group"}}
       {
-        "id": "{{$element.name}}",
+        "id": "{{.name}}",
         "type": "group",
         "properties":{
           {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
         }
       }
-    {{ end }}
+  {{ end }}
   ],
   "relations":[
+  {{ if eq $object_type "user" }}
       {
         "relation": "identifier",
         "subject_type": "user",
@@ -139,6 +144,7 @@
         "object_type": "group",
         "object_id": "{{$element.name}}"
       }
+    {{ end }}
     {{ end }}
   ]
 }

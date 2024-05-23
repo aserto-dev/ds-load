@@ -29,6 +29,31 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
+	if f.groups {
+		groups, err := f.cognitoClient.ListGroups()
+		if err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+		}
+
+		for _, group := range groups {
+			groupBytes, err := json.Marshal(group)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+				return err
+			}
+			var obj map[string]interface{}
+			err = json.Unmarshal(groupBytes, &obj)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+			}
+
+			err = writer.Write(obj)
+			if err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+			}
+		}
+	}
+
 	users, err := f.cognitoClient.ListUsers(ctx)
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
