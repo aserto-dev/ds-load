@@ -5,25 +5,24 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/dongri/phonenumber"
 )
 
-func customFunctions() map[string]any {
-	return template.FuncMap{
+func customFunctions() template.FuncMap {
+	f := sprig.GenericFuncMap()
+	delete(f, "last")
+
+	extra := template.FuncMap{
 		"last": func(x int, a interface{}) bool {
 			return x == reflect.ValueOf(a).Len()-1
 		},
-		"contains":     strings.Contains,
 		"separator":    separator,
 		"marshal":      marshal,
 		"fromEnv":      fromEnv,
 		"phoneIso3166": phoneIso3166,
-		"add": func(a int, b int) int {
-			return a + b
-		},
 		"array_contains": func(a []interface{}, b string) bool {
 			for _, x := range a {
 				if x.(string) == b {
@@ -33,6 +32,16 @@ func customFunctions() map[string]any {
 			return false
 		},
 	}
+
+	for k, v := range extra {
+		if _, ok := f[k]; !ok {
+			f[k] = v
+		} else {
+			fmt.Fprintf(os.Stderr, "duplicate template func [%s]\n", k)
+		}
+	}
+
+	return f
 }
 
 func separator(s string) func() string {
