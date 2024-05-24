@@ -70,7 +70,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 
-		for _, group := range groups {
+		for i := range groups {
+			group := &groups[i]
 			err = writer.Write(group)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
