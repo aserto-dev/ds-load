@@ -92,7 +92,7 @@ The default location for the configuration file is `~/.config/ds-load/cfg/config
 ```yaml
 ---
 host: directory.prod.aserto.com:8443
-api-key: secretapikey
+api-key: "secretapikey"
 tenant-id: your-tenant-id
 auth0:
   domain: "domain.auth0.com"
