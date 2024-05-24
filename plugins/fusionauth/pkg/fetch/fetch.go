@@ -42,7 +42,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	for i := range users {
-		user := users[i]
+		user := &users[i]
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
