@@ -15,7 +15,7 @@ type ExecCmd struct {
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 
-	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(cmd.HostURL, cmd.ApiKey)
+	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(cmd.HostURL, cmd.APIKey)
 	if err != nil {
 		return err
 	}

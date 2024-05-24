@@ -41,7 +41,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		_, _ = errorWriter.Write([]byte(err.Error()))
 	}
 
-	for _, user := range users {
+	for i := range users {
+		user := users[i]
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))

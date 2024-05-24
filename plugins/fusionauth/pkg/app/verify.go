@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(v.HostURL, v.ApiKey)
+	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(v.HostURL, v.APIKey)
 	if err != nil {
 		return err
 	}
