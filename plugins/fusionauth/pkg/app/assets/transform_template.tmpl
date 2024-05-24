@@ -1,0 +1,99 @@
+{
+  {{ $displayName := $.email }}
+  {{ if $.firstName }}
+  {{ $displayName := printf "%s %s" $.firstName $.lastName }}
+  {{ end }}
+
+  "objects": [
+    {{ if $.email }}
+    {
+      "id": "{{ $.email }}",
+      "type": "user",
+      "displayName": "{{ $displayName }}",
+      "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "email": "{{ $.email }}",
+        {{ if $.picture }}
+        "picture": "{{ $.picture }}",
+        {{ end }}
+        {{ if $.data }}
+        "data": {{ marshal $.data }},
+        {{ end }}
+        {{ if $.memberships }}
+        "memberships": {{ marshal $.memberships }},
+        {{ end }}
+        "registrations": {{ marshal $.registrations }},
+        "active": "{{ $.active }}",
+        "tenantId": "{{ $.tenantId }}",
+        "verified": {{ $.verified }}
+      }
+    },
+    {
+      "id": "{{ $.email }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_EMAIL",
+        "provider": "fusionauth",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": {{ $.verified }}
+      }
+    },
+    {
+      "id": "{{ $.id }}",
+      "type": "identity",
+      "properties": {
+        "kind": "IDENTITY_KIND_PID",
+        "provider": "fusionauth",
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        "verified": {{ $.verified }}
+      }
+    }
+    {{ end }}
+
+    {{ if not $.email }}
+    {
+      "id": "{{ $.id }}",
+      "type": "group",
+      "displayName": "{{ $.name }}",
+      "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        {{ if $.roles }}
+        "roles": {{ marshal $.roles }},
+        {{ end }}
+        "tenantId": "{{ $.tenantId }}"
+      }
+    }
+    {{ end }}
+  ],
+  "relations":[  
+    {{ if $.email }}
+    {
+      "object_type": "identity",
+      "object_id": "{{ $.id }}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{ $.email }}"
+    },
+    {
+      "object_type": "identity",
+      "object_id": "{{ $.email }}",
+      "relation": "identifier",
+      "subject_type": "user",
+      "subject_id": "{{ $.email }}"
+    }
+
+    {{ if $.memberships }}, {{ end }}
+
+    {{ range $i, $element := $.memberships }}
+      {{ if $i }},{{ end }}
+      {
+        "object_type": "group",
+        "object_id": "{{ $element.groupId }}",
+        "relation": "member",
+        "subject_type": "user",
+        "subject_id": "{{ $.email }}"
+      }
+    {{ end }}
+    {{ end }}
+  ]
+}
