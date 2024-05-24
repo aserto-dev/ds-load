@@ -130,6 +130,29 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
+  - id: ds-load-fusionauth
+    main: ./plugins/fusionauth/cmd/ds-load-fusionauth
+    binary: ds-load-fusionauth
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
   - id: ds-load-google
     main: ./plugins/google/cmd/ds-load-google
     binary: ds-load-google
@@ -254,6 +277,7 @@ brews:
       bin.install "ds-load-google"
       bin.install "ds-load-okta"
       bin.install "ds-load-ldap"
+      bin.install "ds-load-fusionauth"
 
 dockers:
   # https://goreleaser.com/customization/docker/
