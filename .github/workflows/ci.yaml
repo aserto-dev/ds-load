@@ -32,6 +32,7 @@ jobs:
           - "./plugins/auth0"
           - "./plugins/azuread"
           - "./plugins/cognito"
+          - "./plugins/fusionauth"
           - "./plugins/google"
           - "./plugins/ldap"
           - "./plugins/okta"

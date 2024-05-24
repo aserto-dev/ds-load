@@ -277,6 +277,7 @@ brews:
       bin.install "ds-load-google"
       bin.install "ds-load-okta"
       bin.install "ds-load-ldap"
+      bin.install "ds-load-fusionauth"
 
 dockers:
   # https://goreleaser.com/customization/docker/
