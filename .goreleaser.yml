@@ -37,7 +37,6 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
-
   - id: ds-load-auth0
     main: ./plugins/auth0/cmd/ds-load-auth0
     binary: ds-load-auth0
@@ -236,7 +235,7 @@ release:
 
   draft: false
   prerelease: auto
-  name_template: "{{.ProjectName}}4 {{.Tag}}"
+  name_template: "{{.ProjectName}} {{.Tag}}"
 
 blobs:
   # https://goreleaser.com/customization/blob/
@@ -274,10 +273,10 @@ brews:
       bin.install "ds-load-auth0"
       bin.install "ds-load-azuread"
       bin.install "ds-load-cognito"
-      bin.install "ds-load-google"
-      bin.install "ds-load-okta"
-      bin.install "ds-load-ldap"
       bin.install "ds-load-fusionauth"
+      bin.install "ds-load-google"
+      bin.install "ds-load-ldap"
+      bin.install "ds-load-okta"
 
 dockers:
   # https://goreleaser.com/customization/docker/
