@@ -24,7 +24,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
-	fetcher = fetcher.WithGroups(cmd.Groups)
+	fetcher = fetcher.WithGroups(cmd.Groups).WithHost(cmd.HostURL)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
