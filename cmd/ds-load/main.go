@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/cli/pkg/app"
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/cli/pkg/constants"
-	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/app"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/constants"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/plugin"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )

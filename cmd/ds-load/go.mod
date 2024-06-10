@@ -1,8 +1,8 @@
-module github.com/aserto-dev/ds-load/cli
+module github.com/aserto-dev/ds-load/cmd/ds-load
 
 go 1.21
 
-replace github.com/aserto-dev/ds-load/sdk => ../sdk
+replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
 require (
 	github.com/alecthomas/kong v0.9.0

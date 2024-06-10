@@ -3,7 +3,7 @@ package app
 import (
 	"strings"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/fetch"
 	"github.com/aserto-dev/ds-load/sdk/exec"

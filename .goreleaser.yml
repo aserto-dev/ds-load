@@ -15,8 +15,31 @@ before:
 builds:
   # https://goreleaser.com/customization/build/
   - id: ds-load
-    main: ./cli/cmd/ds-load
+    main: ./cmd/ds-load
     binary: ds-load
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/sdk/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+  - id: ds-sync
+    main: ./cmd/ds-sync
+    binary: ds-sync
     goos:
       - darwin
       - linux

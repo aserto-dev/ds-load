@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"

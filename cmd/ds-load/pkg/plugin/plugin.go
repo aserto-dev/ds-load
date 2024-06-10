@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/constants"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/constants"
 )
 
 type Plugin struct {

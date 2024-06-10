@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/alecthomas/kong"
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/app"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"

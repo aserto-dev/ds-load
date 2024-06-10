@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/googleclient"
 )
 

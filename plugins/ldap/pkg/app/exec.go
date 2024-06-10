@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/ldapclient"
 	"github.com/aserto-dev/ds-load/sdk/exec"

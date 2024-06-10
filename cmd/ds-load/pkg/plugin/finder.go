@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/constants"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/constants"
 	"golang.org/x/exp/slices"
 )
 

@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/cmd/ds-load/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
 )
