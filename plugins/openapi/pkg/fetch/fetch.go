@@ -34,7 +34,19 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
-	apis, err := f.openapiClient.ListAPIs(ctx)
+	services, err := f.openapiClient.ListServices()
+	if err != nil {
+		_, _ = errorWriter.Write([]byte(err.Error()))
+	}
+
+	for _, service := range services {
+		err = writer.Write(service)
+		if err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+		}
+	}
+
+	apis, err := f.openapiClient.ListAPIs()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 	}

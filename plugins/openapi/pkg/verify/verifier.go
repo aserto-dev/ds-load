@@ -20,10 +20,10 @@ func New(ctx context.Context, client *openapiclient.OpenAPIClient) (*Verifier, e
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {
-	_, errReq := v.client.ListAPIs(ctx)
+	_, errReq := v.client.ListServices()
 
 	if errReq != nil {
-		return errors.Wrap(errReq, "failed to retrieve APIs from OpenAPI source")
+		return errors.Wrap(errReq, "failed to retrieve Services from OpenAPI source")
 	}
 
 	return nil

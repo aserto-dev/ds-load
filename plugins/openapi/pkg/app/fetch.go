@@ -9,8 +9,8 @@ import (
 )
 
 type FetchCmd struct {
-	Directory string `short:"d" help:"OpenAPI Spec Directory" env:"OPENAPI_DIRECTORY" required:""`
-	URL       string `short:"u" help:"OpenAPI Spec URL" env:"OPENAPI_URL" required:""`
+	Directory string `short:"d" help:"OpenAPI Spec Directory" env:"OPENAPI_DIRECTORY"`
+	URL       string `short:"u" help:"OpenAPI Spec URL" env:"OPENAPI_URL"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
