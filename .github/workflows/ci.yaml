@@ -36,6 +36,7 @@ jobs:
           - "./plugins/google"
           - "./plugins/ldap"
           - "./plugins/okta"
+          - "./plugins/openapi"
 
     steps:
       -
