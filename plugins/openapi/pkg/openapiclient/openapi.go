@@ -11,6 +11,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	Base64    = "base64"
+	Canonical = "canonical"
+)
+
 type OpenAPIClient struct {
 	docs     []*openapi3.T
 	idFormat string
@@ -32,7 +37,7 @@ type Service struct {
 	ID          string `json:"id"`
 }
 
-func NewOpenAPIClient(directory, specurl string, idFormat string) (*OpenAPIClient, error) {
+func NewOpenAPIClient(directory, specurl, idFormat string) (*OpenAPIClient, error) {
 	c := &OpenAPIClient{}
 	c.idFormat = idFormat
 	c.docs = make([]*openapi3.T, 0)
@@ -124,7 +129,7 @@ func (c *OpenAPIClient) ListAPIsInService(service *openapi3.T, idFormat string) 
 	return apis
 }
 
-func newService(name string, idFormat string) *Service {
+func newService(name, idFormat string) *Service {
 	service := &Service{}
 	service.DisplayName = name
 	service.Type = "service"
@@ -132,7 +137,7 @@ func newService(name string, idFormat string) *Service {
 	return service
 }
 
-func newAPI(service, method, path string, idFormat string) *API {
+func newAPI(service, method, path, idFormat string) *API {
 	api := &API{}
 	api.Type = "endpoint"
 	api.Service = service
@@ -149,27 +154,27 @@ func canonicalizePath(uri string) string {
 	return strings.Join(parts[1:], ".")
 }
 
-func canonicalizeEndpoint(service, method, path string, idFormat string) string {
+func canonicalizeEndpoint(service, method, path, idFormat string) string {
 	parts := []string{service, method}
 	switch idFormat {
-	case "canonical":
-		parts = append(parts, canonicalizePath(path))
-		return strings.Join(parts, ":")
-	case "base64":
+	case Base64:
 		parts = append(parts, path)
 		return base64.StdEncoding.EncodeToString([]byte(strings.Join(parts, "")))
+	case Canonical:
+		parts = append(parts, canonicalizePath(path))
+		return strings.Join(parts, ":")
 	default:
 		parts = append(parts, path)
 		return strings.Join(parts, ":")
 	}
 }
 
-func canonicalizeServiceName(serviceName string, idFormat string) string {
+func canonicalizeServiceName(serviceName, idFormat string) string {
 	switch idFormat {
-	case "canonical":
-		return strings.Replace(serviceName, " ", "_", -1)
-	case "base64":
+	case Base64:
 		return base64.StdEncoding.EncodeToString([]byte(serviceName))
+	case Canonical:
+		return strings.Replace(serviceName, " ", "_", -1)
 	default:
 		return strings.Replace(serviceName, " ", "_", -1)
 	}
