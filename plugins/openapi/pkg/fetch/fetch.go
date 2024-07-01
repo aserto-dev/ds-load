@@ -12,6 +12,7 @@ type Fetcher struct {
 	openapiClient *openapiclient.OpenAPIClient
 	directory     string
 	specurl       string
+	idFormat      string
 }
 
 func New(client *openapiclient.OpenAPIClient) (*Fetcher, error) {
@@ -27,6 +28,11 @@ func (f *Fetcher) WithDirectory(directory string) *Fetcher {
 
 func (f *Fetcher) WithURL(url string) *Fetcher {
 	f.specurl = url
+	return f
+}
+
+func (f *Fetcher) WithIDFormat(idFormat string) *Fetcher {
+	f.idFormat = idFormat
 	return f
 }
 

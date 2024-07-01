@@ -1,6 +1,7 @@
 package openapiclient
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"os"
@@ -11,7 +12,8 @@ import (
 )
 
 type OpenAPIClient struct {
-	docs []*openapi3.T
+	docs     []*openapi3.T
+	idFormat string
 }
 
 type API struct {
@@ -30,8 +32,9 @@ type Service struct {
 	ID          string `json:"id"`
 }
 
-func NewOpenAPIClient(directory, specurl string) (*OpenAPIClient, error) {
+func NewOpenAPIClient(directory, specurl string, idFormat string) (*OpenAPIClient, error) {
 	c := &OpenAPIClient{}
+	c.idFormat = idFormat
 	c.docs = make([]*openapi3.T, 0)
 
 	if specurl != "" {
@@ -72,7 +75,7 @@ func NewOpenAPIClient(directory, specurl string) (*OpenAPIClient, error) {
 func (c *OpenAPIClient) ListServices() ([]Service, error) {
 	services := make([]Service, 0)
 	for _, service := range c.docs {
-		svc := newService(service.Info.Title)
+		svc := newService(service.Info.Title, c.idFormat)
 		services = append(services, *svc)
 	}
 	return services, nil
@@ -81,39 +84,39 @@ func (c *OpenAPIClient) ListServices() ([]Service, error) {
 func (c *OpenAPIClient) ListAPIs() ([]API, error) {
 	apis := make([]API, 0)
 	for _, service := range c.docs {
-		apiList := c.ListAPIsInService(service)
+		apiList := c.ListAPIsInService(service, c.idFormat)
 		apis = append(apis, apiList...)
 	}
 	return apis, nil
 }
 
-func (c *OpenAPIClient) ListAPIsInService(service *openapi3.T) []API {
+func (c *OpenAPIClient) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 
 	apis := make([]API, 0)
 	for pathKey, pathItem := range service.Paths.Map() {
 
 		if pathItem.Get != nil {
-			api := newAPI(service.Info.Title, "GET", pathKey)
+			api := newAPI(service.Info.Title, "GET", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Post != nil {
-			api := newAPI(service.Info.Title, "POST", pathKey)
+			api := newAPI(service.Info.Title, "POST", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Put != nil {
-			api := newAPI(service.Info.Title, "PUT", pathKey)
+			api := newAPI(service.Info.Title, "PUT", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Patch != nil {
-			api := newAPI(service.Info.Title, "PATCH", pathKey)
+			api := newAPI(service.Info.Title, "PATCH", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Delete != nil {
-			api := newAPI(service.Info.Title, "DELETE", pathKey)
+			api := newAPI(service.Info.Title, "DELETE", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Options != nil {
-			api := newAPI(service.Info.Title, "OPTIONS", pathKey)
+			api := newAPI(service.Info.Title, "OPTIONS", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 	}
@@ -121,46 +124,53 @@ func (c *OpenAPIClient) ListAPIsInService(service *openapi3.T) []API {
 	return apis
 }
 
-func newService(name string) *Service {
+func newService(name string, idFormat string) *Service {
 	service := &Service{}
 	service.DisplayName = name
 	service.Type = "service"
-	service.ID = canonicalizeServiceName(name)
+	service.ID = canonicalizeServiceName(name, idFormat)
 	return service
 }
 
-func newAPI(service, method, path string) *API {
+func newAPI(service, method, path string, idFormat string) *API {
 	api := &API{}
 	api.Type = "endpoint"
 	api.Service = service
 	api.Method = method
 	api.Path = path
 	api.DisplayName = fmt.Sprintf("%s %s", method, path)
-	api.ServiceID = canonicalizeServiceName(api.Service)
-	api.ID = canonicalizeEndpoint(api.ServiceID, method, path)
+	api.ServiceID = canonicalizeServiceName(api.Service, idFormat)
+	api.ID = canonicalizeEndpoint(api.ServiceID, method, path, idFormat)
 	return api
 }
 
-func parsePath(uri string) []string {
-	result := []string{}
+func canonicalizePath(uri string) string {
 	parts := strings.Split(uri, "/")
-	for _, part := range parts[1:] {
-		if strings.Contains(part, "{") {
-			clean := strings.ToLower(strings.Replace(strings.Replace(part, "{", "", -1), "}", "", -1))
-			result = append(result, "__"+clean)
-		} else {
-			result = append(result, strings.ToLower(part))
-		}
+	return strings.Join(parts[1:], ".")
+}
+
+func canonicalizeEndpoint(service, method, path string, idFormat string) string {
+	parts := []string{service, method}
+	switch idFormat {
+	case "canonical":
+		parts = append(parts, canonicalizePath(path))
+		return strings.Join(parts, ":")
+	case "base64":
+		parts = append(parts, path)
+		return base64.StdEncoding.EncodeToString([]byte(strings.Join(parts, "")))
+	default:
+		parts = append(parts, path)
+		return strings.Join(parts, ":")
 	}
-	return result
 }
 
-func canonicalizeEndpoint(service, method, path string) string {
-	parts := []string{service, strings.ToLower(method)}
-	parts = append(parts, parsePath(path)...)
-	return strings.Join(parts, ".")
-}
-
-func canonicalizeServiceName(serviceName string) string {
-	return strings.Replace(strings.ToLower(serviceName), " ", "_", -1)
+func canonicalizeServiceName(serviceName string, idFormat string) string {
+	switch idFormat {
+	case "canonical":
+		return strings.Replace(serviceName, " ", "_", -1)
+	case "base64":
+		return base64.StdEncoding.EncodeToString([]byte(serviceName))
+	default:
+		return strings.Replace(serviceName, " ", "_", -1)
+	}
 }
