@@ -1,5 +1,24 @@
 {
     "cSpell.words": [
-        "aserto"
+        "alecthomas",
+        "aserto",
+        "azuread",
+        "buildx",
+        "canonicalize",
+        "clui",
+        "fusionauth",
+        "getkin",
+        "goarch",
+        "goreleaser",
+        "incpatch",
+        "iostream",
+        "kongyaml",
+        "ldflags",
+        "openapi",
+        "opencontainers",
+        "tmpl",
+        "withargs",
+        "wrapf",
+        "zerolog"
     ]
 }
