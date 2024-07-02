@@ -1,4 +1,4 @@
-package openapiclient
+package openapi
 
 import (
 	"encoding/base64"
@@ -16,7 +16,7 @@ const (
 	Canonical = "canonical"
 )
 
-type OpenAPIClient struct {
+type Client struct {
 	docs     []*openapi3.T
 	idFormat string
 }
@@ -37,19 +37,19 @@ type Service struct {
 	ID          string `json:"id"`
 }
 
-func NewOpenAPIClient(directory, specurl, idFormat string) (*OpenAPIClient, error) {
-	c := &OpenAPIClient{}
+func New(directory, specURL, idFormat string) (*Client, error) {
+	c := &Client{}
 	c.idFormat = idFormat
 	c.docs = make([]*openapi3.T, 0)
 
-	if specurl != "" {
-		specURL, err := url.Parse(specurl)
+	if specURL != "" {
+		parsedURL, err := url.Parse(specURL)
 		if err != nil {
-			return nil, errors.Wrapf(err, "url not parsed: %s", specurl)
+			return nil, errors.Wrapf(err, "url not parsed: %s", specURL)
 		}
-		doc, err := openapi3.NewLoader().LoadFromURI(specURL)
+		doc, err := openapi3.NewLoader().LoadFromURI(parsedURL)
 		if err != nil {
-			return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specurl)
+			return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specURL)
 		}
 		c.docs = append(c.docs, doc)
 	}
@@ -77,7 +77,7 @@ func NewOpenAPIClient(directory, specurl, idFormat string) (*OpenAPIClient, erro
 	return c, nil
 }
 
-func (c *OpenAPIClient) ListServices() ([]Service, error) {
+func (c *Client) ListServices() ([]Service, error) {
 	services := make([]Service, 0)
 	for _, service := range c.docs {
 		svc := newService(service.Info.Title, c.idFormat)
@@ -86,7 +86,7 @@ func (c *OpenAPIClient) ListServices() ([]Service, error) {
 	return services, nil
 }
 
-func (c *OpenAPIClient) ListAPIs() ([]API, error) {
+func (c *Client) ListAPIs() ([]API, error) {
 	apis := make([]API, 0)
 	for _, service := range c.docs {
 		apiList := c.ListAPIsInService(service, c.idFormat)
@@ -95,8 +95,7 @@ func (c *OpenAPIClient) ListAPIs() ([]API, error) {
 	return apis, nil
 }
 
-func (c *OpenAPIClient) ListAPIsInService(service *openapi3.T, idFormat string) []API {
-
+func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	apis := make([]API, 0)
 	for pathKey, pathItem := range service.Paths.Map() {
 

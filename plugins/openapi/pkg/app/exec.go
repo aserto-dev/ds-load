@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/fetch"
-	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapiclient"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
@@ -14,8 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-
-	openapiClient, err := openapiclient.NewOpenAPIClient(cmd.Directory, cmd.URL, cmd.IDFormat)
+	openapiClient, err := openapi.New(cmd.Directory, cmd.URL, cmd.IDFormat)
 	if err != nil {
 		return err
 	}

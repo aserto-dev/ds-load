@@ -1,4 +1,6 @@
 package app
 
-const AppName = "ds-load-openapi"
-const AppDescription = "OpenAPI directory loader"
+const (
+	AppName        = "ds-load-openapi"
+	AppDescription = "OpenAPI directory loader"
+)

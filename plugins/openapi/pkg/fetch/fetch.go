@@ -4,20 +4,20 @@ import (
 	"context"
 	"io"
 
-	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapiclient"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher struct {
-	openapiClient *openapiclient.OpenAPIClient
-	directory     string
-	specurl       string
-	idFormat      string
+	client    *openapi.Client
+	directory string
+	specURL   string
+	idFormat  string
 }
 
-func New(client *openapiclient.OpenAPIClient) (*Fetcher, error) {
+func New(client *openapi.Client) (*Fetcher, error) {
 	return &Fetcher{
-		openapiClient: client,
+		client: client,
 	}, nil
 }
 
@@ -27,7 +27,7 @@ func (f *Fetcher) WithDirectory(directory string) *Fetcher {
 }
 
 func (f *Fetcher) WithURL(url string) *Fetcher {
-	f.specurl = url
+	f.specURL = url
 	return f
 }
 
@@ -40,7 +40,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
-	services, err := f.openapiClient.ListServices()
+	services, err := f.client.ListServices()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 	}
@@ -52,7 +52,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		}
 	}
 
-	apis, err := f.openapiClient.ListAPIs()
+	apis, err := f.client.ListAPIs()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 	}

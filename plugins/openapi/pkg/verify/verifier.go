@@ -3,20 +3,19 @@ package verify
 import (
 	"context"
 
-	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapiclient"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
 
 	"github.com/pkg/errors"
 )
 
 type Verifier struct {
-	client *openapiclient.OpenAPIClient
+	client *openapi.Client
 }
 
-func New(ctx context.Context, client *openapiclient.OpenAPIClient) (*Verifier, error) {
+func New(ctx context.Context, client *openapi.Client) (*Verifier, error) {
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

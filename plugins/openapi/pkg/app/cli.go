@@ -3,8 +3,9 @@ package app
 import (
 	"fmt"
 
-	"github.com/alecthomas/kong"
 	"github.com/aserto-dev/ds-load/sdk/common/version"
+
+	"github.com/alecthomas/kong"
 )
 
 type CLI struct {
@@ -18,8 +19,7 @@ type CLI struct {
 	Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
 }
 
-type VersionCmd struct {
-}
+type VersionCmd struct{}
 
 func (cmd *VersionCmd) Run() error {
 	fmt.Printf("%s - %s\n",

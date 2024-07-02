@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
-	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapiclient"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
 	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/verify"
 )
 
@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	openapiClient, err := openapiclient.NewOpenAPIClient(v.Directory, v.URL, v.IDFormat)
+	openapiClient, err := openapi.New(v.Directory, v.URL, v.IDFormat)
 	if err != nil {
 		return err
 	}
