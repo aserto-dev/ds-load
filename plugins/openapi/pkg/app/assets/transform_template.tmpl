@@ -1,0 +1,199 @@
+{
+  "objects": [
+    {
+      "id": "{{ $.id }}",
+      "type": "{{ $.type }}",
+      "displayName": "{{ $.displayName }}",
+      "properties":{
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
+        {{ if $.method }}
+        "method": "{{ $.method }}",
+        {{ end }}
+        {{ if $.path }}
+        "path": "{{ $.path }}",
+        {{ end }}
+        {{ if $.service }}
+        "service": "{{ $.service }}",
+        {{ end }}
+        {{ if $.serviceID }}
+        "serviceID": "{{ $.serviceID }}",
+        {{ end }}
+        "canonicalName": "{{ $.id }}"
+      }
+    }
+
+    {{ if contains $.type "service" }}
+    ,
+    {
+      "id": "global-readers",
+      "type": "group",
+      "displayName": "Global Readers"
+    },
+    {
+      "id": "global-writers",
+      "type": "group",
+      "displayName": "Global Writers"
+    },
+    {
+      "id": "global-creators",
+      "type": "group",
+      "displayName": "Global Creators"
+    },
+    {
+      "id": "global-deleters",
+      "type": "group",
+      "displayName": "Global Deleters"
+    },
+    {
+      "id": "{{ printf "%s-readers" $.id }}",
+      "type": "group",
+      "displayName": "{{ printf "%s Readers" $.displayName }}"
+    },
+    {
+      "id": "{{ printf "%s-writers" $.id }}",
+      "type": "group",
+      "displayName": "{{ printf "%s Writers" $.displayName }}"
+    },
+    {
+      "id": "{{ printf "%s-creators" $.id }}",
+      "type": "group",
+      "displayName": "{{ printf "%s Creators" $.displayName }}"
+    },
+    {
+      "id": "{{ printf "%s-deleters" $.id }}",
+      "type": "group",
+      "displayName": "{{ printf "%s Deleters" $.displayName }}"
+    }
+    {{ end }}
+  ],
+  "relations":[
+    {{ if contains $.type "endpoint" }}
+      {{ if contains $.method "GET" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-reader",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+
+      {{ if contains $.method "PUT" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-writer",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+
+      {{ if contains $.method "PATCH" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-writer",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+
+      {{ if contains $.method "POST" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-creator",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+
+      {{ if contains $.method "DELETE" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-deleter",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+
+      {{ if contains $.method "OPTIONS" }}
+      {
+        "object_type": "endpoint",
+        "object_id": "{{ $.id }}",
+        "relation": "service-reader",
+        "subject_type": "service",
+        "subject_id": "{{ $.serviceID }}"
+      }
+      {{ end }}
+    {{ end }}
+
+    {{ if contains $.type "service" }}
+    {
+      "object_type": "service",
+      "object_id": "{{ $.id }}",
+      "relation": "reader",
+      "subject_type": "group",
+      "subject_id": "{{ printf "%s-readers" $.id }}",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "service",
+      "object_id": "{{ $.id }}",
+      "relation": "writer",
+      "subject_type": "group",
+      "subject_id": "{{ printf "%s-writers" $.id }}",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "service",
+      "object_id": "{{ $.id }}",
+      "relation": "creator",
+      "subject_type": "group",
+      "subject_id": "{{ printf "%s-creators" $.id }}",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "service",
+      "object_id": "{{ $.id }}",
+      "relation": "deleter",
+      "subject_type": "group",
+      "subject_id": "{{ printf "%s-deleters" $.id }}",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "group",
+      "object_id": "{{ printf "%s-readers" $.id }}",
+      "relation": "member",
+      "subject_type": "group",
+      "subject_id": "global-readers",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "group",
+      "object_id": "{{ printf "%s-writers" $.id }}",
+      "relation": "member",
+      "subject_type": "group",
+      "subject_id": "global-writers",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "group",
+      "object_id": "{{ printf "%s-creators" $.id }}",
+      "relation": "member",
+      "subject_type": "group",
+      "subject_id": "global-creators",
+      "subject_relation": "member"
+    },
+    {
+      "object_type": "group",
+      "object_id": "{{ printf "%s-deleters" $.id }}",
+      "relation": "member",
+      "subject_type": "group",
+      "subject_id": "global-deleters",
+      "subject_relation": "member"
+    }
+    {{ end }}
+  ]
+}

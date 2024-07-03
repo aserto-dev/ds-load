@@ -1,0 +1,30 @@
+package app
+
+import (
+	"os"
+
+	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/fetch"
+	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
+)
+
+type FetchCmd struct {
+	Directory string `short:"d" help:"OpenAPI Spec Directory" env:"OPENAPI_DIRECTORY"`
+	URL       string `short:"u" help:"OpenAPI Spec URL" env:"OPENAPI_URL"`
+	IDFormat  string `short:"f" help:"ID Format (base64, canonical, default)" env:"OPENAPI_IDFORMAT"`
+}
+
+func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
+	openapiClient, err := openapi.New(cmd.Directory, cmd.URL, cmd.IDFormat)
+	if err != nil {
+		return err
+	}
+
+	fetcher, err := fetch.New(openapiClient)
+	if err != nil {
+		return err
+	}
+	fetcher = fetcher.WithDirectory(cmd.Directory).WithURL(cmd.URL).WithIDFormat(cmd.IDFormat)
+
+	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+}
