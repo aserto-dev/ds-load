@@ -5,7 +5,7 @@ go 1.21
 replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
 require (
-	github.com/FusionAuth/go-client v0.0.0-20240425220342-2317e10dfcf5
+	github.com/FusionAuth/go-client v0.0.0-20240704024005-f13b7da8ec56
 	github.com/alecthomas/kong v0.9.0
 	github.com/aserto-dev/ds-load/cli v0.0.0-20230808135510-07f5c2157f1f
 	github.com/pkg/errors v0.9.1
