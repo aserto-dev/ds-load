@@ -9,10 +9,11 @@ import (
 )
 
 type Fetcher struct {
-	client    *openapi.Client
-	directory string
-	specURL   string
-	idFormat  string
+	client      *openapi.Client
+	directory   string
+	idFormat    string
+	specURL     string
+	serviceName string
 }
 
 func New(client *openapi.Client) (*Fetcher, error) {
@@ -33,6 +34,11 @@ func (f *Fetcher) WithURL(url string) *Fetcher {
 
 func (f *Fetcher) WithIDFormat(idFormat string) *Fetcher {
 	f.idFormat = idFormat
+	return f
+}
+
+func (f *Fetcher) WithServiceName(serviceName string) *Fetcher {
+	f.serviceName = serviceName
 	return f
 }
 

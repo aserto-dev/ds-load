@@ -14,7 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	openapiClient, err := openapi.New(cmd.Directory, cmd.URL, cmd.IDFormat)
+	openapiClient, err := openapi.New(cmd.Directory, cmd.URL, cmd.IDFormat, cmd.ServiceName)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
-	fetcher = fetcher.WithDirectory(cmd.Directory).WithURL(cmd.URL).WithIDFormat(cmd.IDFormat)
+	fetcher = fetcher.WithDirectory(cmd.Directory).WithURL(cmd.URL).WithIDFormat(cmd.IDFormat).WithServiceName(cmd.ServiceName)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
