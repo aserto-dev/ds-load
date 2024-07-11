@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	openapiClient, err := openapi.New(v.Directory, v.URL, v.IDFormat)
+	openapiClient, err := openapi.New(v.Directory, v.URL, v.IDFormat, v.ServiceName)
 	if err != nil {
 		return err
 	}

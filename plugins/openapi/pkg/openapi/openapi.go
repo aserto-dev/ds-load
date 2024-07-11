@@ -37,7 +37,7 @@ type Service struct {
 	ID          string `json:"id"`
 }
 
-func New(directory, specURL, idFormat string) (*Client, error) {
+func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 	c := &Client{}
 	c.idFormat = idFormat
 	c.docs = make([]*openapi3.T, 0)
@@ -50,6 +50,12 @@ func New(directory, specURL, idFormat string) (*Client, error) {
 		doc, err := openapi3.NewLoader().LoadFromURI(parsedURL)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specURL)
+		}
+		if serviceName != "" {
+			if doc.Info.Extensions == nil {
+				doc.Info.Extensions = make(map[string]interface{}, 0)
+			}
+			doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)
 		}
 		c.docs = append(c.docs, doc)
 	}
@@ -80,7 +86,11 @@ func New(directory, specURL, idFormat string) (*Client, error) {
 func (c *Client) ListServices() ([]Service, error) {
 	services := make([]Service, 0)
 	for _, service := range c.docs {
-		svc := newService(service.Info.Title, c.idFormat)
+		id := ""
+		if service.Info.Extensions["ServiceName"] != "" {
+			id = service.Info.Extensions["ServiceName"].(string)
+		}
+		svc := newService(service.Info.Title, id, c.idFormat)
 		services = append(services, *svc)
 	}
 	return services, nil
@@ -97,30 +107,34 @@ func (c *Client) ListAPIs() ([]API, error) {
 
 func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	apis := make([]API, 0)
+	serviceID := service.Info.Extensions["ServiceName"].(string)
+	if serviceID == "" {
+		serviceID = service.Info.Title
+	}
 	for pathKey, pathItem := range service.Paths.Map() {
 
 		if pathItem.Get != nil {
-			api := newAPI(service.Info.Title, "GET", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "GET", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Post != nil {
-			api := newAPI(service.Info.Title, "POST", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "POST", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Put != nil {
-			api := newAPI(service.Info.Title, "PUT", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "PUT", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Patch != nil {
-			api := newAPI(service.Info.Title, "PATCH", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "PATCH", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Delete != nil {
-			api := newAPI(service.Info.Title, "DELETE", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "DELETE", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Options != nil {
-			api := newAPI(service.Info.Title, "OPTIONS", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "OPTIONS", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 	}
@@ -128,22 +142,25 @@ func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	return apis
 }
 
-func newService(name, idFormat string) *Service {
+func newService(name, id, idFormat string) *Service {
 	service := &Service{}
 	service.DisplayName = name
 	service.Type = "service"
-	service.ID = canonicalizeServiceName(name, idFormat)
+	service.ID = id
+	if id == "" {
+		service.ID = canonicalizeServiceName(name, idFormat)
+	}
 	return service
 }
 
-func newAPI(service, method, path, idFormat string) *API {
+func newAPI(serviceID, serviceName, method, path, idFormat string) *API {
 	api := &API{}
 	api.Type = "endpoint"
-	api.Service = service
+	api.ServiceID = serviceID
+	api.Service = serviceName
 	api.Method = method
 	api.Path = path
 	api.DisplayName = fmt.Sprintf("%s %s", method, path)
-	api.ServiceID = canonicalizeServiceName(api.Service, idFormat)
 	api.ID = canonicalizeEndpoint(api.ServiceID, method, path, idFormat)
 	return api
 }
