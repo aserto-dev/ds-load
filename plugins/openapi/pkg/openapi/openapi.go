@@ -55,7 +55,7 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 			if doc.Info.Extensions == nil {
 				doc.Info.Extensions = make(map[string]interface{}, 0)
 			}
-			doc.Info.Extensions["ServiceName"] = serviceName
+			doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)
 		}
 		c.docs = append(c.docs, doc)
 	}
@@ -114,27 +114,27 @@ func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	for pathKey, pathItem := range service.Paths.Map() {
 
 		if pathItem.Get != nil {
-			api := newAPI(serviceID, "GET", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "GET", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Post != nil {
-			api := newAPI(serviceID, "POST", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "POST", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Put != nil {
-			api := newAPI(serviceID, "PUT", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "PUT", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Patch != nil {
-			api := newAPI(serviceID, "PATCH", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "PATCH", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Delete != nil {
-			api := newAPI(serviceID, "DELETE", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "DELETE", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 		if pathItem.Options != nil {
-			api := newAPI(serviceID, "OPTIONS", pathKey, idFormat)
+			api := newAPI(serviceID, service.Info.Title, "OPTIONS", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
 	}
@@ -146,22 +146,21 @@ func newService(name, id, idFormat string) *Service {
 	service := &Service{}
 	service.DisplayName = name
 	service.Type = "service"
-	if id != "" {
-		service.ID = canonicalizeServiceName(id, Canonical)
-	} else {
+	service.ID = id
+	if id == "" {
 		service.ID = canonicalizeServiceName(name, idFormat)
 	}
 	return service
 }
 
-func newAPI(service, method, path, idFormat string) *API {
+func newAPI(serviceID, serviceName, method, path, idFormat string) *API {
 	api := &API{}
 	api.Type = "endpoint"
-	api.Service = service
+	api.ServiceID = serviceID
+	api.Service = serviceName
 	api.Method = method
 	api.Path = path
 	api.DisplayName = fmt.Sprintf("%s %s", method, path)
-	api.ServiceID = canonicalizeServiceName(api.Service, idFormat)
 	api.ID = canonicalizeEndpoint(api.ServiceID, method, path, idFormat)
 	return api
 }
