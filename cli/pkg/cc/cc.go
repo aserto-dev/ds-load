@@ -5,15 +5,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/aserto-dev/clui"
-	"github.com/aserto-dev/ds-load/cli/pkg/cc/iostream"
 	logger "github.com/aserto-dev/logger"
 	"github.com/rs/zerolog"
 )
 
 type CommonCtx struct {
 	Context    context.Context
-	UI         *clui.UI
 	LogLevel   zerolog.Level
 	Log        *zerolog.Logger
 	ConfigPath string
@@ -32,7 +29,6 @@ func NewCommonContext(verbosity int, config string) *CommonCtx {
 
 	return &CommonCtx{
 		Context:    context.Background(),
-		UI:         iostream.NewUI(iostream.DefaultIO()),
 		LogLevel:   logLevelParsed,
 		Log:        newLogger,
 		ConfigPath: config,

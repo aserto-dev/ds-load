@@ -2,9 +2,10 @@ package publish
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"os"
 
-	"github.com/aserto-dev/clui"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
@@ -20,7 +21,6 @@ import (
 )
 
 type DirectoryV2Publisher struct {
-	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsi.ImporterClient
 	validator      *protovalidate.Validator
@@ -32,7 +32,6 @@ func NewDirectoryV2Publisher(commonCtx *cc.CommonCtx, importerClient dsi.Importe
 	v, _ := protovalidate.New()
 
 	return &DirectoryV2Publisher{
-		UI:             commonCtx.UI,
 		Log:            commonCtx.Log,
 		importerClient: importerClient,
 		validator:      v,
@@ -61,7 +60,7 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 
 		for _, object := range message.Objects {
 			if err := p.validator.Validate(object); err != nil {
-				p.UI.Problem().Msgf("validation failed, object: [%s] type [%s]", object.Id, object.Type)
+				fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.Id, object.Type)
 				continue
 			}
 			v2msg.Objects = append(v2msg.Objects, convert.ObjectToV2(object))
@@ -69,12 +68,12 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 
 		for _, relation := range message.Relations {
 			if relation.SubjectRelation != "" {
-				p.UI.Problem().Msgf("detected subject relation %s in v2 mode", relation.SubjectRelation)
+				fmt.Fprintf(os.Stderr, "detected subject relation %s in v2 mode\n", relation.SubjectRelation)
 				continue
 			}
 
 			if err := p.validator.Validate(relation); err != nil {
-				p.UI.Problem().Msgf("validation failed, relation: [%s] obj: [%s] subj [%s]", relation.Relation, relation.ObjectId, relation.SubjectId)
+				fmt.Fprintf(os.Stderr, "validation failed, relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
 				continue
 			}
 
@@ -88,11 +87,11 @@ func (p *DirectoryV2Publisher) Publish(ctx context.Context, reader io.Reader) er
 	}
 
 	if p.objErr != 0 {
-		p.UI.Problem().Msgf("failed to import %d objects", p.objErr)
+		fmt.Fprintf(os.Stderr, "failed to import %d objects\n", p.objErr)
 		common.SetExitCode(1)
 	}
 	if p.relErr != 0 {
-		p.UI.Problem().Msgf("failed to import %d relations", p.relErr)
+		fmt.Fprintf(os.Stderr, "failed to import %d relations\n", p.relErr)
 		common.SetExitCode(1)
 	}
 
@@ -110,7 +109,7 @@ func (p *DirectoryV2Publisher) publishMessages(ctx context.Context, message *msg
 
 	// import objects
 	for _, object := range message.Objects {
-		p.UI.Note().Msgf("object: [%s] type [%s]", object.Key, object.Type)
+		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.Key, object.Type)
 		sErr := stream.Send(&dsi.ImportRequest{
 			Msg: &dsi.ImportRequest_Object{
 				Object: object,
@@ -121,7 +120,7 @@ func (p *DirectoryV2Publisher) publishMessages(ctx context.Context, message *msg
 
 	// import relations
 	for _, relation := range message.Relations {
-		p.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
+		fmt.Fprintf(os.Stdout, "relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, *relation.Object.Key, *relation.Subject.Key)
 		sErr := stream.Send(&dsi.ImportRequest{
 			Msg: &dsi.ImportRequest_Relation{
 				Relation: relation,

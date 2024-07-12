@@ -2,9 +2,10 @@ package publish
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"os"
 
-	"github.com/aserto-dev/clui"
 	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
@@ -18,7 +19,6 @@ import (
 )
 
 type DirectoryPublisher struct {
-	UI             *clui.UI
 	Log            *zerolog.Logger
 	importerClient dsiv3.ImporterClient
 	validator      *protovalidate.Validator
@@ -30,7 +30,6 @@ func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsiv3.Importe
 	v, _ := protovalidate.New()
 
 	return &DirectoryPublisher{
-		UI:             commonCtx.UI,
 		Log:            commonCtx.Log,
 		importerClient: importerClient,
 		validator:      v,
@@ -59,11 +58,11 @@ func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) erro
 	}
 
 	if p.objErr != 0 {
-		p.UI.Problem().Msgf("failed to import %d objects", p.objErr)
+		fmt.Fprintf(os.Stderr, "failed to import %d objects\n", p.objErr)
 		common.SetExitCode(1)
 	}
 	if p.relErr != 0 {
-		p.UI.Problem().Msgf("failed to import %d relations", p.relErr)
+		fmt.Fprintf(os.Stderr, "failed to import %d relations\n", p.relErr)
 		common.SetExitCode(1)
 	}
 
@@ -82,10 +81,10 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	// import objects
 	for _, object := range message.Objects {
 		if err := p.validator.Validate(object); err != nil {
-			p.UI.Problem().Msgf("validation failed, object: [%s] type [%s]", object.Id, object.Type)
+			fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.Id, object.Type)
 			continue
 		}
-		p.UI.Note().Msgf("object: [%s] type [%s]", object.Id, object.Type)
+		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.Id, object.Type)
 		sErr := stream.Send(&dsiv3.ImportRequest{
 			Msg: &dsiv3.ImportRequest_Object{
 				Object: object,
@@ -98,10 +97,10 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	// import relations
 	for _, relation := range message.Relations {
 		if err := p.validator.Validate(relation); err != nil {
-			p.UI.Problem().Msgf("validation failed, relation: [%s] obj: [%s] subj [%s]", relation.Relation, relation.ObjectId, relation.SubjectId)
+			fmt.Fprintf(os.Stderr, "validation failed, relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
 			continue
 		}
-		p.UI.Note().Msgf("relation: [%s] obj: [%s] subj [%s]", relation.Relation, relation.ObjectId, relation.SubjectId)
+		fmt.Fprintf(os.Stdout, "relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
 		sErr := stream.Send(&dsiv3.ImportRequest{
 			Msg: &dsiv3.ImportRequest_Relation{
 				Relation: relation,
