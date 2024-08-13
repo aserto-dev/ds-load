@@ -5,6 +5,7 @@ use (
 	./magefiles
 	./plugins/auth0
 	./plugins/azuread
+	./plugins/azureadb2c
 	./plugins/cognito
 	./plugins/fusionauth
 	./plugins/google

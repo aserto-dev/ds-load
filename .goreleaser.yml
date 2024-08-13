@@ -106,6 +106,29 @@ builds:
       - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
+  - id: ds-load-azureadb2c
+    main: ./plugins/azureadb2c/cmd/ds-load-azureadb2c
+    binary: ds-load-azureadb2c
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s
+      - -w
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.ver={{.Version}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.commit={{.ShortCommit}}
+      - -X github.com/{{ .Env.ORG }}/{{ .Env.REPO }}/common/version.date={{.Date}}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
   - id: ds-load-cognito
     main: ./plugins/cognito/cmd/ds-load-cognito
     binary: ds-load-cognito
