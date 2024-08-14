@@ -5,13 +5,13 @@ go:
     version: "v1.3.13"
   buf:
     importPath: "github.com/bufbuild/buf/cmd/buf"
-    version: "v1.30.0"
+    version: "v1.34.0"
   protoc-gen-buf-breaking:
     importPath: "github.com/bufbuild/buf/cmd/protoc-gen-buf-breaking"
-    version: "v1.30.0"
+    version: "v1.34.0"
   protoc-gen-buf-lint:
     importPath: "github.com/bufbuild/buf/cmd/protoc-gen-buf-lint"
-    version: "v1.30.0"
+    version: "v1.34.0"
   protoc-gen-go:
     importPath: google.golang.org/protobuf/cmd/protoc-gen-go
     version: "v1.33.0"
