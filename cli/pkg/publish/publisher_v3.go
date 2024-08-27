@@ -78,10 +78,18 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	errGroup.Go(p.receiver(stream))
 	errGroup.Go(p.doneHandler(stream.Context()))
 
+	opCode := message.OpCode
+	if opCode == dsiv3.Opcode_OPCODE_UNKNOWN {
+		opCode = dsiv3.Opcode_OPCODE_SET
+	}
+
 	// import objects
 	for _, object := range message.Objects {
 		if err := p.validator.Validate(object); err != nil {
 			fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.Id, object.Type)
+			continue
+		}
+		if (opCode == dsiv3.Opcode_OPCODE_DELETE || opCode == dsiv3.Opcode_OPCODE_DELETE_WITH_RELATIONS) && object.Type == "group" {
 			continue
 		}
 		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.Id, object.Type)
@@ -89,7 +97,7 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 			Msg: &dsiv3.ImportRequest_Object{
 				Object: object,
 			},
-			OpCode: dsiv3.Opcode_OPCODE_SET,
+			OpCode: opCode,
 		})
 		p.handleStreamError(sErr)
 	}
@@ -105,7 +113,7 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 			Msg: &dsiv3.ImportRequest_Relation{
 				Relation: relation,
 			},
-			OpCode: dsiv3.Opcode_OPCODE_SET,
+			OpCode: opCode,
 		})
 		p.handleStreamError(sErr)
 	}

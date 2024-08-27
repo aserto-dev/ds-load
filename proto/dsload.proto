@@ -6,6 +6,7 @@ package aserto.dsload;
 
 import "aserto/directory/common/v2/common.proto";
 import "aserto/directory/common/v3/common.proto";
+import "aserto/directory/importer/v3/importer.proto";
 
 message TransformV2 {
     repeated aserto.directory.common.v2.Object objects     = 1;
@@ -15,4 +16,5 @@ message TransformV2 {
 message Transform {
     repeated aserto.directory.common.v3.Object objects     = 1;
     repeated aserto.directory.common.v3.Relation relations = 2;
+    aserto.directory.importer.v3.Opcode op_code            = 3;
 }
