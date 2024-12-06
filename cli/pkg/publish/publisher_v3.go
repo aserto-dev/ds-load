@@ -154,10 +154,10 @@ func (p *DirectoryPublisher) receiver(stream dsiv3.Importer_ImportClient) func()
 
 			if result != nil {
 				if result.Object != nil && result.Object.Error != 0 {
-					p.objErr += int(result.Object.Error)
+					p.objErr += int(result.Object.Error) //nolint:gosec
 				}
 				if result.Relation != nil && result.Relation.Error != 0 {
-					p.relErr += int(result.Relation.Error)
+					p.relErr += int(result.Relation.Error) //nolint:gosec
 				}
 			}
 		}

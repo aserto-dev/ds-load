@@ -4,14 +4,8 @@ option go_package = "github.com/aserto-dev/ds-load/sdk/common/msg;msg";
 
 package aserto.dsload;
 
-import "aserto/directory/common/v2/common.proto";
 import "aserto/directory/common/v3/common.proto";
 import "aserto/directory/importer/v3/importer.proto";
-
-message TransformV2 {
-    repeated aserto.directory.common.v2.Object objects     = 1;
-    repeated aserto.directory.common.v2.Relation relations = 2;
-}
 
 message Transform {
     repeated aserto.directory.common.v3.Object objects     = 1;

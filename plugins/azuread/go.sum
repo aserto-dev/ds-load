@@ -32,8 +32,7 @@ github.com/aserto-dev/go-directory v0.31.5 h1:DPGE8SGW2Z3EFS7VB6v0ds81meKXtHGpI0
 github.com/aserto-dev/go-directory v0.31.5/go.mod h1:fgIT515NcK+4m1UyriBCPMwFHl3DHPaa8yBLbEb9r/I=
 github.com/aserto-dev/logger v0.0.4 h1:GF+17mhn03ZnE5KHCszrzGRcZULgczsql+y+PCHjgpI=
 github.com/aserto-dev/logger v0.0.4/go.mod h1:awdS/W0VnLNyP+aT5mmLx9PjOcT5IrXsYMxqwHglSLU=
-github.com/aserto-dev/msgraph-sdk-go v0.0.2 h1:heDOKFy0g+wYPQvfbbsbvzDy/okcymfT9pnptKPityo=
-github.com/aserto-dev/msgraph-sdk-go v0.0.2/go.mod h1:lXsORtVthvPSKCIk1O73XCWEFq7+3xo/qq/BVbv7Yf0=
+github.com/aserto-dev/msgraph-sdk-go v0.0.3 h1:vfDJe1/rlYlWGNOILyg+idYi1EHzRW8USgr7U4mM6uA=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cjlapao/common-go v0.0.39 h1:bAAUrj2B9v0kMzbAOhzjSmiyDy+rd56r2sy7oEiQLlA=

@@ -11,5 +11,5 @@ func GetExitCode() int {
 }
 
 func SetExitCode(code int) {
-	atomic.StoreInt32(&exitCode, int32(code))
+	atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec
 }
