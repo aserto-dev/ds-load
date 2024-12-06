@@ -25,9 +25,9 @@ func (v *Verifier) WithGroups(groups bool) *Verifier {
 	return v
 }
 
-func (f *Verifier) WithB2C(b2c bool) *Verifier {
-	f.B2C = b2c
-	return f
+func (v *Verifier) WithB2C(b2c bool) *Verifier {
+	v.B2C = b2c
+	return v
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

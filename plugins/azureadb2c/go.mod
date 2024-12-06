@@ -1,6 +1,6 @@
 module github.com/aserto-dev/ds-load/plugins/azureadb2c
 
-go 1.21
+go 1.23.2
 
 replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 

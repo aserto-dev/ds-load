@@ -1,3 +1,5 @@
+---
+version: 2
 project_name: ds-load
 
 env:
@@ -259,7 +261,7 @@ checksum:
 
 snapshot:
   # https://goreleaser.com/customization/snapshots/
-  name_template: "{{ incpatch .Version }}-{{ .ShortCommit }}{{ if .IsGitDirty }}-dirty{{ end }}"
+  version_template: "{{ incpatch .Version }}-{{ .ShortCommit }}{{ if .IsGitDirty }}-dirty{{ end }}"
   
 source:
   # https://goreleaser.com/customization/source/
@@ -318,6 +320,7 @@ brews:
       bin.install "ds-load"
       bin.install "ds-load-auth0"
       bin.install "ds-load-azuread"
+      bin.install "ds-load-azureadb2c"
       bin.install "ds-load-cognito"
       bin.install "ds-load-fusionauth"
       bin.install "ds-load-google"

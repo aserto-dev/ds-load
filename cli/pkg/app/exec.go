@@ -69,20 +69,13 @@ func (e *ExecCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	if !e.Print {
-		if e.V2 {
-			dirClient, err := clients.NewDirectoryV2ImportClient(c.Context, &e.Config)
-			if err != nil {
-				return errors.Wrap(err, "Could not connect to the directory")
-			}
-			e.publisher = publish.NewDirectoryV2Publisher(c, dirClient)
-		} else {
-			dirClient, err := clients.NewDirectoryV3ImportClient(c.Context, &e.Config)
-			if err != nil {
-				return errors.Wrap(err, "Could not connect to the directory")
-			}
-			e.publisher = publish.NewDirectoryPublisher(c, dirClient)
+		dirClient, err := clients.NewDirectoryV3ImportClient(c.Context, &e.Config)
+		if err != nil {
+			return errors.Wrap(err, "Could not connect to the directory")
 		}
+		e.publisher = publish.NewDirectoryPublisher(c, dirClient)
 	}
+
 	return e.LaunchPlugin(c)
 }
 
