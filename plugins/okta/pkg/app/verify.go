@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, v.Domain, v.APIToken, v.RequestTimeout)
+	oktaClient, err := oktaclient.NewOktaClient(v.Domain, v.APIToken, v.RequestTimeout)
 	if err != nil {
 		return err
 	}

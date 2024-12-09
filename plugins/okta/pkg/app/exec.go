@@ -14,7 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, cmd.Domain, cmd.APIToken, cmd.RequestTimeout)
+	oktaClient, err := oktaclient.NewOktaClient(cmd.Domain, cmd.APIToken, cmd.RequestTimeout)
 	if err != nil {
 		return err
 	}
