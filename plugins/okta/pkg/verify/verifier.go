@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
-	"github.com/okta/okta-sdk-golang/v2/okta/query"
 	"github.com/pkg/errors"
 )
 
@@ -20,8 +19,7 @@ func New(ctx context.Context, client *oktaclient.OktaClient) (*Verifier, error) 
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {
-	filter := query.NewQueryParams(query.WithLimit(1))
-	_, _, err := v.client.User.ListUsers(ctx, filter)
+	_, _, err := v.client.User.ListUsers(ctx).Limit(1).Execute()
 
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve user from Okta")

@@ -1,8 +1,7 @@
-go 1.21
+go 1.23.2
 
 use (
 	./cli
-	./magefiles
 	./plugins/auth0
 	./plugins/azuread
 	./plugins/azureadb2c

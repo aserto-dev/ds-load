@@ -1,7 +1,7 @@
 {
   "objects": [
     {
-      "key": "{{ $.user_id }}",
+      "id": "{{ $.user_id }}",
       "type": "user",
       "displayName": "{{ $.nickname }}",
       "created_at":"{{ $.created_at }}",
@@ -16,7 +16,7 @@
     },
     {{ range $index, $element := $.identities }}
     {
-      "key": "{{$element.user_id}}",
+      "id": "{{$element.user_id}}",
       "type": "identity"
     }
     {{ if $.roles }}, {{ end }}
@@ -24,7 +24,7 @@
     {{ end }}
     {{ range $i, $element := $.roles }}
     {
-      "key": "{{$element.name}}",
+      "id": "{{$element.name}}",
       "type": "group"
     }
     {{if last $i $.roles | not}}, {{end}}
@@ -33,26 +33,18 @@
   "relations":[
     {
     "relation": "manager",
-            "subject": {
-                "type": "user",
-                "key": "{{$.user_id}}"
-            },
-            "object": {
-                "type": "user",
-                "key": "{{$.user_metadata.manager_id}}"
-            }
+    "subject_type": "user",
+    "subject_id": "{{$.user_id}}",
+    "object_type": "user",
+    "object_id": "{{$.user_metadata.manager_id}}"
     },
     {{ range $i,$element := $.identities }} 
     {
     "relation": "identifier",
-            "subject": {
-                "type": "user",
-                "key": "{{$.user_id}}"
-            },
-            "object": {
-                "type": "identity",
-                "key": "{{$element.user_id}}"
-            }
+    "subject_type": "user",
+    "subject_id": "{{$.user_id}}",
+    "object_type": "identity",
+    "object_id": "{{$element.user_id}}"
     }
     {{if last $i $.identities | not}}, {{end}}
     {{ end }}

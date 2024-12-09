@@ -9,7 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
-	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 )
 
 type Fetcher struct {
@@ -49,7 +49,7 @@ func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.
 }
 
 func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWriter, errorWriter io.Writer) error {
-	users, response, err := fetcher.oktaClient.User.ListUsers(ctx, nil)
+	users, response, err := fetcher.oktaClient.User.ListUsers(ctx).Execute()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
@@ -60,7 +60,7 @@ func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWrit
 		logIfRateLimitExceeded(response, errorWriter)
 
 		for _, user := range users {
-			userResult, err := fetcher.processUser(ctx, user, errorWriter)
+			userResult, err := fetcher.processUser(ctx, &user, errorWriter)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
@@ -72,7 +72,7 @@ func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWrit
 		}
 
 		if response != nil && response.HasNextPage() {
-			response, err = response.Next(ctx, &users)
+			response, err = response.Next(&users)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
@@ -86,7 +86,7 @@ func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWrit
 }
 
 func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWriter, errorWriter io.Writer) error {
-	groups, response, err := fetcher.oktaClient.Group.ListGroups(ctx, nil)
+	groups, response, err := fetcher.oktaClient.Group.ListGroups(ctx).Execute()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
@@ -97,7 +97,7 @@ func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWri
 		logIfRateLimitExceeded(response, errorWriter)
 
 		for _, group := range groups {
-			groupResult, err := fetcher.processGroup(ctx, group, errorWriter)
+			groupResult, err := fetcher.processGroup(ctx, &group, errorWriter)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
@@ -109,7 +109,7 @@ func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWri
 		}
 
 		if response != nil && response.HasNextPage() {
-			response, err = response.Next(ctx, &groups)
+			response, err = response.Next(&groups)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
@@ -137,7 +137,7 @@ func (fetcher *Fetcher) processUser(ctx context.Context, user *okta.User, errorW
 
 	if fetcher.Groups {
 		// Write all user groups
-		groups, err := fetcher.getGroups(ctx, user.Id, errorWriter)
+		groups, err := fetcher.getGroups(ctx, *user.Id, errorWriter)
 		if err != nil {
 			common.SetExitCode(1)
 			return nil, err
@@ -147,7 +147,7 @@ func (fetcher *Fetcher) processUser(ctx context.Context, user *okta.User, errorW
 
 	if fetcher.Roles {
 		// Write all user roles
-		roles, err := fetcher.getUserRoles(ctx, user.Id, errorWriter)
+		roles, err := fetcher.getUserRoles(ctx, *user.Id, errorWriter)
 		if err != nil {
 			common.SetExitCode(1)
 			return nil, err
@@ -172,7 +172,7 @@ func (fetcher *Fetcher) processGroup(ctx context.Context, group *okta.Group, err
 
 	if fetcher.Roles {
 		// Write all group roles
-		roles, err := fetcher.getGroupRoles(ctx, group.Id, errorWriter)
+		roles, err := fetcher.getGroupRoles(ctx, *group.Id, errorWriter)
 		if err != nil {
 			common.SetExitCode(1)
 			return nil, err
@@ -183,12 +183,12 @@ func (fetcher *Fetcher) processGroup(ctx context.Context, group *okta.Group, err
 }
 
 func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
-	var response *okta.Response
+	var response *okta.APIResponse
 	var result []map[string]interface{}
-	var groups []*okta.Group
+	var groups []okta.Group
 	var err error
 
-	groups, response, err = fetcher.oktaClient.User.ListUserGroups(ctx, userID)
+	groups, response, err = fetcher.oktaClient.User.ListUserGroups(ctx, userID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWrite
 		}
 
 		if response != nil && response.HasNextPage() {
-			response, err = response.Next(ctx, &groups)
+			response, err = response.Next(&groups)
 			if err != nil {
 				return nil, err
 			}
@@ -222,12 +222,12 @@ func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWrite
 }
 
 func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
-	var response *okta.Response
+	var response *okta.APIResponse
 	var result []map[string]interface{}
-	var roles []*okta.Role
+	var roles []okta.Role
 	var err error
 
-	roles, response, err = fetcher.oktaClient.User.ListAssignedRolesForUser(ctx, userID, nil)
+	roles, response, err = fetcher.oktaClient.RoleAssignments.ListAssignedRolesForUser(ctx, userID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWr
 		}
 
 		if response != nil && response.HasNextPage() {
-			response, err = response.Next(ctx, &roles)
+			response, err = response.Next(&roles)
 			if err != nil {
 				return nil, err
 			}
@@ -261,12 +261,12 @@ func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWr
 }
 
 func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
-	var response *okta.Response
+	var response *okta.APIResponse
 	var result []map[string]interface{}
-	var roles []*okta.Role
+	var roles []okta.Role
 	var err error
 
-	roles, response, err = fetcher.oktaClient.Group.ListGroupAssignedRoles(ctx, groupID, nil)
+	roles, response, err = fetcher.oktaClient.RoleAssignments.ListGroupAssignedRoles(ctx, groupID).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, error
 		}
 
 		if response != nil && response.HasNextPage() {
-			response, err = response.Next(ctx, &roles)
+			response, err = response.Next(&roles)
 			if err != nil {
 				return nil, err
 			}
@@ -299,7 +299,7 @@ func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, error
 	return result, nil
 }
 
-func logIfRateLimitExceeded(resp *okta.Response, errorWriter io.Writer) {
+func logIfRateLimitExceeded(resp *okta.APIResponse, errorWriter io.Writer) {
 	if resp.Response != nil && resp.StatusCode == http.StatusTooManyRequests {
 		_, _ = errorWriter.Write([]byte("Rate limit exceeded"))
 	}

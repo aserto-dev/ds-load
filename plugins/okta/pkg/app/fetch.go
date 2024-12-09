@@ -17,7 +17,7 @@ type FetchCmd struct {
 }
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, f.Domain, f.APIToken, f.RequestTimeout)
+	oktaClient, err := oktaclient.NewOktaClient(f.Domain, f.APIToken, f.RequestTimeout)
 	if err != nil {
 		return err
 	}
