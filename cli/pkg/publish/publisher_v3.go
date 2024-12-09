@@ -14,16 +14,23 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc/codes"
 
 	dsiv3 "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
+)
+
+const (
+	objectsCounter   string = "object"
+	relationsCounter string = "relation"
 )
 
 type DirectoryPublisher struct {
 	Log            *zerolog.Logger
 	importerClient dsiv3.ImporterClient
 	validator      *protovalidate.Validator
-	objErr         int
-	relErr         int
+	errs           bool
+	objCounter     *dsiv3.ImportCounter
+	relCounter     *dsiv3.ImportCounter
 }
 
 func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsiv3.ImporterClient) *DirectoryPublisher {
@@ -57,12 +64,15 @@ func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) erro
 		}
 	}
 
-	if p.objErr != 0 {
-		fmt.Fprintf(os.Stderr, "failed to import %d objects\n", p.objErr)
-		common.SetExitCode(1)
+	if p.objCounter != nil {
+		printCounter(os.Stdout, p.objCounter)
 	}
-	if p.relErr != 0 {
-		fmt.Fprintf(os.Stderr, "failed to import %d relations\n", p.relErr)
+	if p.relCounter != nil {
+		printCounter(os.Stdout, p.relCounter)
+	}
+
+	if p.errs {
+		fmt.Fprintf(os.Stderr, "import failure\n")
 		common.SetExitCode(1)
 	}
 
@@ -153,11 +163,17 @@ func (p *DirectoryPublisher) receiver(stream dsiv3.Importer_ImportClient) func()
 			}
 
 			if result != nil {
-				if result.Object != nil && result.Object.Error != 0 {
-					p.objErr += int(result.Object.Error) //nolint:gosec
-				}
-				if result.Relation != nil && result.Relation.Error != 0 {
-					p.relErr += int(result.Relation.Error) //nolint:gosec
+				switch m := result.Msg.(type) {
+				case *dsiv3.ImportResponse_Status:
+					p.errs = true
+					printStatus(os.Stderr, m.Status)
+				case *dsiv3.ImportResponse_Counter:
+					switch m.Counter.Type {
+					case objectsCounter:
+						p.objCounter = m.Counter
+					case relationsCounter:
+						p.relCounter = m.Counter
+					}
 				}
 			}
 		}
@@ -174,4 +190,22 @@ func (p *DirectoryPublisher) doneHandler(ctx context.Context) func() error {
 		}
 		return nil
 	}
+}
+
+func printStatus(w io.Writer, status *dsiv3.ImportStatus) {
+	fmt.Fprintf(w, "%-9s : %s - %s (%d)\n",
+		"error",
+		status.Msg,
+		codes.Code(status.Code).String(),
+		status.Code)
+}
+
+func printCounter(w io.Writer, ctr *dsiv3.ImportCounter) {
+	fmt.Fprintf(w, "%-9s : %d (set:%d delete:%d error:%d)\n",
+		ctr.Type,
+		ctr.Recv,
+		ctr.Set,
+		ctr.Delete,
+		ctr.Error,
+	)
 }
