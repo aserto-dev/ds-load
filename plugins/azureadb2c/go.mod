@@ -4,13 +4,10 @@ go 1.23.2
 
 replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
-replace github.com/aserto-dev/ds-load/cli => ../../cli
-
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
 	github.com/alecthomas/kong v1.6.0
-	github.com/aserto-dev/ds-load/cli v0.0.0-20241206112725-5d200d771446
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20241206112725-5d200d771446
 	github.com/aserto-dev/msgraph-sdk-go v0.0.3
 	github.com/microsoft/kiota-abstractions-go v1.8.1

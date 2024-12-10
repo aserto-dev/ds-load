@@ -4,11 +4,8 @@ go 1.23.2
 
 replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
-replace github.com/aserto-dev/ds-load/cli => ../../cli
-
 require (
 	github.com/alecthomas/kong v1.6.0
-	github.com/aserto-dev/ds-load/cli v0.0.0-20241206112725-5d200d771446
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20241206112725-5d200d771446
 	github.com/bwmarrin/go-objectsid v0.0.0-20191126144531-5fee401a2f37
 	github.com/go-ldap/ldap/v3 v3.4.8

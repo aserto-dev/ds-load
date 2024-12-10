@@ -9,7 +9,6 @@ require (
 	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
 	github.com/aserto-dev/go-aserto v0.33.4
 	github.com/aserto-dev/go-directory v0.33.1
-	github.com/aserto-dev/logger v0.0.6
 	github.com/bufbuild/protovalidate-go v0.7.3
 	github.com/fullstorydev/grpcurl v1.9.1
 	github.com/pkg/errors v0.9.1
@@ -25,6 +24,7 @@ require (
 	cel.dev/expr v0.18.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/aserto-dev/header v0.0.8 // indirect
+	github.com/aserto-dev/logger v0.0.6 // indirect
 	github.com/bufbuild/protocompile v0.10.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20240905190251-b4127c9b8d78 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect

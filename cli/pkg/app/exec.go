@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"sync"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
 	"github.com/aserto-dev/ds-load/cli/pkg/publish"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	plug "github.com/aserto-dev/ds-load/sdk/plugin"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"

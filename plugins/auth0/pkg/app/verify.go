@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/auth0client"
 	"github.com/aserto-dev/ds-load/plugins/auth0/pkg/verify"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type VerifyCmd struct {

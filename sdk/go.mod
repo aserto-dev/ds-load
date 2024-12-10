@@ -6,6 +6,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/alecthomas/kong v1.6.0
 	github.com/aserto-dev/go-directory v0.33.1
+	github.com/aserto-dev/logger v0.0.6
 	github.com/dongri/phonenumber v0.1.12
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0

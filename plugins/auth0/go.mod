@@ -4,11 +4,8 @@ go 1.23.2
 
 replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 
-replace github.com/aserto-dev/ds-load/cli => ../../cli
-
 require (
 	github.com/alecthomas/kong v1.6.0
-	github.com/aserto-dev/ds-load/cli v0.0.0-20231031085256-cf380a2fab03
 	github.com/aserto-dev/ds-load/sdk v0.0.0-00010101000000-000000000000
 	github.com/auth0/go-auth0 v1.13.0
 	github.com/pkg/errors v0.9.1
