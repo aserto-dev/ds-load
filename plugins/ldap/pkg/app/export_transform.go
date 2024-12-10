@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/transform"
 )
 

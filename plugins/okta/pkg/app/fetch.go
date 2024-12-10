@@ -3,9 +3,9 @@ package app
 import (
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type FetchCmd struct {
@@ -17,7 +17,7 @@ type FetchCmd struct {
 }
 
 func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, f.Domain, f.APIToken, f.RequestTimeout)
+	oktaClient, err := oktaclient.NewOktaClient(f.Domain, f.APIToken, f.RequestTimeout)
 	if err != nil {
 		return err
 	}

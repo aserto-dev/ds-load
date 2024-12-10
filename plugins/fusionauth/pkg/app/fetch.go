@@ -3,9 +3,9 @@ package app
 import (
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type FetchCmd struct {

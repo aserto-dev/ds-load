@@ -3,9 +3,9 @@ package app
 import (
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/googleclient"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type FetchCmd struct {

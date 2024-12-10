@@ -1,9 +1,9 @@
 package app
 
 import (
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/verify"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type VerifyCmd struct {
@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	oktaClient, err := oktaclient.NewOktaClient(ctx.Context, v.Domain, v.APIToken, v.RequestTimeout)
+	oktaClient, err := oktaclient.NewOktaClient(v.Domain, v.APIToken, v.RequestTimeout)
 	if err != nil {
 		return err
 	}
