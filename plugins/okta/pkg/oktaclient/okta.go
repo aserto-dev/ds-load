@@ -1,22 +1,21 @@
 package oktaclient
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/okta/okta-sdk-golang/v2/okta"
+	"github.com/okta/okta-sdk-golang/v5/okta"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type OktaClient struct {
-	User  *okta.UserResource
-	Group *okta.GroupResource
+	User            okta.UserAPI
+	Group           okta.GroupAPI
+	RoleAssignments okta.RoleAssignmentAPI
 }
 
-func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int64) (*OktaClient, error) {
-	_, client, err := okta.NewClient(
-		ctx,
+func NewOktaClient(domain, token string, requestTimeout int64) (*OktaClient, error) {
+	config, err := okta.NewConfiguration(
 		okta.WithOrgUrl(fmt.Sprintf("https://%s", domain)),
 		okta.WithToken(token),
 		okta.WithConnectionTimeout(5),
@@ -26,11 +25,13 @@ func NewOktaClient(ctx context.Context, domain, token string, requestTimeout int
 	)
 
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to connect to Okta: %s", err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to create Okta configuration: %s", err.Error())
 	}
 
+	client := okta.NewAPIClient(config)
 	return &OktaClient{
-		User:  client.User,
-		Group: client.Group,
+		User:            client.UserAPI,
+		Group:           client.GroupAPI,
+		RoleAssignments: client.RoleAssignmentAPI,
 	}, nil
 }

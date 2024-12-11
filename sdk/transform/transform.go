@@ -10,28 +10,17 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	convert "github.com/aserto-dev/go-directory/pkg/convert"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-type APIVersion int
-
-const (
-	APIVersionUnknown APIVersion = 1
-	APIVersionV2      APIVersion = 2
-	APIVersionV3      APIVersion = 3
-)
-
 type GoTemplateTransform struct {
 	template []byte
-	version  APIVersion
 }
 
 func NewGoTemplateTransform(transformTemplate []byte) *GoTemplateTransform {
 	return &GoTemplateTransform{
 		template: transformTemplate,
-		version:  APIVersionUnknown,
 	}
 }
 
@@ -86,34 +75,9 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 		DiscardUnknown: false,
 	}
 
-	switch t.version {
-	case APIVersionV2:
-		var dirV2msg msg.TransformV2
-		err = opts.Unmarshal([]byte(output), &dirV2msg)
-		if err != nil {
-			return errors.Wrap(err, "failed to unmarshal transformed data into directory v2 objects and relations")
-		}
-		dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
-		dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
-	case APIVersionV3:
-		err = opts.Unmarshal([]byte(output), &dirV3msg)
-		if err != nil {
-			return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
-		}
-	case APIVersionUnknown:
-		err = opts.Unmarshal([]byte(output), &dirV3msg)
-		if err != nil {
-			var dirV2msg msg.TransformV2
-			v2err := opts.Unmarshal([]byte(output), &dirV2msg)
-			if v2err != nil {
-				return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
-			}
-			dirV3msg.Objects = convert.ObjectArrayToV3(dirV2msg.Objects)
-			dirV3msg.Relations = convert.RelationArrayToV3(dirV2msg.Relations)
-			t.version = APIVersionV2
-		} else {
-			t.version = APIVersionV3
-		}
+	err = opts.Unmarshal([]byte(output), &dirV3msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
 	}
 
 	err = jsonWriter.WriteProtoMessage(&dirV3msg)

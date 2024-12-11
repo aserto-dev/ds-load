@@ -5,7 +5,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/aserto-dev/ds-load/cli/pkg/cc"
+	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/aserto-dev/ds-load/sdk/template"
 	"github.com/aserto-dev/ds-load/sdk/transform"
