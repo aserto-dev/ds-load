@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/constants"
-	"golang.org/x/exp/slices"
 )
 
 type Finder struct {

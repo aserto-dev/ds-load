@@ -1,7 +1,7 @@
 .DS_Store
 
 # local development settings
-/.dev/ 
+/.dev/
 # external extensions folder
 /.ext/
 # goreleaser build directory
@@ -16,3 +16,6 @@
 .idea/
 .run/
 go.work.sum
+
+# Test coverage
+cover.out

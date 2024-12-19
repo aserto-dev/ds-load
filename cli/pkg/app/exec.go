@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"slices"
 	"sync"
 
 	"github.com/aserto-dev/ds-load/cli/pkg/clients"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/pkg/errors"
-	"golang.org/x/exp/slices"
 )
 
 type ExecCmd struct {
