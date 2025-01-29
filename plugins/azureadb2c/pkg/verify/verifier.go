@@ -31,7 +31,7 @@ func (v *Verifier) WithB2C(b2c bool) *Verifier {
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {
-	_, errReq := v.client.ListUsers(ctx, v.Groups)
+	_, errReq := v.client.ListUsers(ctx, v.Groups, []string{"id"})
 
 	if errReq != nil {
 		return errors.Wrap(errReq, "failed to retrieve users from AzureAD")

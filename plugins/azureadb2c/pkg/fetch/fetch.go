@@ -14,11 +14,15 @@ import (
 type Fetcher struct {
 	azureClient *azureclient.AzureADClient
 	Groups      bool
+	userProps   []string
+	groupProps  []string
 }
 
-func New(ctx context.Context, client *azureclient.AzureADClient) (*Fetcher, error) {
+func New(ctx context.Context, client *azureclient.AzureADClient, userProps, groupProps []string) (*Fetcher, error) {
 	return &Fetcher{
 		azureClient: client,
+		userProps:   userProps,
+		groupProps:  groupProps,
 	}, nil
 }
 
@@ -32,7 +36,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer jsonWriter.Close()
 
 	if f.Groups {
-		aadGroups, err := f.azureClient.ListGroups(ctx)
+		aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
@@ -68,7 +72,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		}
 	}
 
-	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups)
+	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
