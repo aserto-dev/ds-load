@@ -1,4 +1,4 @@
-go 1.23.2
+go 1.23.7
 
 use (
 	./cli
@@ -8,6 +8,7 @@ use (
 	./plugins/cognito
 	./plugins/fusionauth
 	./plugins/google
+	./plugins/jumpcloud
 	./plugins/ldap
 	./plugins/okta
 	./plugins/openapi
