@@ -18,8 +18,6 @@ github.com/aserto-dev/go-directory v0.33.7 h1:jldr2cGQp5EYM4l3IKSNyuK3Rr30taQ7Me
 github.com/aserto-dev/go-directory v0.33.7/go.mod h1:mY53j91JUnGRk9lsfw3yxgQXO41SCnt2bSP/2PamxCo=
 github.com/aserto-dev/logger v0.0.7 h1:ORvXxZDMNIcN/E3SYHj8fxmNZnOD7Gf87pOLB2XQavw=
 github.com/aserto-dev/logger v0.0.7/go.mod h1:66ff7ALo68NT1HcCg5zytOnGh6I5R0HeDpN85cwHcD0=
-github.com/auth0/go-auth0 v1.13.0 h1:GA7WyGAzlKBQ2ctHcCZwVf0aiOvPd2PB3QagC5heQJg=
-github.com/auth0/go-auth0 v1.13.0/go.mod h1:G3oPT7sWjmM4mHbn6qkMYEsxnwm/5PnSbo0kpPLSS0E=
 github.com/auth0/go-auth0 v1.17.0 h1:KPAGX4gpmJAMGL/1Z1iTtxMdxOO5lbpLQyie9u06zY4=
 github.com/auth0/go-auth0 v1.17.0/go.mod h1:f6wP4Hov4Be5AKK55tVhAHlKNltqXQIIc3QGfBbnvdU=
 github.com/aybabtme/iocontrol v0.0.0-20150809002002-ad15bcfc95a0 h1:0NmehRCgyk5rljDQLKUO+cRJCnduDyn11+zGZIc9Z48=
