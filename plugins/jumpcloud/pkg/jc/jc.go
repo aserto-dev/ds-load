@@ -45,7 +45,7 @@ func (c *JumpCloudClient) ListDirectories() ([]any, error) {
 	url := baseURL + "/v2/directories"
 
 	var directories []any
-	resp, err := MakeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, directories)
+	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, directories)
 	if err != nil {
 		return []any{}, err
 	}
@@ -61,7 +61,7 @@ func (c *JumpCloudClient) ListUsers() ([]*User, error) {
 		TotalCount int     `json:"totalCount"`
 	}{}
 
-	resp, err := MakeHTTPRequest(url, http.MethodPost, c.headers, nil, nil, users)
+	resp, err := makeHTTPRequest(url, http.MethodPost, c.headers, nil, nil, users)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *JumpCloudClient) ListGroups(groupType GroupType) ([]*Group, error) {
 	}
 
 	groups := []*Group{}
-	resp, err := MakeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, groups)
+	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, groups)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func (c *JumpCloudClient) GetUsersInGroup(groupID string) ([]*User, error) {
 		Attributes any `json:"attributes"`
 	}{}
 
-	resp, err := MakeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, members)
+	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, members)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c *JumpCloudClient) GetUserByID(id string) (*User, error) {
 	url := baseURL + "/Systemusers/" + id + "?limit=1000&skip=0"
 
 	var user User
-	resp, err := MakeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &user)
+	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +142,7 @@ func (c *JumpCloudClient) GetUserByEmail(email string) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "GetUserByEmail not implemented")
 }
 
-func MakeHTTPRequest[T any](fullUrl string, method string, headers map[string]string, queryParameters url.Values, body io.Reader, responseType T) (T, error) {
+func makeHTTPRequest[T any](fullUrl string, method string, headers map[string]string, queryParameters url.Values, body io.Reader, responseType T) (T, error) {
 	client := http.Client{}
 	u, err := url.Parse(fullUrl)
 	if err != nil {

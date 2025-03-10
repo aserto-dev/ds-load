@@ -58,30 +58,6 @@ func TestListUsers(t *testing.T) {
 	enc.Encode(users)
 }
 
-func TestGetUserByID(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
-	require.NoError(t, err)
-	assert.NoError(t, err)
-	_ = jcc
-
-	// req, err := jcc.NewRequest(http.MethodGet, "/api/Systemusers/67cb39b4c1189814618d9554", nil)
-	// require.NoError(t, err)
-
-	// var body any
-	// resp, err := jcc.Do(req, &body)
-	// require.NoError(t, err)
-
-	// enc := json.NewEncoder(os.Stderr)
-	// enc.SetEscapeHTML(false)
-	// enc.SetIndent("", "  ")
-	// enc.Encode(body)
-
-	// fmt.Fprintf(os.Stderr, "status code: %d (%s)\n", resp.StatusCode, resp.Status)
-}
-
 func TestListGroups(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

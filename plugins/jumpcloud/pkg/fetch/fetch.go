@@ -11,13 +11,13 @@ import (
 )
 
 type Fetcher struct {
-	gClient *jc.JumpCloudClient
-	Groups  bool
+	jcc    *jc.JumpCloudClient
+	Groups bool
 }
 
 func New(client *jc.JumpCloudClient) (*Fetcher, error) {
 	return &Fetcher{
-		gClient: client,
+		jcc: client,
 	}, nil
 }
 
@@ -30,7 +30,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
-	users, err := f.gClient.ListUsers()
+	users, err := f.jcc.ListUsers()
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
@@ -59,7 +59,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	if f.Groups {
-		groups, err := f.gClient.ListGroups(jc.UserGroups)
+		groups, err := f.jcc.ListGroups(jc.UserGroups)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
@@ -81,7 +81,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 
-			usersInGroup, err := f.gClient.GetUsersInGroup("")
+			usersInGroup, err := f.jcc.GetUsersInGroup(group.ID)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
