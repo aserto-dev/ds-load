@@ -12,8 +12,6 @@ require (
 	github.com/pkg/errors v0.9.1
 )
 
-require github.com/rogpeppe/go-internal v1.14.1 // indirect
-
 require (
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
