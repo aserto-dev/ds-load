@@ -8,19 +8,17 @@ import (
 )
 
 type CLI struct {
-	Config          kong.ConfigFlag    `help:"Configuration file path" short:"c"`
 	Version         VersionCmd         `cmd:"" help:"version information"`
-	Fetch           FetchCmd           `cmd:"" help:"fetch google workspace data"`
-	Transform       TransformCmd       `cmd:"" help:"transform google workspace data"`
+	Fetch           FetchCmd           `cmd:"" help:"fetch jumpcloud directory data"`
+	Transform       TransformCmd       `cmd:"" help:"transform jumpcloud directory data"`
 	ExportTransform ExportTransformCmd `cmd:"" help:"export default transform template"`
-	Exec            ExecCmd            `cmd:"" help:"fetch and transform google workspace data" default:"withargs"`
-	GetRefreshToken GetTokenCmd        `cmd:"" help:"obtain a refresh token from GCP"`
-	Verbosity       int                `short:"v" type:"counter" help:"Use to increase output verbosity."`
-	Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
+	Exec            ExecCmd            `cmd:"" help:"fetch and transform jumpcloud directory" default:"withargs"`
+	Verify          VerifyCmd          `cmd:"" help:"verify fetcher configuration and credentials"`
+	Config          kong.ConfigFlag    `flag:"" short:"c" help:"Configuration file path" `
+	Verbosity       int                `flag:"" short:"v" type:"counter" help:"Use to increase output verbosity."`
 }
 
-type VersionCmd struct {
-}
+type VersionCmd struct{}
 
 func (cmd *VersionCmd) Run() error {
 	fmt.Printf("%s - %s\n",

@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jcclient"
+	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher struct {
-	gClient *jcclient.JumpCloudClient
+	gClient *jc.JumpCloudClient
 	Groups  bool
 }
 
-func New(client *jcclient.JumpCloudClient) (*Fetcher, error) {
+func New(client *jc.JumpCloudClient) (*Fetcher, error) {
 	return &Fetcher{
 		gClient: client,
 	}, nil
@@ -81,7 +81,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 
-			usersInGroup, err := f.gClient.GetUsersInGroup(group.Id)
+			usersInGroup, err := f.gClient.GetUsersInGroup("")
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)

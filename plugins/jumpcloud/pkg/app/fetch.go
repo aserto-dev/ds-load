@@ -4,20 +4,17 @@ import (
 	"os"
 
 	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/fetch"
-	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jcclient"
+	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
 type FetchCmd struct {
-	ClientID     string `short:"i" help:"Google Client ID" env:"GOOGLE_CLIENT_ID" required:""`
-	ClientSecret string `short:"s" help:"Google Client Secret" env:"GOOGLE_CLIENT_SECRET" required:""`
-	RefreshToken string `short:"r" help:"Google Refresh Token" env:"GOOGLE_REFRESH_TOKEN" required:""`
-	Groups       bool   `short:"g" help:"Retrieve Google groups" env:"GOOGLE_GROUPS" default:"false"`
-	Customer     string `help:"Google Workspace Customer field" env:"GOOGLE_CUSTOMER" default:"my_customer"`
+	APIKey string `short:"k" help:"JumpCloud API Key" env:"JC_API_KEY" required:""`
+	Groups bool   `short:"g" help:"Retrieve JumpCloud groups" env:"JC_GROUPS" default:"false"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	jcClient, err := jcclient.NewJumpCloudClient(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
+	jcClient, err := jc.NewJumpCloudClient(ctx.Context, cmd.APIKey)
 	if err != nil {
 		return err
 	}

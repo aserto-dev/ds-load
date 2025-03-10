@@ -2,7 +2,7 @@ package app
 
 import (
 	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/fetch"
-	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jcclient"
+	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
@@ -14,7 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	gClient, err := jcclient.NewJumpCloudClient(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
+	gClient, err := jc.NewJumpCloudClient(ctx.Context, cmd.APIKey)
 	if err != nil {
 		return err
 	}
