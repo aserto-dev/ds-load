@@ -10,13 +10,13 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/common/msg"
-	"github.com/bufbuild/protovalidate-go"
+	dsi3 "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
+	"github.com/aserto-dev/go-directory/pkg/validator"
+
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
-
-	dsiv3 "github.com/aserto-dev/go-directory/aserto/directory/importer/v3"
 )
 
 const (
@@ -26,20 +26,16 @@ const (
 
 type DirectoryPublisher struct {
 	Log            *zerolog.Logger
-	importerClient dsiv3.ImporterClient
-	validator      *protovalidate.Validator
+	importerClient dsi3.ImporterClient
 	errs           bool
-	objCounter     *dsiv3.ImportCounter
-	relCounter     *dsiv3.ImportCounter
+	objCounter     *dsi3.ImportCounter
+	relCounter     *dsi3.ImportCounter
 }
 
-func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsiv3.ImporterClient) *DirectoryPublisher {
-	v, _ := protovalidate.New()
-
+func NewDirectoryPublisher(commonCtx *cc.CommonCtx, importerClient dsi3.ImporterClient) *DirectoryPublisher {
 	return &DirectoryPublisher{
 		Log:            commonCtx.Log,
 		importerClient: importerClient,
-		validator:      v,
 	}
 }
 
@@ -89,22 +85,22 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	errGroup.Go(p.doneHandler(stream.Context()))
 
 	opCode := message.OpCode
-	if opCode == dsiv3.Opcode_OPCODE_UNKNOWN {
-		opCode = dsiv3.Opcode_OPCODE_SET
+	if opCode == dsi3.Opcode_OPCODE_UNKNOWN {
+		opCode = dsi3.Opcode_OPCODE_SET
 	}
 
 	// import objects
 	for _, object := range message.Objects {
-		if err := p.validator.Validate(object); err != nil {
+		if err := validator.Object(object); err != nil {
 			fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.Id, object.Type)
 			continue
 		}
-		if (opCode == dsiv3.Opcode_OPCODE_DELETE || opCode == dsiv3.Opcode_OPCODE_DELETE_WITH_RELATIONS) && object.Type == "group" {
+		if (opCode == dsi3.Opcode_OPCODE_DELETE || opCode == dsi3.Opcode_OPCODE_DELETE_WITH_RELATIONS) && object.Type == "group" {
 			continue
 		}
 		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.Id, object.Type)
-		sErr := stream.Send(&dsiv3.ImportRequest{
-			Msg: &dsiv3.ImportRequest_Object{
+		sErr := stream.Send(&dsi3.ImportRequest{
+			Msg: &dsi3.ImportRequest_Object{
 				Object: object,
 			},
 			OpCode: opCode,
@@ -114,13 +110,13 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 
 	// import relations
 	for _, relation := range message.Relations {
-		if err := p.validator.Validate(relation); err != nil {
+		if err := validator.Relation(relation); err != nil {
 			fmt.Fprintf(os.Stderr, "validation failed, relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
 			continue
 		}
 		fmt.Fprintf(os.Stdout, "relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
-		sErr := stream.Send(&dsiv3.ImportRequest{
-			Msg: &dsiv3.ImportRequest_Relation{
+		sErr := stream.Send(&dsi3.ImportRequest{
+			Msg: &dsi3.ImportRequest_Relation{
 				Relation: relation,
 			},
 			OpCode: opCode,
@@ -150,7 +146,7 @@ func (p *DirectoryPublisher) handleStreamError(err error) {
 	common.SetExitCode(1)
 }
 
-func (p *DirectoryPublisher) receiver(stream dsiv3.Importer_ImportClient) func() error {
+func (p *DirectoryPublisher) receiver(stream dsi3.Importer_ImportClient) func() error {
 	return func() error {
 		for {
 			result, err := stream.Recv()
@@ -164,10 +160,10 @@ func (p *DirectoryPublisher) receiver(stream dsiv3.Importer_ImportClient) func()
 
 			if result != nil {
 				switch m := result.Msg.(type) {
-				case *dsiv3.ImportResponse_Status:
+				case *dsi3.ImportResponse_Status:
 					p.errs = true
 					printStatus(os.Stderr, m.Status)
-				case *dsiv3.ImportResponse_Counter:
+				case *dsi3.ImportResponse_Counter:
 					switch m.Counter.Type {
 					case objectsCounter:
 						p.objCounter = m.Counter
@@ -192,7 +188,7 @@ func (p *DirectoryPublisher) doneHandler(ctx context.Context) func() error {
 	}
 }
 
-func printStatus(w io.Writer, status *dsiv3.ImportStatus) {
+func printStatus(w io.Writer, status *dsi3.ImportStatus) {
 	fmt.Fprintf(w, "%-9s : %s - %s (%d)\n",
 		"error",
 		status.Msg,
@@ -200,7 +196,7 @@ func printStatus(w io.Writer, status *dsiv3.ImportStatus) {
 		status.Code)
 }
 
-func printCounter(w io.Writer, ctr *dsiv3.ImportCounter) {
+func printCounter(w io.Writer, ctr *dsi3.ImportCounter) {
 	fmt.Fprintf(w, "%-9s : %d (set:%d delete:%d error:%d)\n",
 		ctr.Type,
 		ctr.Recv,

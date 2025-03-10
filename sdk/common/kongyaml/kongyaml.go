@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/alecthomas/kong"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type YAMLResolver struct {
