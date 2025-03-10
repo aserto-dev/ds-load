@@ -17,12 +17,12 @@ EXT_BIN_DIR        := ${EXT_DIR}/bin
 EXT_TMP_DIR        := ${EXT_DIR}/tmp
 
 GO_VER             := 1.24
-VAULT_VER	       := 1.8.12
-SVU_VER 	       := 3.1.0
+VAULT_VER	         := 1.8.12
+SVU_VER 	         := 3.1.0
 GOTESTSUM_VER      := 1.11.0
 GOLANGCI-LINT_VER  := 1.64.5
 GORELEASER_VER     := 2.3.2
-BUF_VER            := 1.34.0
+BUF_VER            := 1.50.0
 
 RELEASE_TAG        := $$(${EXT_BIN_DIR}/svu current)
 
@@ -61,6 +61,8 @@ generate:
 .PHONY: lint
 lint:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
+	@${EXT_BIN_DIR}/golangci-lint config path
+	@${EXT_BIN_DIR}/golangci-lint config verify
 	@go list -f '{{.Dir}}/...' -m | xargs ${EXT_BIN_DIR}/golangci-lint run --config ${PWD}/.golangci.yaml
 
 PHONY: go-mod-tidy

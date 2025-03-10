@@ -11,7 +11,7 @@ require (
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20241206112725-5d200d771446
 	github.com/okta/okta-sdk-golang/v5 v5.0.4
 	github.com/pkg/errors v0.9.1
-	google.golang.org/grpc v1.70.0
+	google.golang.org/grpc v1.71.0
 )
 
 require (
