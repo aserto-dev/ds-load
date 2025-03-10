@@ -3,6 +3,7 @@ package jc_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -12,8 +13,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const JC_API_KEY string = "JC_API_KEY"
+
 func TestMain(m *testing.M) {
-	os.Setenv("JC_API_KEY", "jca_7F8FDtW94HCXnVA97WkrdXDd7v7P47XkALqq")
+	if os.Getenv(JC_API_KEY) == "" {
+		fmt.Fprintf(os.Stderr, "env %q not set, tests skipped", JC_API_KEY)
+		return
+	}
+
 	exitVal := m.Run()
 	os.Exit(exitVal)
 }

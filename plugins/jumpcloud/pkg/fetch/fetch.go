@@ -59,7 +59,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	if f.Groups {
-		groups, err := f.gClient.ListGroups()
+		groups, err := f.gClient.ListGroups(jc.UserGroups)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
