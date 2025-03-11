@@ -42,21 +42,21 @@
     ],
     "relations":[
       {
-        "object_type": "identity",
+        "object_type": "user",
         "object_id": "{{$.Key}}",
         "relation": "identifier",
-        "subject_type": "user",
+        "subject_type": "identity",
         "subject_id": "{{$.Key}}"
       }
       {{/* if there are emails, create an identity for each of them */}}
       {{ if $.Attributes.mail}}
         {{ range $email := $.Attributes.mail }}
           ,{
-            "object_type": "identity",
-            "object_id": "{{ $email }}",
+            "object_type": "user",
+            "object_id": "{{ $.Key }}",
             "relation": "identifier",
-            "subject_type": "user",
-            "subject_id": "{{$.Key}}"
+            "subject_type": "identity",
+            "subject_id": "{{ $email }}"
           }
         {{ end }}
       {{end}}

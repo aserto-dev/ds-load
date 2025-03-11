@@ -85,28 +85,28 @@
     {{ end }}
   ],
   "relations":[  
-    {
-      "object_type": "identity",
+       {
+      "object_type": "user",
       "object_id": "{{$.id}}",
       "relation": "identifier",
-      "subject_type": "user",
+      "subject_type": "identity",
       "subject_id": "{{$.id}}"
     },
     {
-      "object_type": "identity",
-      "object_id": "{{$email}}",
+      "object_type": "user",
+      "object_id": "{{$.id}}",
       "relation": "identifier",
-      "subject_type": "user",
-      "subject_id":  "{{$.id}}"
+      "subject_type": "identity",
+      "subject_id":  "{{$email}}"
     }
     {{ if $.mobilePhone }}
     ,
     {
-      "object_type": "identity",
-      "object_id": "{{$.mobilePhone}}",
+      "object_type": "user",
+      "object_id": "{{$.id}}",
       "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$.id}}"
+      "subject_type": "identity",
+      "subject_id": "{{$.mobilePhone}}"
     }
     {{ end }}
     {{ if $.memberOf }}, {{ end }}
