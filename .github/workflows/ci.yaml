@@ -36,6 +36,7 @@ jobs:
           - "./plugins/cognito"
           - "./plugins/fusionauth"
           - "./plugins/google"
+          - "./plugins/jumpcloud"
           - "./plugins/ldap"
           - "./plugins/okta"
           - "./plugins/openapi"
