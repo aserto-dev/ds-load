@@ -30,7 +30,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
-	users, err := f.jcc.ListUsers()
+	users, err := f.jcc.ListUsers(ctx)
 	if err != nil {
 		_, _ = errorWriter.Write([]byte(err.Error()))
 		common.SetExitCode(1)
@@ -59,7 +59,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	if f.Groups {
-		groups, err := f.jcc.ListGroups(jc.UserGroups)
+		groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			common.SetExitCode(1)
@@ -81,7 +81,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 
-			usersInGroup, err := f.jcc.GetUsersInGroup(group.ID)
+			usersInGroup, err := f.jcc.GetUsersInGroup(ctx, group.ID)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)

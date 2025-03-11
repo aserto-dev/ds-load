@@ -18,7 +18,7 @@ func New(ctx context.Context, client *jc.JumpCloudClient) (*Verifier, error) {
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {
-	_, errReq := v.client.ListUsers()
+	_, errReq := v.client.ListUsers(ctx)
 
 	if errReq != nil {
 		return errors.Wrap(errReq, "failed to retrieve users from Google")

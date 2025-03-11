@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
@@ -24,6 +25,7 @@ type JumpCloudClient struct {
 	baseURL *url.URL
 	apiKey  string
 	headers map[string]string
+	timeout time.Duration
 }
 
 func NewJumpCloudClient(ctx context.Context, apiKey string) (*JumpCloudClient, error) {
@@ -37,23 +39,25 @@ func NewJumpCloudClient(ctx context.Context, apiKey string) (*JumpCloudClient, e
 			"Accept":       "application/json",
 			apiKeyHeader:   apiKey,
 		},
+		timeout: 30 * time.Second,
 	}
 
 	return c, nil
 }
 
-func (c *JumpCloudClient) ListDirectories() ([]any, error) {
+func (c *JumpCloudClient) ListDirectories(ctx context.Context) ([]any, error) {
 	url := baseURL + "/v2/directories"
 
 	var directories []any
-	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &directories); err != nil {
+
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &directories); err != nil {
 		return []any{}, err
 	}
 
 	return directories, nil
 }
 
-func (c *JumpCloudClient) ListUsers() ([]*User, error) {
+func (c *JumpCloudClient) ListUsers(ctx context.Context) ([]*User, error) {
 	url := baseURL + "/search/systemusers"
 
 	users := struct {
@@ -61,7 +65,7 @@ func (c *JumpCloudClient) ListUsers() ([]*User, error) {
 		TotalCount int     `json:"totalCount"`
 	}{}
 
-	if err := makeHTTPRequest(url, http.MethodPost, c.headers, nil, nil, users); err != nil {
+	if err := makeHTTPRequest(ctx, url, http.MethodPost, c.headers, nil, nil, &users); err != nil {
 		return []*User{}, err
 	}
 
@@ -78,7 +82,7 @@ const (
 	UserGroups
 )
 
-func (c *JumpCloudClient) ListGroups(groupType GroupType) ([]*Group, error) {
+func (c *JumpCloudClient) ListGroups(ctx context.Context, groupType GroupType) ([]*Group, error) {
 	var url string
 	switch groupType {
 	case AllGroups:
@@ -90,7 +94,8 @@ func (c *JumpCloudClient) ListGroups(groupType GroupType) ([]*Group, error) {
 	}
 
 	groups := []*Group{}
-	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
+
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
 		return nil, err
 	}
 
@@ -99,11 +104,26 @@ func (c *JumpCloudClient) ListGroups(groupType GroupType) ([]*Group, error) {
 	return groups, nil
 }
 
-func (c *JumpCloudClient) GetUsersInGroup(groupID string) ([]*BaseUser, error) {
+const batchSize int = 10
+
+type Members []struct {
+	To struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"to"`
+}
+
+func (c *JumpCloudClient) GetUsersInGroup(ctx context.Context, groupID string) ([]*BaseUser, error) {
 	u, err := url.Parse(baseURL + "/v2/usergroups/" + groupID + "/members")
 	if err != nil {
 		return nil, err
 	}
+
+	qv := u.Query()
+	qv.Add("limit", strconv.FormatInt(int64(batchSize), 10))
+	qv.Add("skip", strconv.FormatInt(0, 10))
+
+	u.RawQuery = qv.Encode()
 
 	members := []struct {
 		To struct {
@@ -114,62 +134,64 @@ func (c *JumpCloudClient) GetUsersInGroup(groupID string) ([]*BaseUser, error) {
 		Attributes any `json:"attributes"`
 	}{}
 
-	users := []*BaseUser{}
-
-	qv := u.Query()
-	qv.Add("limit", strconv.FormatInt(100, 10))
-	qv.Add("skip", strconv.FormatInt(0, 10))
-
-	u.RawQuery = qv.Encode()
+	idList := []string{}
 
 	for {
-		if err := makeHTTPRequest(u.String(), http.MethodGet, c.headers, nil, nil, &members); err != nil {
+		if err := makeHTTPRequest(ctx, u.String(), http.MethodGet, c.headers, nil, nil, &members); err != nil {
 			return nil, err
 		}
 
-		for _, member := range members {
-			user, err := c.GetBaseUserByID(member.To.ID)
-			if err != nil {
-				return nil, err
-			}
-			users = append(users, user)
+		for _, v := range members {
+			idList = append(idList, v.To.ID)
 		}
 
-		if len(users) != 100 {
+		if len(members) != batchSize {
 			break
 		}
 
 		qv := u.Query()
-		qv.Set("skip", strconv.FormatInt(int64(len(users)), 10))
+		qv.Set("skip", strconv.FormatInt(int64(len(idList)), 10))
 		u.RawQuery = qv.Encode()
+	}
+
+	users := []*BaseUser{}
+
+	for _, id := range idList {
+		user, err := c.GetBaseUserByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
 	}
 
 	return users, nil
 }
 
-func (c *JumpCloudClient) GetBaseUserByID(id string) (*BaseUser, error) {
-	url := baseURL + "/Systemusers/" + id + "?limit=1000&skip=0"
+func (c *JumpCloudClient) GetBaseUserByID(ctx context.Context, id string) (*BaseUser, error) {
+	url := baseURL + "/Systemusers/" + id + "?limit=1&skip=0"
 
 	user := &BaseUser{}
-	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, user); err != nil {
+
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, user); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (c *JumpCloudClient) GetUserByID(id string) (*User, error) {
-	url := baseURL + "/Systemusers/" + id + "?limit=1000&skip=0"
+func (c *JumpCloudClient) GetUserByID(ctx context.Context, id string) (*User, error) {
+	url := baseURL + "/Systemusers/" + id + "?limit=1&skip=0"
 
 	user := &User{}
-	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &user); err != nil {
+
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &user); err != nil {
 		return nil, err
 	}
 
 	return user, nil
 }
 
-func (c *JumpCloudClient) GetUserByEmail(email string) (*User, error) {
+func (c *JumpCloudClient) GetUserByEmail(_ context.Context, _ string) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "GetUserByEmail not implemented")
 }
 
@@ -178,7 +200,7 @@ var (
 	ErrStatusNotOK   = errors.New("status not OK")
 )
 
-func makeHTTPRequest[T any](reqURL, method string, headers map[string]string, queryParams url.Values, body io.Reader, resp T) error {
+func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers map[string]string, queryParams url.Values, body io.Reader, resp T) error {
 	client := http.Client{}
 
 	u, err := url.Parse(reqURL)
@@ -195,7 +217,7 @@ func makeHTTPRequest[T any](reqURL, method string, headers map[string]string, qu
 		u.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequest(method, u.String(), body)
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
 	if err != nil {
 		return err
 	}
