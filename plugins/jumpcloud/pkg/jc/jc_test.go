@@ -16,8 +16,6 @@ import (
 const JcAPIKey string = "JC_API_KEY" // nolint: gosec // no hardcoded credentials.
 
 func TestMain(m *testing.M) {
-	os.Setenv(JcAPIKey, "jca_8R6RtyhQcFuUfVdwzjzouUfXaVKhCwtqS3av")
-
 	if os.Getenv(JcAPIKey) == "" {
 		fmt.Fprintf(os.Stderr, "env %q not set, tests skipped", JcAPIKey)
 		return
