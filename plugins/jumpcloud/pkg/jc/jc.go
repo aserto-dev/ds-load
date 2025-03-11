@@ -3,13 +3,14 @@ package jc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
+	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -45,12 +46,11 @@ func (c *JumpCloudClient) ListDirectories() ([]any, error) {
 	url := baseURL + "/v2/directories"
 
 	var directories []any
-	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, directories)
-	if err != nil {
+	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &directories); err != nil {
 		return []any{}, err
 	}
 
-	return resp, nil
+	return directories, nil
 }
 
 func (c *JumpCloudClient) ListUsers() ([]*User, error) {
@@ -61,12 +61,13 @@ func (c *JumpCloudClient) ListUsers() ([]*User, error) {
 		TotalCount int     `json:"totalCount"`
 	}{}
 
-	resp, err := makeHTTPRequest(url, http.MethodPost, c.headers, nil, nil, users)
-	if err != nil {
-		return nil, err
+	if err := makeHTTPRequest(url, http.MethodPost, c.headers, nil, nil, users); err != nil {
+		return []*User{}, err
 	}
 
-	return resp.Results, nil
+	lo.ForEach(users.Results, func(item *User, index int) { item.Type = TypeUser })
+
+	return users.Results, nil
 }
 
 type GroupType int
@@ -89,70 +90,106 @@ func (c *JumpCloudClient) ListGroups(groupType GroupType) ([]*Group, error) {
 	}
 
 	groups := []*Group{}
-	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, groups)
+	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
+		return nil, err
+	}
+
+	lo.ForEach(groups, func(item *Group, index int) { item.Name = strings.ReplaceAll(item.Name, " ", "_") })
+
+	return groups, nil
+}
+
+func (c *JumpCloudClient) GetUsersInGroup(groupID string) ([]*BaseUser, error) {
+	u, err := url.Parse(baseURL + "/v2/usergroups/" + groupID + "/members")
 	if err != nil {
 		return nil, err
 	}
 
-	return resp, nil
-}
-
-func (c *JumpCloudClient) GetUsersInGroup(groupID string) ([]*User, error) {
-	url := baseURL + "/v2/usergroups/" + groupID + "/members"
-
 	members := []struct {
 		To struct {
-			Id         string `json:"id"`
+			ID         string `json:"id"`
 			Type       string `json:"type"`
 			Attributes any    `json:"attributes"`
 		}
 		Attributes any `json:"attributes"`
 	}{}
 
-	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, members)
-	if err != nil {
-		return nil, err
-	}
+	users := []*BaseUser{}
 
-	users := []*User{}
-	for _, member := range resp {
-		user, err := c.GetUserByID(member.To.Id)
-		if err != nil {
+	qv := u.Query()
+	qv.Add("limit", strconv.FormatInt(100, 10))
+	qv.Add("skip", strconv.FormatInt(0, 10))
+
+	u.RawQuery = qv.Encode()
+
+	for {
+		if err := makeHTTPRequest(u.String(), http.MethodGet, c.headers, nil, nil, &members); err != nil {
 			return nil, err
 		}
-		users = append(users, user)
+
+		for _, member := range members {
+			user, err := c.GetBaseUserByID(member.To.ID)
+			if err != nil {
+				return nil, err
+			}
+			users = append(users, user)
+		}
+
+		if len(users) != 100 {
+			break
+		}
+
+		qv := u.Query()
+		qv.Set("skip", strconv.FormatInt(int64(len(users)), 10))
+		u.RawQuery = qv.Encode()
 	}
 
 	return users, nil
 }
 
-func (c *JumpCloudClient) GetUserByID(id string) (*User, error) {
+func (c *JumpCloudClient) GetBaseUserByID(id string) (*BaseUser, error) {
 	url := baseURL + "/Systemusers/" + id + "?limit=1000&skip=0"
 
-	var user User
-	resp, err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &user)
-	if err != nil {
+	user := &BaseUser{}
+	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, user); err != nil {
 		return nil, err
 	}
 
-	return resp, nil
+	return user, nil
+}
+
+func (c *JumpCloudClient) GetUserByID(id string) (*User, error) {
+	url := baseURL + "/Systemusers/" + id + "?limit=1000&skip=0"
+
+	user := &User{}
+	if err := makeHTTPRequest(url, http.MethodGet, c.headers, nil, nil, &user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (c *JumpCloudClient) GetUserByEmail(email string) (*User, error) {
 	return nil, status.Error(codes.Unimplemented, "GetUserByEmail not implemented")
 }
 
-func makeHTTPRequest[T any](fullUrl string, method string, headers map[string]string, queryParameters url.Values, body io.Reader, responseType T) (T, error) {
+var (
+	ErrEmptyResponse = errors.New("empty response")
+	ErrStatusNotOK   = errors.New("status not OK")
+)
+
+func makeHTTPRequest[T any](reqURL, method string, headers map[string]string, queryParams url.Values, body io.Reader, resp T) error {
 	client := http.Client{}
-	u, err := url.Parse(fullUrl)
+
+	u, err := url.Parse(reqURL)
 	if err != nil {
-		return responseType, err
+		return err
 	}
 
-	if method == http.MethodGet && queryParameters != nil {
+	if method == http.MethodGet && queryParams != nil {
 		q := u.Query()
 
-		for k, v := range queryParameters {
+		for k, v := range queryParams {
 			q.Set(k, strings.Join(v, ","))
 		}
 		u.RawQuery = q.Encode()
@@ -160,7 +197,7 @@ func makeHTTPRequest[T any](fullUrl string, method string, headers map[string]st
 
 	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
-		return responseType, err
+		return err
 	}
 
 	for k, v := range headers {
@@ -169,30 +206,27 @@ func makeHTTPRequest[T any](fullUrl string, method string, headers map[string]st
 
 	res, err := client.Do(req)
 	if err != nil {
-		return responseType, err
+		return err
 	}
 
 	if res == nil {
-		return responseType, fmt.Errorf("error: calling %s returned empty response", u.String())
+		return errors.Wrapf(ErrEmptyResponse, "req %s", u.String())
 	}
 
-	responseData, err := io.ReadAll(res.Body)
+	buf, err := io.ReadAll(res.Body)
 	if err != nil {
-		return responseType, err
+		return err
 	}
-
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return responseType, fmt.Errorf("error calling %s:\nstatus: %s\nresponseData: %s", u.String(), res.Status, responseData)
+		return errors.Wrapf(ErrStatusNotOK, "req: %s status: %s response: %s", u.String(), res.Status, buf)
 	}
 
-	var responseObject T
-	err = json.Unmarshal(responseData, &responseObject)
+	err = json.Unmarshal(buf, &resp)
 	if err != nil {
-		log.Printf("error unmarshaling response: %+v", err)
-		return responseType, err
+		return err
 	}
 
-	return responseObject, nil
+	return nil
 }

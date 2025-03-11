@@ -10,6 +10,7 @@ require (
 	github.com/alecthomas/kong v1.8.1
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20241206112725-5d200d771446
 	github.com/pkg/errors v0.9.1
+	github.com/samber/lo v1.49.1
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.71.0
 )

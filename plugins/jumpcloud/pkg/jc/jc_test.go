@@ -13,11 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const JC_API_KEY string = "JC_API_KEY"
+const JcAPIKey string = "JC_API_KEY" // nolint: gosec // no hardcoded credentials.
 
 func TestMain(m *testing.M) {
-	if os.Getenv(JC_API_KEY) == "" {
-		fmt.Fprintf(os.Stderr, "env %q not set, tests skipped", JC_API_KEY)
+	os.Setenv(JcAPIKey, "")
+	if os.Getenv(JcAPIKey) == "" {
+		fmt.Fprintf(os.Stderr, "env %q not set, tests skipped", JcAPIKey)
 		return
 	}
 
@@ -39,7 +40,9 @@ func TestListDirectories(t *testing.T) {
 	enc := json.NewEncoder(os.Stderr)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	enc.Encode(directories)
+	if err := enc.Encode(directories); err != nil {
+		require.NoError(t, err)
+	}
 }
 
 func TestListUsers(t *testing.T) {
@@ -55,7 +58,9 @@ func TestListUsers(t *testing.T) {
 	enc := json.NewEncoder(os.Stderr)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	enc.Encode(users)
+	if err := enc.Encode(users); err != nil {
+		require.NoError(t, err)
+	}
 }
 
 func TestListGroups(t *testing.T) {
@@ -71,7 +76,9 @@ func TestListGroups(t *testing.T) {
 	enc := json.NewEncoder(os.Stderr)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	enc.Encode(groups)
+	if err := enc.Encode(groups); err != nil {
+		require.NoError(t, err)
+	}
 }
 
 func TestGetSystemGroups(t *testing.T) {
@@ -87,7 +94,9 @@ func TestGetSystemGroups(t *testing.T) {
 	enc := json.NewEncoder(os.Stderr)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	enc.Encode(groups)
+	if err := enc.Encode(groups); err != nil {
+		require.NoError(t, err)
+	}
 }
 
 func TestGetUserGroups(t *testing.T) {
@@ -103,7 +112,9 @@ func TestGetUserGroups(t *testing.T) {
 	enc := json.NewEncoder(os.Stderr)
 	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
-	enc.Encode(groups)
+	if err := enc.Encode(groups); err != nil {
+		require.NoError(t, err)
+	}
 }
 
 func TestGetMembersOfGroup(t *testing.T) {
@@ -124,6 +135,8 @@ func TestGetMembersOfGroup(t *testing.T) {
 	for _, group := range groups {
 		users, err := jcc.GetUsersInGroup(group.ID)
 		require.NoError(t, err)
-		enc.Encode(users)
+		if err := enc.Encode(users); err != nil {
+			require.NoError(t, err)
+		}
 	}
 }

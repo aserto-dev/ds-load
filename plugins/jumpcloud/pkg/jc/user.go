@@ -2,17 +2,24 @@ package jc
 
 import "time"
 
+const TypeUser string = "user"
+
+type BaseUser struct {
+	IID         string `json:"_id"`
+	ID          string `json:"id"`
+	Type        string `json:"type"`
+	DisplayName string `json:"displayname"`
+	Email       string `json:"email"`
+	Username    string `json:"username"`
+}
+
 type User struct {
-	JCID                          string        `json:"_id"`
-	ID                            string        `json:"id"`
-	Username                      string        `json:"username"`
-	Displayname                   string        `json:"displayname"`
-	Email                         string        `json:"email"`
+	BaseUser
 	SystemUsername                string        `json:"systemUsername"`
 	Activated                     bool          `json:"activated"`
-	Firstname                     string        `json:"firstname"`
-	Middlename                    string        `json:"middlename"`
-	Lastname                      string        `json:"lastname"`
+	FirstName                     string        `json:"firstname"`
+	MiddleName                    string        `json:"middlename"`
+	LastName                      string        `json:"lastname"`
 	Organization                  string        `json:"organization"`
 	JobTitle                      string        `json:"jobTitle"`
 	Description                   string        `json:"description"`
@@ -30,7 +37,7 @@ type User struct {
 	EmployeeIdentifier            interface{}   `json:"employeeIdentifier"`
 	EmployeeType                  string        `json:"employeeType"`
 	EnableManagedUID              bool          `json:"enable_managed_uid"`
-	EnableUserPortalMultifactor   bool          `json:"enable_user_portal_multifactor"`
+	EnableUserPortalMultiFactor   bool          `json:"enable_user_portal_multifactor"`
 	ExternalDn                    string        `json:"external_dn"`
 	ExternalSourceType            string        `json:"external_source_type"`
 	ExternallyManaged             bool          `json:"externally_managed"`
@@ -39,21 +46,21 @@ type User struct {
 	ManagedAppleID                string        `json:"managedAppleId"`
 	Manager                       interface{}   `json:"manager"`
 	Mfa                           struct {
-		Configured bool `json:"configured"`
-		Exclusion  bool `json:"exclusion"`
-	} `json:"mfa"`
+		Configured bool `json:"configured,omitempty"`
+		Exclusion  bool `json:"exclusion,omitempty"`
+	} `json:"mfa,omitempty"`
 	MfaEnrollment struct {
-		OverallStatus  string `json:"overallStatus"`
-		PushStatus     string `json:"pushStatus"`
-		TotpStatus     string `json:"totpStatus"`
-		WebAuthnStatus string `json:"webAuthnStatus"`
-	} `json:"mfaEnrollment"`
+		OverallStatus  string `json:"overallStatus,omitempty"`
+		PushStatus     string `json:"pushStatus,omitempty"`
+		TotpStatus     string `json:"totpStatus,omitempty"`
+		WebAuthnStatus string `json:"webAuthnStatus,omitempty"`
+	} `json:"mfaEnrollment,omitempty"`
 	PasswordDate         time.Time     `json:"password_date"`
 	PasswordExpired      bool          `json:"password_expired"`
 	PasswordNeverExpires bool          `json:"password_never_expires"`
 	PasswordlessSudo     bool          `json:"passwordless_sudo"`
 	PhoneNumbers         []interface{} `json:"phoneNumbers"`
-	RestrictedFields     []interface{} `json:"restrictedFields"`
+	RestrictedFields     []interface{} `json:"restrictedFields,omitempty"`
 	SambaServiceUser     bool          `json:"samba_service_user"`
 	SSHKeys              []interface{} `json:"ssh_keys"`
 	State                string        `json:"state"`

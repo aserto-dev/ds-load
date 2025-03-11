@@ -1,110 +1,73 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if $.account_locked}}
+  {{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
+
 {
-{{$email := $.primaryEmail}}
   "objects": [
-  {{ if contains $.kind "admin#directory#user" }}
-    {
-      "id": "{{ $email }}",
-      "type": "user",
-      "displayName": "{{ $.name.fullName }}",
-      "created_at":"{{ $.creationTime }}",
-      "properties":{
-        "id": "{{ $.id }}",
-        "email": "{{ $email }}",
-        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-        {{ if $.recoveryPhone }}
-        "phone": "{{ $.recoveryPhone }}",
-        {{ end }}
-        {{ if $.thumbnailPhotoUrl }}
-        "picture": "{{ $.thumbnailPhotoUrl }}",
-        {{ end }}
-        {{ if $.isAdmin }}
-        "isAdmin": true
-        {{ else }}
-        "isAdmin": false
-        {{ end }}
-      }
-    },
-    {
-      "id": "{{ $email }}",
-      "type": "identity",
-      "properties": {
-        "kind": "IDENTITY_KIND_EMAIL",
-        "provider": "google-workspace",
-        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-        "verified": true
-      }
-    },
+  {{ if eq $.type "user" }}
     {
       "id": "{{ $.id }}",
-      "type": "identity",
-      "properties": {
-        "kind": "IDENTITY_KIND_PID",
-        "provider": "google-workspace",
-        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-        "verified": true
-      }
-    }
-  {{ end }}
-
-  {{ if contains $.kind "admin#directory#group" }}
-    {
-      "id": "{{ $.email }}",
-      "type": "group",
-      "displayName": "{{ $.name }}",
+      "type": "user",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }}",
       "properties": {
         "email": "{{ $.email }}",
-        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
-        "id": "{{ $.id }}"
-      }
+        "organization_id": "{{ $.organization }}",
+        "status": "{{ $status }}",
+        "user_id": "{{ $.id }}",
+        "username": "{{ $.username }}"
+      },
+      "created_at": "{{ $.created }}"
+    },
+    {
+      "id": "{{ $.email }}",
+      "type": "identity",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (email)"
+    },
+    {
+      "id": "{{ $.username }}",
+      "type": "identity",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (username)"
+    }
+  {{ end }}
+  
+  {{ if eq $.type "user_group" }}
+    {
+      "id": "{{ $.name }}",
+      "type": "group",
+      "display_name": "{{ $.name }}"
     }
   {{ end }}
   ],
-  "relations":[  
-    {{ if contains $.kind "admin#directory#user" }}
+  "relations": [
+  {{ if eq $.type "user" }}
     {
-      "object_type": "identity",
-      "object_id": "{{$.id}}",
+      "object_type": "user",
+      "object_id": "{{ $.id }}",
       "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$email}}"
+      "subject_type": "identity",
+      "subject_id": "{{ $.email }}"
     },
     {
-      "object_type": "identity",
-      "object_id": "{{$email}}",
+      "object_type": "user",
+      "object_id": "{{ $.id }}",
       "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$email}}"
+      "subject_type": "identity",
+      "subject_id": "{{ $.username }}"
     }
-    {{ end }}
+  {{ end }}
 
-    {{ if contains $.kind "admin#directory#group" }}
-      {{ $index := 0 }}
-      {{ range $i, $element := $.users }}
-
-      {{ $subject_type := $element.type }}
-
-      {{ if contains $element.type "USER" }}
-        {{ $subject_type = "user" }}
-      {{ else if contains $element.type "GROUP"}}
-        {{ $subject_type = "group" }}
-      {{ else }}
-        {{ continue }}
-      {{ end }}
-      
-      {{ if $index }},{{ end }}
-      {{$index = add $index 1}}
-
-      {
-        "object_type": "group",
-        "object_id": "{{$.email}}",
-        "relation": "member",
-        "subject_type": "{{$subject_type}}",
-        {{ if contains $element.type "GROUP" }}
-        "subject_relation": "member",
-        {{ end }}
-        "subject_id": "{{$element.email}}"
-      }
-      {{ end }}
-    {{ end }}
+  {{ if eq $.type "user_group" }}
+  {{ range $i, $user := $.users }}
+    {{ if $i }},{{ end }}
+    {
+      "object_type": "group",
+      "object_id": "{{ $.name }}",
+      "relation": "member",
+      "subject_type": "user",
+      "subject_id": "{{ $user.id }}"
+    }
+  {{ end }}
+  {{ end }}
   ]
 }
