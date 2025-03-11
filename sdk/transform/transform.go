@@ -66,8 +66,7 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 		return errors.Wrap(err, "failed to transform idpData into directory objects and relations")
 	}
 
-	err = jsonWriter.WriteProtoMessage(dirV3msg)
-	if err != nil {
+	if err := jsonWriter.WriteProtoMessage(dirV3msg); err != nil {
 		return errors.Wrap(err, "failed to write directory objects to output")
 	}
 	return nil
