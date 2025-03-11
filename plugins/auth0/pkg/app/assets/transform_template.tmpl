@@ -98,40 +98,40 @@
   "relations":[
   {{ if eq $object_type "user" }}
       {
+        "object_type": "user",
+        "object_id": "{{ $user_object_id }}",
         "relation": "identifier",
-        "subject_type": "user",
-        "subject_id": "{{ $user_object_id }}",
-        "object_type": "identity",
-        "object_id": "{{ $.user_id }}"
+        "subject_type": "identity",
+        "subject_id": "{{ $.user_id }}"
       }
     {{ if $.email }}
     ,
       {
+        "object_type": "user",
+        "object_id": "{{ $user_object_id }}",
         "relation": "identifier",
-        "subject_type": "user",
-        "subject_id": "{{ $user_object_id }}",
-        "object_type": "identity",
-        "object_id": "{{ $.email }}"
+        "subject_type": "identity",
+        "subject_id": "{{ $.email }}"
       }
     {{ end }}
     {{ if and ($.username) (ne $.username "") }}
     ,
       {
+        "object_type": "user",
+        "object_id": "{{ $user_object_id }}",
         "relation": "identifier",
-        "subject_type": "user",
-        "subject_id": "{{ $user_object_id }}",
-        "object_type": "identity",
-        "object_id": "{{ $.username }}"
+        "subject_type": "identity",
+        "subject_id": "{{ $.username }}"
       }
     {{ end }}
     {{ if and ($.phone_number) (ne $.phone_number "") ($.phone_verified) }}
     ,
       {
+        "object_type": "user",
+        "object_id": "{{ $user_object_id }}",
         "relation": "identifier",
-        "subject_type": "user",
-        "subject_id": "{{ $user_object_id }}",
-        "object_type": "identity",
-        "object_id": "{{ $.phone_number }}"
+        "subject_type": "identity",
+        "subject_id": "{{ $.phone_number }}"
       }
     {{ end }}
     {{ if $.roles }}, {{ end }}

@@ -58,18 +58,18 @@
   "relations":[
   {{ if eq $object_type "user" }}
     {
-      "object_type": "identity",
+      "object_type": "user",
       "object_id": "{{$.Username}}",
       "relation": "identifier",
-      "subject_type": "user",
+      "subject_type": "identity",
       "subject_id": "{{$.Username}}"
     },
     {
-      "object_type": "identity",
-      "object_id": "{{$email}}",
+      "object_type": "user",
+      "object_id": "{{$.Username}}",
       "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$.Username}}"
+      "subject_type": "identity",
+      "subject_id": "{{$email}}"
     }
 
     {{ if $.Groups }}, {{ end }}

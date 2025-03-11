@@ -62,17 +62,17 @@
   "relations":[  
     {{ if contains $.kind "admin#directory#user" }}
     {
-      "object_type": "identity",
-      "object_id": "{{$.id}}",
-      "relation": "identifier",
-      "subject_type": "user",
-      "subject_id": "{{$email}}"
-    },
-    {
-      "object_type": "identity",
+      "object_type": "user",
       "object_id": "{{$email}}",
       "relation": "identifier",
-      "subject_type": "user",
+      "subject_type": "identity",
+      "subject_id": "{{$.id}}"
+    },
+    {
+      "object_type": "user",
+      "object_id": "{{$email}}",
+      "relation": "identifier",
+      "subject_type": "identity",
       "subject_id": "{{$email}}"
     }
     {{ end }}
