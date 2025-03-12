@@ -139,3 +139,34 @@ func TestGetMembersOfGroup(t *testing.T) {
 		}
 	}
 }
+
+func TestExpandMembersOfGroup(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	require.NoError(t, err)
+
+	users, err := jcc.ListUsers(ctx)
+	require.NoError(t, err)
+
+	idLookup := map[string]*jc.BaseUser{}
+	for _, u := range users {
+		idLookup[u.ID] = &u.BaseUser
+	}
+
+	groups, err := jcc.ListGroups(ctx, jc.UserGroups)
+	require.NoError(t, err)
+
+	enc := json.NewEncoder(os.Stderr)
+	enc.SetEscapeHTML(false)
+	enc.SetIndent("", "  ")
+
+	for _, group := range groups {
+		users, err := jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
+		require.NoError(t, err)
+		if err := enc.Encode(users); err != nil {
+			require.NoError(t, err)
+		}
+	}
+}
