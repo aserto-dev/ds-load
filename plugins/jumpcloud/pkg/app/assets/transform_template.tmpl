@@ -11,6 +11,7 @@
       "type": "user",
       "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }}",
       "properties": {
+        {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }},
         "email": "{{ $.email }}",
         "organization_id": "{{ $.organization }}",
         "status": "{{ $status }}",
@@ -22,12 +23,18 @@
     {
       "id": "{{ $.email }}",
       "type": "identity",
-      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (email)"
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (email)",
+      "properties": {
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          }
     },
     {
       "id": "{{ $.username }}",
       "type": "identity",
-      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (username)"
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (username)",
+      "properties": {
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          }
     }
   {{ end }}
   
@@ -35,7 +42,10 @@
     {
       "id": "{{ $.name }}",
       "type": "group",
-      "display_name": "{{ $.name }}"
+      "display_name": "{{ $.name }}",
+      "properties": {
+            {{ fromEnv "connection_id" "ASERTO_CONNECTION_ID" }}
+          }
     }
   {{ end }}
   ],
