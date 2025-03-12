@@ -167,6 +167,64 @@ func (c *JumpCloudClient) GetUsersInGroup(ctx context.Context, groupID string) (
 	return users, nil
 }
 
+func (c *JumpCloudClient) ExpandUsersInGroup(ctx context.Context, groupID string, idLookup map[string]*BaseUser) ([]*BaseUser, error) {
+	u, err := url.Parse(baseURL + "/v2/usergroups/" + groupID + "/members")
+	if err != nil {
+		return nil, err
+	}
+
+	qv := u.Query()
+	qv.Add("limit", strconv.FormatInt(int64(batchSize), 10))
+	qv.Add("skip", strconv.FormatInt(0, 10))
+
+	u.RawQuery = qv.Encode()
+
+	members := []struct {
+		To struct {
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Attributes any    `json:"attributes"`
+		}
+		Attributes any `json:"attributes"`
+	}{}
+
+	idList := []string{}
+
+	for {
+		if err := makeHTTPRequest(ctx, u.String(), http.MethodGet, c.headers, nil, nil, &members); err != nil {
+			return nil, err
+		}
+
+		for _, v := range members {
+			idList = append(idList, v.To.ID)
+		}
+
+		if len(members) != batchSize {
+			break
+		}
+
+		qv := u.Query()
+		qv.Set("skip", strconv.FormatInt(int64(len(idList)), 10))
+		u.RawQuery = qv.Encode()
+	}
+
+	users := []*BaseUser{}
+
+	for _, id := range idList {
+		if user, ok := idLookup[id]; ok {
+			users = append(users, user)
+		} else {
+			user, err := c.GetBaseUserByID(ctx, id)
+			if err != nil {
+				return nil, err
+			}
+			users = append(users, user)
+		}
+	}
+
+	return users, nil
+}
+
 func (c *JumpCloudClient) GetBaseUserByID(ctx context.Context, id string) (*BaseUser, error) {
 	url := baseURL + "/Systemusers/" + id + "?limit=1&skip=0"
 

@@ -37,6 +37,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		return err
 	}
 
+	idLookup := map[string]*jc.BaseUser{}
+
 	for _, user := range users {
 		userBytes, err := json.Marshal(user)
 		if err != nil {
@@ -56,6 +58,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
+
+		idLookup[user.ID] = &user.BaseUser
 	}
 
 	if f.Groups {
@@ -81,7 +85,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				continue
 			}
 
-			usersInGroup, err := f.jcc.GetUsersInGroup(ctx, group.ID)
+			usersInGroup, err := f.jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
 			if err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				common.SetExitCode(1)
