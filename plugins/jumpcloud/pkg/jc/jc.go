@@ -84,6 +84,7 @@ const (
 
 func (c *JumpCloudClient) ListGroups(ctx context.Context, groupType GroupType) ([]*Group, error) {
 	var url string
+
 	switch groupType {
 	case AllGroups:
 		url = baseURL + "/v2/groups"
@@ -161,6 +162,7 @@ func (c *JumpCloudClient) GetUsersInGroup(ctx context.Context, groupID string) (
 		if err != nil {
 			return nil, err
 		}
+
 		users = append(users, user)
 	}
 
@@ -218,6 +220,7 @@ func (c *JumpCloudClient) ExpandUsersInGroup(ctx context.Context, groupID string
 			if err != nil {
 				return nil, err
 			}
+
 			users = append(users, user)
 		}
 	}
@@ -272,6 +275,7 @@ func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers 
 		for k, v := range queryParams {
 			q.Set(k, strings.Join(v, ","))
 		}
+
 		u.RawQuery = q.Encode()
 	}
 
@@ -303,8 +307,7 @@ func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers 
 		return errors.Wrapf(ErrStatusNotOK, "req: %s status: %s response: %s", u.String(), res.Status, buf)
 	}
 
-	err = json.Unmarshal(buf, &resp)
-	if err != nil {
+	if err := json.Unmarshal(buf, &resp); err != nil {
 		return err
 	}
 

@@ -37,6 +37,7 @@ func NewAzureADClient(ctx context.Context, tenant, clientID, clientSecret string
 	if err != nil {
 		return nil, err
 	}
+
 	return c, nil
 }
 
@@ -52,6 +53,7 @@ func NewAzureADClientWithRefreshToken(ctx context.Context, tenant, clientID, cli
 	if err != nil {
 		return nil, err
 	}
+
 	return c, nil
 }
 
@@ -76,6 +78,7 @@ func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string, groups
 		filter := fmt.Sprintf("userPrincipalName eq '%s'", email)
 		return c.listUsers(ctx, filter, groups)
 	}
+
 	return azureadUsers, err
 }
 
@@ -176,5 +179,6 @@ func (c *AzureADClient) initClient(credential azcore.TokenCredential) error {
 	// Create a Graph client using request adapter
 	c.appClient = msgraphsdk.NewMsgraph(adapter)
 	c.requestAdaptor = adapter
+
 	return nil
 }

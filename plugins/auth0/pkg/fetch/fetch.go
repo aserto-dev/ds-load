@@ -82,41 +82,39 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 
 		users, more, err := f.getUsers(ctx, opts)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
 
 		for _, user := range users {
 			res, err := user.MarshalJSON()
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				continue
 			}
+
 			var obj map[string]interface{}
-			err = json.Unmarshal(res, &obj)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+			if err := json.Unmarshal(res, &obj); err != nil {
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				continue
 			}
+
 			obj["email_verified"] = user.GetEmailVerified()
 			obj["object_type"] = "user"
+
 			if f.Roles {
 				roles, err := f.getUserRoles(ctx, *user.ID)
 				if err != nil {
-					_, _ = errorWriter.Write([]byte(err.Error()))
-					common.SetExitCode(1)
+					common.WriteErrorWithExitCode(errorWriter, err, 1)
 				} else {
 					obj["roles"] = roles
 				}
 			}
+
 			if f.Orgs {
 				orgs, err := f.getOrgs(ctx, *user.ID)
 				if err != nil {
-					_, _ = errorWriter.Write([]byte(err.Error()))
-					common.SetExitCode(1)
+					common.WriteErrorWithExitCode(errorWriter, err, 1)
 				} else {
 					obj["orgs"] = orgs
 				}
@@ -127,9 +125,11 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 				return err
 			}
 		}
+
 		if !more {
 			break
 		}
+
 		page++
 	}
 
@@ -141,35 +141,37 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 
 	for f.Roles {
 		opts := []management.RequestOption{management.Page(page)}
+
 		if f.ConnectionName != "" {
 			opts = append(opts, management.Query(f.getConnectionQuery()))
 		}
 
 		roles, more, err := f.getRoles(ctx, opts)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
 
 		for _, role := range roles {
 			res := role.String()
+
 			var obj map[string]interface{}
-			err = json.Unmarshal([]byte(res), &obj)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+
+			if err := json.Unmarshal([]byte(res), &obj); err != nil {
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				continue
 			}
+
 			obj["object_type"] = "role"
-			err = outputWriter.Write(obj)
-			if err != nil {
+			if err := outputWriter.Write(obj); err != nil {
 				return err
 			}
 		}
+
 		if !more {
 			break
 		}
+
 		page++
 	}
 
@@ -187,34 +189,41 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 		if err != nil {
 			return nil, false, err
 		}
+
 		if user == nil {
 			return nil, false, errors.Wrapf(err, "failed to get user by pid %s", f.UserPID)
 		}
+
 		return []*management.User{user}, false, nil
-	} else if f.UserEmail != "" {
+	}
+
+	if f.UserEmail != "" {
 		// List only users that have the provided email
 		users, err := f.client.Mgmt.User.ListByEmail(ctx, f.UserEmail)
 		if err != nil {
 			return nil, false, err
 		}
+
 		return users, false, nil
-	} else {
-		// List all users
-		if !f.SAML {
-			userList, err := f.client.Mgmt.User.List(ctx, opts...)
-			if err != nil {
-				return nil, false, err
-			}
-			return userList.Users, userList.HasNext(), nil
-		} else {
-			// Use special SAML user list, to avoid known unmarshal errors, see notes below.
-			ul := &UserList{}
-			if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
-				return nil, false, err
-			}
-			return ul.UserList(), ul.HasNext(), nil
-		}
 	}
+
+	// List all users
+	if !f.SAML {
+		userList, err := f.client.Mgmt.User.List(ctx, opts...)
+		if err != nil {
+			return nil, false, err
+		}
+
+		return userList.Users, userList.HasNext(), nil
+	}
+
+	// Use special SAML user list, to avoid known unmarshal errors, see notes below.
+	ul := &UserList{}
+	if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
+		return nil, false, err
+	}
+
+	return ul.UserList(), ul.HasNext(), nil
 }
 
 func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption) ([]*management.Role, bool, error) {
@@ -222,6 +231,7 @@ func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption)
 	if err != nil {
 		return nil, false, err
 	}
+
 	if roles == nil {
 		return nil, false, errors.Wrap(err, "failed to get roles")
 	}
@@ -241,28 +251,33 @@ func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]in
 		}
 
 		reqOpts := management.Page(page)
+
 		roles, err := f.client.Mgmt.User.Roles(ctx, uID, reqOpts)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, role := range roles.Roles {
 			res, err := json.Marshal(role)
 			if err != nil {
 				return nil, err
 			}
+
 			var obj map[string]interface{}
-			err = json.Unmarshal(res, &obj)
-			if err != nil {
+			if err := json.Unmarshal(res, &obj); err != nil {
 				return nil, err
 			}
+
 			results = append(results, obj)
 		}
+
 		if !roles.HasNext() {
 			finished = true
 		}
 
 		page++
 	}
+
 	return results, nil
 }
 
@@ -278,22 +293,26 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 		}
 
 		reqOpts := management.Page(page)
+
 		orgs, err := f.client.Mgmt.User.Organizations(ctx, uID, reqOpts)
 		if err != nil {
 			return nil, err
 		}
+
 		for _, org := range orgs.Organizations {
 			res, err := json.Marshal(org)
 			if err != nil {
 				return nil, err
 			}
+
 			var obj map[string]interface{}
-			err = json.Unmarshal(res, &obj)
-			if err != nil {
+			if err := json.Unmarshal(res, &obj); err != nil {
 				return nil, err
 			}
+
 			results = append(results, obj)
 		}
+
 		if !orgs.HasNext() {
 			finished = true
 		}
@@ -308,6 +327,7 @@ func (f *Fetcher) getConnectionQuery() string {
 	if f.ConnectionName == "" {
 		return ""
 	}
+
 	return `identities.connection:"` + f.ConnectionName + `"`
 }
 
@@ -358,11 +378,13 @@ func (u *User) UnmarshalJSON(b []byte) error {
 	}
 
 	type tTmpUser User
+
 	var tmpUser tTmpUser
 
 	if err := json.Unmarshal(buf, &tmpUser); err != nil {
 		return err
 	}
+
 	tmpUser.VerifyEmail = &verified
 
 	*u = User(tmpUser)
@@ -398,7 +420,7 @@ func ListUsers(ctx context.Context, m *management.Management, payload interface{
 	}
 
 	if len(responseBody) > 0 && string(responseBody) != "{}" {
-		if err = json.Unmarshal(responseBody, &payload); err != nil {
+		if err := json.Unmarshal(responseBody, &payload); err != nil {
 			return fmt.Errorf("failed to unmarshal response payload: %w", err)
 		}
 	}

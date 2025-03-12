@@ -3,6 +3,12 @@
 # https://github.com/golangci/golangci/wiki/Configuration
 
 linters-settings:
+  depguard:
+    rules:
+      Main:
+        deny:
+          - pkg: github.com/sirupsen/logrus
+            desc: "logging is allowed only by zerolog"
   dupl:
     threshold: 100
   funlen:
@@ -50,9 +56,10 @@ linters:
   enable:
     - asciicheck
     - bodyclose
+    - depguard
     - dogsled
     - errcheck
-    - copyloopvar
+    - exportloopref
     - exhaustive
     - funlen
     - gochecknoinits
@@ -60,7 +67,7 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - err113
+    - goerr113
     - gofmt
     - goimports
     - goprintffuncname
@@ -79,21 +86,8 @@ linters:
     - unconvert
     - unparam
     - unused
-
-  # don't enable:
-    # - depguard
-    # - dupl
-    # - gochecknoglobals
-    # - gocognit
-    # - godox
-    # - gomnd
-    # - lll
-    # - nestif
-    # - nolintlint # conflict with 1.19 gofmt changes
-    # - prealloc
-    # - revive
-    # - wsl
-    # - whitespace
+    - whitespace
+    - wsl
 
 issues:
   # List of regexps of issue texts to exclude, empty list by default.
@@ -113,6 +107,18 @@ issues:
       linters:
       - gocritic
     - text: "unnamedResult:"
+      linters:
+      - gocritic
+    - path: \.resolvers\.go
+      text: "typeDefFirst:"
+      linters:
+      - gocritic
+    - path: \.resolvers\.go
+      text: "paramTypeCombine:"
+      linters:
+      - gocritic
+    - path: \.resolvers\.go
+      text: "hugeParam:"
       linters:
       - gocritic
     - text: "G404"

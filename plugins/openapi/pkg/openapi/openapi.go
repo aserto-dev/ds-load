@@ -47,16 +47,20 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 		if err != nil {
 			return nil, errors.Wrapf(err, "url not parsed: %s", specURL)
 		}
+
 		doc, err := openapi3.NewLoader().LoadFromURI(parsedURL)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specURL)
 		}
+
 		if serviceName != "" {
 			if doc.Info.Extensions == nil {
 				doc.Info.Extensions = make(map[string]interface{}, 0)
 			}
+
 			doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)
 		}
+
 		c.docs = append(c.docs, doc)
 	}
 
@@ -64,17 +68,21 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 		if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
 			return nil, errors.Wrapf(err, "directory not found: %s", directory)
 		}
+
 		files, err := os.ReadDir(directory)
 		if err != nil {
 			return nil, errors.Wrapf(err, "cannot read directory: %s", directory)
 		}
+
 		for _, file := range files {
 			if !file.IsDir() {
 				filename := fmt.Sprintf("%s/%s", directory, file.Name())
+
 				doc, err := openapi3.NewLoader().LoadFromFile(filename)
 				if err != nil {
 					return nil, errors.Wrapf(err, "cannot open file: %s", file.Name())
 				}
+
 				c.docs = append(c.docs, doc)
 			}
 		}
@@ -85,54 +93,65 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 
 func (c *Client) ListServices() ([]Service, error) {
 	services := make([]Service, 0)
+
 	for _, service := range c.docs {
 		id := ""
 		if service.Info.Extensions["ServiceName"] != "" {
 			id = service.Info.Extensions["ServiceName"].(string)
 		}
+
 		svc := newService(service.Info.Title, id, c.idFormat)
 		services = append(services, *svc)
 	}
+
 	return services, nil
 }
 
 func (c *Client) ListAPIs() ([]API, error) {
 	apis := make([]API, 0)
+
 	for _, service := range c.docs {
 		apiList := c.ListAPIsInService(service, c.idFormat)
 		apis = append(apis, apiList...)
 	}
+
 	return apis, nil
 }
 
 func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	apis := make([]API, 0)
+
 	serviceID := service.Info.Extensions["ServiceName"].(string)
 	if serviceID == "" {
 		serviceID = service.Info.Title
 	}
-	for pathKey, pathItem := range service.Paths.Map() {
 
+	for pathKey, pathItem := range service.Paths.Map() {
 		if pathItem.Get != nil {
 			api := newAPI(serviceID, service.Info.Title, "GET", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
+
 		if pathItem.Post != nil {
 			api := newAPI(serviceID, service.Info.Title, "POST", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
+
 		if pathItem.Put != nil {
 			api := newAPI(serviceID, service.Info.Title, "PUT", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
+
 		if pathItem.Patch != nil {
 			api := newAPI(serviceID, service.Info.Title, "PATCH", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
+
 		if pathItem.Delete != nil {
 			api := newAPI(serviceID, service.Info.Title, "DELETE", pathKey, idFormat)
 			apis = append(apis, *api)
 		}
+
 		if pathItem.Options != nil {
 			api := newAPI(serviceID, service.Info.Title, "OPTIONS", pathKey, idFormat)
 			apis = append(apis, *api)
@@ -147,9 +166,11 @@ func newService(name, id, idFormat string) *Service {
 	service.DisplayName = name
 	service.Type = "service"
 	service.ID = id
+
 	if id == "" {
 		service.ID = canonicalizeServiceName(name, idFormat)
 	}
+
 	return service
 }
 
@@ -162,6 +183,7 @@ func newAPI(serviceID, serviceName, method, path, idFormat string) *API {
 	api.Path = path
 	api.DisplayName = fmt.Sprintf("%s %s", method, path)
 	api.ID = canonicalizeEndpoint(api.ServiceID, method, path, idFormat)
+
 	return api
 }
 
@@ -172,6 +194,7 @@ func canonicalizePath(uri string) string {
 
 func canonicalizeEndpoint(service, method, path, idFormat string) string {
 	parts := []string{service, method}
+
 	switch idFormat {
 	case Base64:
 		parts = append(parts, path)

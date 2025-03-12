@@ -46,11 +46,13 @@ func customFunctions() template.FuncMap {
 
 func separator(s string) func() string {
 	i := -1
+
 	return func() string {
 		i++
 		if i == 0 {
 			return ""
 		}
+
 		return s
 	}
 }
@@ -63,6 +65,7 @@ func marshal(v interface{}) string {
 func fromEnv(key, envName string) string {
 	value := os.Getenv(envName)
 	strValue, _ := json.Marshal(value)
+
 	return fmt.Sprintf("%q:%s", key, string(strValue))
 }
 

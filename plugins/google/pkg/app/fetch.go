@@ -17,7 +17,6 @@ type FetchCmd struct {
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
-
 	gClient, err := googleclient.NewGoogleClient(ctx.Context, cmd.ClientID, cmd.ClientSecret, cmd.RefreshToken, cmd.Customer)
 	if err != nil {
 		return err
@@ -27,6 +26,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	fetcher = fetcher.WithGroups(cmd.Groups)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)

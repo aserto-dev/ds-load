@@ -26,5 +26,6 @@ func (cmd *VersionCmd) Run() error {
 		AppName,
 		version.GetInfo().String(),
 	)
+
 	return nil
 }

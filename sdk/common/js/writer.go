@@ -23,34 +23,40 @@ func NewJSONArrayWriter(w io.Writer) *JSONArrayWriter {
 }
 
 func (w *JSONArrayWriter) WriteProtoMessage(message protoreflect.ProtoMessage) error {
-	err := w.writeDelimiters()
-	if err != nil {
+	if err := w.writeDelimiters(); err != nil {
 		return err
 	}
+
 	jsonObj, err := protojson.Marshal(message)
 	if err != nil {
 		return err
 	}
+
 	_, err = w.writer.Write(jsonObj)
+
 	if !w.addDelimiter {
 		w.addDelimiter = true
 	}
+
 	return err
 }
 
 func (w *JSONArrayWriter) Write(message any) error {
-	err := w.writeDelimiters()
-	if err != nil {
+	if err := w.writeDelimiters(); err != nil {
 		return err
 	}
+
 	jsonObj, err := json.Marshal(message)
 	if err != nil {
 		return err
 	}
+
 	_, err = w.writer.Write(jsonObj)
+
 	if !w.addDelimiter {
 		w.addDelimiter = true
 	}
+
 	return err
 }
 
@@ -67,9 +73,11 @@ func (w *JSONArrayWriter) Close() error {
 		if err != nil {
 			return err
 		}
+
 		w.addDelimiter = false
 		w.writer = nil
 	}
+
 	return nil
 }
 
@@ -79,13 +87,16 @@ func (w *JSONArrayWriter) writeDelimiters() error {
 		if err != nil {
 			return err
 		}
+
 		w.arrayInitialized = true
 	}
+
 	if w.addDelimiter {
 		_, err := w.writer.Write([]byte{','})
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
 }

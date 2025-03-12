@@ -37,9 +37,11 @@ func NewHomeDirFinder(env bool) (*Finder, error) {
 func (f Finder) Find() ([]*Plugin, error) {
 	addedPlugins := []string{}
 	dirs := f.dirs
+
 	if f.env {
 		pathEnv := os.Getenv("PATH")
 		dirs = append(dirs, strings.Split(pathEnv, string(os.PathListSeparator))...)
+
 		pwd, err := os.Getwd()
 		if err != nil {
 			fmt.Println(err)
@@ -55,6 +57,7 @@ func (f Finder) Find() ([]*Plugin, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if len(files) > 0 {
 			for _, f := range files {
 				p := NewPlugin(f)

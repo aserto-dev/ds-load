@@ -34,35 +34,33 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	if f.Groups {
 		aadGroups, err := f.azureClient.ListGroups(ctx)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 		}
 
 		for _, group := range aadGroups {
 			writer := kiota.NewJsonSerializationWriter()
+
 			err := group.Serialize(writer)
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				return err
 			}
+
 			groupBytes, err := writer.GetSerializedContent()
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				return err
 			}
 
 			groupString := "{" + string(groupBytes) + "}"
+
 			var obj map[string]interface{}
-			err = json.Unmarshal([]byte(groupString), &obj)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-				common.SetExitCode(1)
+			if err := json.Unmarshal([]byte(groupString), &obj); err != nil {
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				return err
 			}
-			err = jsonWriter.Write(obj)
-			if err != nil {
+
+			if err := jsonWriter.Write(obj); err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
 		}
@@ -70,35 +68,33 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups)
 	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-		common.SetExitCode(1)
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
 	}
 
 	for _, user := range aadUsers {
 		writer := kiota.NewJsonSerializationWriter()
+
 		err := user.Serialize(writer)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
+
 		userBytes, err := writer.GetSerializedContent()
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
 
 		userString := "{" + string(userBytes) + "}"
+
 		var obj map[string]interface{}
-		err = json.Unmarshal([]byte(userString), &obj)
-		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-			common.SetExitCode(1)
+		if err := json.Unmarshal([]byte(userString), &obj); err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
-		err = jsonWriter.Write(obj)
-		if err != nil {
+
+		if err := jsonWriter.Write(obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}

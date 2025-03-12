@@ -18,14 +18,15 @@ type FusionAuthClient struct {
 func NewFusionAuthClient(host, apiKey string) (*FusionAuthClient, error) {
 	c := &FusionAuthClient{}
 
-	var httpClient = &http.Client{
+	httpClient := &http.Client{
 		Timeout: time.Second * 10,
 	}
 
-	var baseURL, _ = url.Parse(host)
+	baseURL, _ := url.Parse(host)
 
 	c.fusionauthClient = fusionauth.NewClient(httpClient, baseURL, apiKey)
 	c.host = host
+
 	return c, nil
 }
 
@@ -52,6 +53,7 @@ func (c *FusionAuthClient) ListUsers(ctx context.Context) ([]fusionauth.User, er
 			fmt.Println("Failed to list users:", err)
 			return nil, err
 		}
+
 		if faErrs != nil {
 			fmt.Println("Failed to list users:", faErrs)
 			return nil, faErrs
@@ -64,6 +66,7 @@ func (c *FusionAuthClient) ListUsers(ctx context.Context) ([]fusionauth.User, er
 			break
 		}
 	}
+
 	return users, nil
 }
 

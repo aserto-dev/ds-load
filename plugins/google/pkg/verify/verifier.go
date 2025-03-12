@@ -15,7 +15,6 @@ func New(ctx context.Context, client *googleclient.GoogleClient) (*Verifier, err
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

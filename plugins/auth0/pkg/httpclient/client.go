@@ -18,6 +18,7 @@ func (rl RateLimit) Wait() {
 		if rl.ResetTime.Before(time.Now()) {
 			return
 		}
+
 		duration := time.Until(rl.ResetTime)
 		time.Sleep(duration)
 	}
@@ -37,10 +38,12 @@ func (c *Transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	if err != nil || resp.StatusCode >= 400 {
 		return resp, err
 	}
+
 	rl, err := parseRateLimit(resp)
 	if err != nil {
 		return resp, err
 	}
+
 	c.rateLimiter = rl
 
 	return resp, err
@@ -63,6 +66,7 @@ func parseRateLimit(resp *http.Response) (*RateLimit, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse X-RateLimit-Reset header")
 	}
+
 	rl.ResetTime = time.Unix(int64(reset), 0)
 
 	return &rl, nil

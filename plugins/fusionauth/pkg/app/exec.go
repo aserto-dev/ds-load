@@ -14,7 +14,6 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-
 	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(cmd.HostURL, cmd.APIKey)
 	if err != nil {
 		return err
@@ -24,12 +23,15 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	fetcher = fetcher.WithGroups(cmd.Groups).WithHost(cmd.HostURL)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
+
 	transformer := transform.NewGoTemplateTransform(templateContent)
+
 	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }
