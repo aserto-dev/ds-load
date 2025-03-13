@@ -17,7 +17,6 @@ func New(ctx context.Context, client *azureclient.AzureADClient) (*Verifier, err
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) WithGroups(groups bool) *Verifier {

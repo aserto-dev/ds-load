@@ -16,7 +16,6 @@ func New(ctx context.Context, client *auth0client.Auth0Client) (*Verifier, error
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

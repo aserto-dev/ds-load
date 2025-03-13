@@ -41,6 +41,7 @@ func NewJSONArrayReader(r io.Reader) (*JSONArrayReader, error) {
 // returns io.EOF at the end of the input stream.
 func (r *JSONArrayReader) ReadProtoMessage(message proto.Message) error {
 	more, err := r.more()
+
 	switch {
 	case err != nil:
 		return err
@@ -56,11 +57,13 @@ func (r *JSONArrayReader) Read(message any) error {
 	if err != nil {
 		return err
 	}
+
 	if more {
 		if err := r.decoder.Decode(&message); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -74,6 +77,7 @@ func (r *JSONArrayReader) more() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
 	if delim, ok := tok.(json.Delim); !ok && delim.String() != "]" {
 		return false, errors.Errorf("file does not contain a JSON array")
 	}

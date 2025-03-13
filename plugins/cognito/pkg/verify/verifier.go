@@ -15,7 +15,6 @@ func New(ctx context.Context, client *cognitoclient.CognitoClient) (*Verifier, e
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

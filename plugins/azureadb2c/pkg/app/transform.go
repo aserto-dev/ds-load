@@ -21,6 +21,7 @@ func (t *TransformCmd) Run(ctx *cc.CommonCtx) error {
 	}
 
 	goTemplateTransformer := transform.NewGoTemplateTransform(template)
+
 	return t.transform(ctx.Context, goTemplateTransformer)
 }
 
@@ -29,8 +30,11 @@ func (t *TransformCmd) transform(ctx context.Context, transformer plugin.Transfo
 }
 
 func (t *TransformCmd) getTemplateContent() ([]byte, error) {
-	var templateContent []byte
-	var err error
+	var (
+		templateContent []byte
+		err             error
+	)
+
 	if t.Template == "" {
 		templateContent, err = Assets().ReadFile("assets/transform_template.tmpl")
 		if err != nil {
@@ -42,5 +46,6 @@ func (t *TransformCmd) getTemplateContent() ([]byte, error) {
 			return nil, err
 		}
 	}
+
 	return templateContent, nil
 }

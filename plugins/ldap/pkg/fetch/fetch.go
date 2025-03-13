@@ -76,10 +76,11 @@ func entryType(ldapEntry *ldap.Entry, groupDnToKey map[string]string) string {
 }
 
 func buildMapFromDNToKey(ldapEntries []*ldap.Entry, key string) map[string]string {
-	var mapDNToKey = make(map[string]string)
+	mapDNToKey := make(map[string]string)
 	for _, entry := range ldapEntries {
 		mapDNToKey[entry.DN] = extractKey(key, entry)
 	}
+
 	return mapDNToKey
 }
 

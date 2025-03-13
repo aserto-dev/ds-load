@@ -38,7 +38,8 @@ func addMembersByType(attributes map[string][]string, userDnTOKey, groupDnTOKey 
 }
 
 func decodeAttributes(ldapEntry *ldap.Entry) map[string][]string {
-	var data = make(map[string][]string)
+	data := make(map[string][]string)
+
 	for _, attribute := range ldapEntry.Attributes {
 		if attribute.Name == "objectSid" {
 			data[attribute.Name] = []string{ObjectSid(ldapEntry)}
@@ -52,6 +53,7 @@ func decodeAttributes(ldapEntry *ldap.Entry) map[string][]string {
 
 		data[attribute.Name] = attribute.Values
 	}
+
 	return data
 }
 
@@ -63,6 +65,7 @@ func ObjectSid(entry *ldap.Entry) string {
 	if len(rawObjectSid) > 0 {
 		return objectsid.Decode(rawObjectSid).String()
 	}
+
 	return ""
 }
 
@@ -73,12 +76,15 @@ func ObjectGUID(entry *ldap.Entry) string {
 	rawObjectGUID := entry.GetRawAttributeValue("objectGUID")
 	if len(rawObjectGUID) > 0 {
 		objectGUID := entry.GetRawAttributeValue("objectGUID")
+
 		uuidString, err := uuid.FromBytes(objectGUID)
 		if err != nil {
 			return ""
 		}
+
 		return uuidToComStyle(uuidString.String())
 	}
+
 	return ""
 }
 
@@ -89,6 +95,7 @@ func ObjectGUID(entry *ldap.Entry) string {
 */
 func uuidToComStyle(token string) string {
 	token = strings.ReplaceAll(token, "-", "")
+
 	return fmt.Sprintf("%s%s%s%s-%s%s-%s%s-%s%s-%s%s%s%s%s%s",
 		token[6:8], token[4:6], token[2:4], token[0:2], token[10:12], token[8:10], token[14:16], token[12:14],
 		token[16:18], token[18:20], token[20:22], token[22:24], token[24:26], token[26:28], token[28:30], token[30:32])

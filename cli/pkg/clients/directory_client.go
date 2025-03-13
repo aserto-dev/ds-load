@@ -71,11 +71,14 @@ func validate(cfg *Config) error {
 	opts := []grpc.DialOption{
 		grpc.WithUserAgent("ds-load " + version.GetInfo().Version),
 	}
+
 	if cfg.Insecure {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
+
 	if _, err := grpcurl.BlockingDial(ctx, "tcp", cfg.Host, creds, opts...); err != nil {
 		return err
 	}
+
 	return nil
 }

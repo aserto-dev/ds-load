@@ -37,6 +37,7 @@ func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions, logg
 	if err != nil {
 		return nil, err
 	}
+
 	ldapClient.ldapConn = ldapConn
 	ldapClient.credentials = credentials
 	ldapClient.conOptions = conOptions
@@ -94,6 +95,7 @@ func (l *LDAPClient) search(filter string) []*ldap.Entry {
 		attributes,
 		nil,
 	)
+
 	sr, err := l.ldapConn.SearchWithPaging(searchRequest, 1000)
 	if err != nil {
 		log.Fatal(err)

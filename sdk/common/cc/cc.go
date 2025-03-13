@@ -22,6 +22,7 @@ func NewCommonContext(verbosity int, config string) *CommonCtx {
 		Prod:           false,
 		LogLevelParsed: logLevelParsed,
 	}
+
 	newLogger, err := logger.NewLogger(os.Stdout, os.Stderr, logCfg)
 	if err != nil {
 		log.Fatalf("failed to initialize logger: %s", err.Error())

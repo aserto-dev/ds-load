@@ -18,13 +18,13 @@ type CLI struct {
 	Verify          VerifyCmd          `cmd:"verify" help:"verify fetcher configuration and credentials"`
 }
 
-type VersionCmd struct {
-}
+type VersionCmd struct{}
 
 func (cmd *VersionCmd) Run() error {
 	fmt.Printf("%s - %s\n",
 		AppName,
 		version.GetInfo().String(),
 	)
+
 	return nil
 }

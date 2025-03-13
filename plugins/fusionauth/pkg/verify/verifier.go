@@ -15,7 +15,6 @@ func New(ctx context.Context, client *fusionauthclient.FusionAuthClient) (*Verif
 	return &Verifier{
 		client: client,
 	}, nil
-
 }
 
 func (v *Verifier) Verify(ctx context.Context) error {

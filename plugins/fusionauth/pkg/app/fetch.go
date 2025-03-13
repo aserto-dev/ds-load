@@ -24,6 +24,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	fetcher = fetcher.WithGroups(cmd.Groups).WithHost(cmd.HostURL)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)

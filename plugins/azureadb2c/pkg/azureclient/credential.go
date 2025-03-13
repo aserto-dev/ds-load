@@ -29,6 +29,7 @@ func NewRefreshTokenCredential(ctx context.Context, tenantID, clientID, clientSe
 		tenantID:     tenantID,
 		refreshToken: refreshToken,
 	}
+
 	return c, nil
 }
 
@@ -47,6 +48,7 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	}
 
 	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return accessToken, err
@@ -54,12 +56,13 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 
 	// process the response
 	defer res.Body.Close()
+
 	var responseData map[string]interface{}
+
 	body, _ := io.ReadAll(res.Body)
 
 	// unmarshal the json into a string map
-	err = json.Unmarshal(body, &responseData)
-	if err != nil {
+	if err := json.Unmarshal(body, &responseData); err != nil {
 		return accessToken, err
 	}
 
@@ -73,5 +76,6 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	accessToken.Token = responseData["access_token"].(string)
 	expiresIn := int(responseData["expires_in"].(float64))
 	accessToken.ExpiresOn = time.Now().Add(time.Second * time.Duration(expiresIn))
+
 	return accessToken, nil
 }

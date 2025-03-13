@@ -22,6 +22,7 @@ func (t *TransformCmd) Run(ctx *cc.CommonCtx) error {
 	}
 
 	goTemplateTransformer := transform.NewGoTemplateTransform(templateContent)
+
 	return t.transform(ctx.Context, goTemplateTransformer)
 }
 
@@ -36,6 +37,7 @@ func (t *TransformCmd) getTemplateContent() ([]byte, error) {
 	}
 
 	templateLoader := template.NewTemplateLoader(templateContent)
+
 	templateContent, err = templateLoader.Load(t.Template)
 	if err != nil {
 		return nil, err
