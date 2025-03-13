@@ -43,23 +43,24 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 	for i := range users {
 		user := &users[i]
+
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			return err
 		}
+
 		var obj map[string]interface{}
-		err = json.Unmarshal(userBytes, &obj)
-		if err != nil {
+		if err := json.Unmarshal(userBytes, &obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			return err
 		}
+
 		if user.ImageUrl != "" {
 			obj["picture"] = fmt.Sprintf("%s%s", f.host, user.ImageUrl)
 		}
 
-		err = writer.Write(obj)
-		if err != nil {
+		if err := writer.Write(obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}
@@ -72,8 +73,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 		for i := range groups {
 			group := &groups[i]
-			err = writer.Write(group)
-			if err != nil {
+			if err := writer.Write(group); err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
 		}

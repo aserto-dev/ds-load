@@ -15,6 +15,7 @@ import (
 
 func main() {
 	pluginEnum := ""
+
 	pluginFinder, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
 		os.Stderr.WriteString(err.Error())
@@ -26,9 +27,11 @@ func main() {
 		os.Stderr.WriteString(err.Error())
 		os.Exit(1)
 	}
+
 	for _, p := range plugins {
 		pluginEnum += (p.Name + "|")
 	}
+
 	pluginEnum = strings.TrimSuffix(pluginEnum, "|")
 
 	yamlLoader := kongyaml.NewYAMLResolver("")
@@ -52,9 +55,12 @@ func main() {
 	}
 
 	kongCtx := kong.Parse(&cli, options...)
+
 	ctx := cc.NewCommonContext(cli.Verbosity, string(cli.Config))
+
 	if err := kongCtx.Run(ctx); err != nil {
 		kongCtx.FatalIfErrorf(err)
 	}
+
 	os.Exit(common.GetExitCode())
 }

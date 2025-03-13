@@ -44,6 +44,7 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	plugins, err := find.Find()
 	if err != nil {
 		return err
@@ -52,8 +53,8 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	for _, p := range plugins {
 		os.Stdout.WriteString(p.Name + " " + p.Path + "\n")
 	}
-	return nil
 
+	return nil
 }
 
 type VersionCmd struct{}
@@ -63,5 +64,6 @@ func (cmd *VersionCmd) Run(c *cc.CommonCtx) error {
 		constants.AppName,
 		version.GetInfo().String(),
 	)
+
 	return nil
 }

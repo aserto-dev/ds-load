@@ -23,12 +23,12 @@ func NewOktaClient(domain, token string, requestTimeout int64) (*OktaClient, err
 		okta.WithRateLimitMaxBackOff(30),
 		okta.WithRateLimitMaxRetries(3),
 	)
-
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to create Okta configuration: %s", err.Error())
 	}
 
 	client := okta.NewAPIClient(config)
+
 	return &OktaClient{
 		User:            client.UserAPI,
 		Group:           client.GroupAPI,

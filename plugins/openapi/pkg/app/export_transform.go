@@ -14,6 +14,7 @@ func (t *ExportTransformCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	transformer := transform.NewGoTemplateTransform(templateContent)
 
 	return transformer.ExportTransform(os.Stdout)

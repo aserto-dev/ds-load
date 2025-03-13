@@ -37,8 +37,9 @@ func NewCognitoClient(accessKey, secretKey, userPoolID, region string) (*Cognito
 }
 
 func (c *CognitoClient) ListUsers(ctx context.Context) ([]*cognitoidentityprovider.UserType, error) {
-	users := make([]*cognitoidentityprovider.UserType, 0)
 	var paginationToken *string
+
+	users := make([]*cognitoidentityprovider.UserType, 0)
 
 	for {
 		listUsersInput := &cognitoidentityprovider.ListUsersInput{

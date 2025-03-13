@@ -29,12 +29,15 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	fetcher = fetcher.WithUserPID(cmd.UserPID).WithEmail(cmd.UserEmail).WithRoles(cmd.Roles)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
+
 	transformer := transform.NewGoTemplateTransform(templateContent)
+
 	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }

@@ -52,8 +52,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	for _, service := range services {
-		err = writer.Write(service)
-		if err != nil {
+		if err := writer.Write(service); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}
@@ -64,8 +63,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	for _, api := range apis {
-		err = writer.Write(api)
-		if err != nil {
+		if err := writer.Write(api); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}

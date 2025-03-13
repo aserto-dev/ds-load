@@ -19,6 +19,7 @@ import (
 const (
 	baseURL      string = "https://console.jumpcloud.com/api"
 	apiKeyHeader string = "x-api-key"
+	batchSize    int    = 50
 )
 
 type JumpCloudClient struct {
@@ -83,38 +84,18 @@ const (
 )
 
 func (c *JumpCloudClient) ListGroups(ctx context.Context, groupType GroupType) ([]*Group, error) {
-	var url string
+	var fullURL string
+
 	switch groupType {
 	case AllGroups:
-		url = baseURL + "/v2/groups"
+		fullURL = baseURL + "/v2/groups"
 	case SystemGroups:
-		url = baseURL + "/v2/groups?filter=type:eq:system_group"
+		fullURL = baseURL + "/v2/groups?filter=type:eq:system_group"
 	case UserGroups:
-		url = baseURL + "/v2/groups?filter=type:eq:user_group"
+		fullURL = baseURL + "/v2/groups?filter=type:eq:user_group"
 	}
 
-	groups := []*Group{}
-
-	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
-		return nil, err
-	}
-
-	lo.ForEach(groups, func(item *Group, index int) { item.Name = strings.ReplaceAll(item.Name, " ", "_") })
-
-	return groups, nil
-}
-
-const batchSize int = 10
-
-type Members []struct {
-	To struct {
-		Type string `json:"type"`
-		ID   string `json:"id"`
-	} `json:"to"`
-}
-
-func (c *JumpCloudClient) GetUsersInGroup(ctx context.Context, groupID string) ([]*BaseUser, error) {
-	u, err := url.Parse(baseURL + "/v2/usergroups/" + groupID + "/members")
+	u, err := url.Parse(fullURL)
 	if err != nil {
 		return nil, err
 	}
@@ -125,46 +106,35 @@ func (c *JumpCloudClient) GetUsersInGroup(ctx context.Context, groupID string) (
 
 	u.RawQuery = qv.Encode()
 
-	members := []struct {
-		To struct {
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Attributes any    `json:"attributes"`
-		}
-		Attributes any `json:"attributes"`
-	}{}
-
-	idList := []string{}
+	groups := []*Group{}
 
 	for {
-		if err := makeHTTPRequest(ctx, u.String(), http.MethodGet, c.headers, nil, nil, &members); err != nil {
+		resp := []*Group{}
+		if err := makeHTTPRequest(ctx, u.String(), http.MethodGet, c.headers, nil, nil, &resp); err != nil {
 			return nil, err
 		}
 
-		for _, v := range members {
-			idList = append(idList, v.To.ID)
-		}
+		lo.ForEach(resp, func(item *Group, index int) { item.Name = strings.ReplaceAll(item.Name, " ", "_") })
 
-		if len(members) != batchSize {
+		groups = append(groups, resp...)
+
+		if len(resp) != batchSize {
 			break
 		}
 
 		qv := u.Query()
-		qv.Set("skip", strconv.FormatInt(int64(len(idList)), 10))
+		qv.Set("skip", strconv.FormatInt(int64(len(groups)), 10))
 		u.RawQuery = qv.Encode()
 	}
 
-	users := []*BaseUser{}
+	return groups, nil
+}
 
-	for _, id := range idList {
-		user, err := c.GetBaseUserByID(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		users = append(users, user)
-	}
-
-	return users, nil
+type Members []struct {
+	To struct {
+		Type string `json:"type"`
+		ID   string `json:"id"`
+	} `json:"to"`
 }
 
 func (c *JumpCloudClient) ExpandUsersInGroup(ctx context.Context, groupID string, idLookup map[string]*BaseUser) ([]*BaseUser, error) {
@@ -218,6 +188,7 @@ func (c *JumpCloudClient) ExpandUsersInGroup(ctx context.Context, groupID string
 			if err != nil {
 				return nil, err
 			}
+
 			users = append(users, user)
 		}
 	}
@@ -272,6 +243,7 @@ func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers 
 		for k, v := range queryParams {
 			q.Set(k, strings.Join(v, ","))
 		}
+
 		u.RawQuery = q.Encode()
 	}
 
@@ -303,8 +275,7 @@ func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers 
 		return errors.Wrapf(ErrStatusNotOK, "req: %s status: %s response: %s", u.String(), res.Status, buf)
 	}
 
-	err = json.Unmarshal(buf, &resp)
-	if err != nil {
+	if err := json.Unmarshal(buf, &resp); err != nil {
 		return err
 	}
 

@@ -58,7 +58,9 @@ func NewDSPlugin(options ...PluginOption) *DSPlugin {
 // json encodes results and prints to plugin writer.
 func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error) error {
 	var wg sync.WaitGroup
+
 	wg.Add(1)
+
 	go func() {
 		for err := range errCh {
 			_, wErr := plugin.errWriter.Write([]byte(err.Error() + "\n"))
@@ -66,22 +68,27 @@ func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, er
 				log.Fatalf("cannot write to output: %s", wErr.Error())
 			}
 		}
+
 		wg.Done()
 	}()
 
 	wg.Add(1)
+
 	go func() {
 		writer := js.NewJSONArrayWriter(plugin.outWriter)
 		defer writer.Close()
+
 		for result := range results {
 			err := writer.Write(result)
 			if err != nil {
 				log.Printf("Could not write result [%s] to output", result)
 			}
 		}
+
 		wg.Done()
 	}()
 
 	wg.Wait()
+
 	return nil
 }

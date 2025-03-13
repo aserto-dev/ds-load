@@ -37,6 +37,7 @@ func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
 func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
 	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
+
 	reader, err := js.NewJSONArrayReader(ioReader)
 	if err != nil {
 		return err
@@ -44,15 +45,17 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 
 	for {
 		var idpData map[string]interface{}
+
 		err := reader.Read(&idpData)
 		if err == io.EOF {
 			break
 		}
+
 		if err != nil {
 			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
 		}
-		err = t.doTransform(idpData, jsonWriter)
-		if err != nil {
+
+		if err := t.doTransform(idpData, jsonWriter); err != nil {
 			return err
 		}
 	}
@@ -69,6 +72,7 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 	if err := jsonWriter.WriteProtoMessage(dirV3msg); err != nil {
 		return errors.Wrap(err, "failed to write directory objects to output")
 	}
+
 	return nil
 }
 
@@ -77,9 +81,11 @@ func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
 	}
+
 	if os.Getenv("DEBUG") != "" {
 		os.Stdout.WriteString(output)
 	}
+
 	var dirV3msg msg.Transform
 
 	opts := protojson.UnmarshalOptions{
@@ -87,8 +93,7 @@ func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*
 		DiscardUnknown: false,
 	}
 
-	err = opts.Unmarshal([]byte(output), &dirV3msg)
-	if err != nil {
+	if err := opts.Unmarshal([]byte(output), &dirV3msg); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal transformed data into directory v3 objects and relations")
 	}
 
@@ -97,13 +102,15 @@ func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*
 
 func (t *GoTemplateTransform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
 	temp := template.New("GoTemplateTransform")
+
 	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)
 	if err != nil {
 		return "", err
 	}
+
 	var filled bytes.Buffer
-	err = parsed.Execute(&filled, input)
-	if err != nil {
+
+	if err := parsed.Execute(&filled, input); err != nil {
 		return "", err
 	}
 

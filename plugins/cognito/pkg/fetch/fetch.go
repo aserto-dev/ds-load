@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
@@ -38,17 +39,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		for _, group := range groups {
 			groupBytes, err := json.Marshal(group)
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
 				return err
 			}
+
 			var obj map[string]interface{}
-			err = json.Unmarshal(groupBytes, &obj)
-			if err != nil {
+			if err := json.Unmarshal(groupBytes, &obj); err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
 
-			err = writer.Write(obj)
-			if err != nil {
+			if err := writer.Write(obj); err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
 		}
@@ -67,14 +67,15 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
+
 		var obj map[string]interface{}
-		err = json.Unmarshal(userBytes, &obj)
-		if err != nil {
+		if err := json.Unmarshal(userBytes, &obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
+
 		obj["Attributes"] = attributes
 
 		if f.groups {
@@ -89,16 +90,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 				_, _ = errorWriter.Write([]byte(err.Error()))
 				return err
 			}
+
 			var grps []map[string]string
-			err = json.Unmarshal(groupBytes, &grps)
-			if err != nil {
+			if err := json.Unmarshal(groupBytes, &grps); err != nil {
 				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
+
 			obj["Groups"] = grps
 		}
 
-		err = writer.Write(obj)
-		if err != nil {
+		if err := writer.Write(obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}

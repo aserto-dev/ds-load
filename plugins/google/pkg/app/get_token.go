@@ -24,5 +24,6 @@ func (cmd *GetTokenCmd) Run(ctx *cc.CommonCtx) error {
 	}
 
 	fmt.Println("Refresh token: ", refreshToken)
+
 	return nil
 }

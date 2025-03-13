@@ -14,7 +14,6 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-
 	cognitoClient, err := cognitoclient.NewCognitoClient(cmd.AccessKey, cmd.SecretKey, cmd.UserPoolID, cmd.Region)
 	if err != nil {
 		return err
@@ -24,12 +23,15 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 	if err != nil {
 		return err
 	}
+
 	fetcher = fetcher.WithGroups(cmd.Groups)
 
 	templateContent, err := cmd.getTemplateContent()
 	if err != nil {
 		return err
 	}
+
 	transformer := transform.NewGoTemplateTransform(templateContent)
+
 	return exec.Execute(ctx.Context, ctx.Log, transformer, fetcher)
 }

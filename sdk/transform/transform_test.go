@@ -18,8 +18,10 @@ import (
 func TestTransform(t *testing.T) {
 	// Arrange
 	content, err := sdk.Assets().ReadFile("assets/peoplefinder.json")
-	contentReader := strings.NewReader(string(content))
 	assert.NoError(t, err)
+
+	contentReader := strings.NewReader(string(content))
+
 	template, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
 	assert.NoError(t, err)
 
@@ -36,7 +38,7 @@ func TestTransform(t *testing.T) {
 
 	// Assert
 	bufLen := transformBuffer.Len()
-	var transformOutput = make([]byte, bufLen)
+	transformOutput := make([]byte, bufLen)
 
 	reader := bufio.NewReader(&transformBuffer)
 	_, err = reader.Read(transformOutput)
@@ -95,7 +97,9 @@ func TestTransformEscapedChars(t *testing.T) {
 	assert.NoError(t, err)
 
 	contentReader := strings.NewReader(string(content))
+
 	var transformBuffer bytes.Buffer
+
 	writer := bufio.NewWriter(&transformBuffer)
 
 	transformer := transform.NewGoTemplateTransform(transformTemplate)
@@ -108,7 +112,7 @@ func TestTransformEscapedChars(t *testing.T) {
 
 	// Assert
 	bufLen := transformBuffer.Len()
-	var transformOutput = make([]byte, bufLen)
+	transformOutput := make([]byte, bufLen)
 	reader := bufio.NewReader(&transformBuffer)
 	_, err = reader.Read(transformOutput)
 	assert.NoError(t, err)
@@ -124,6 +128,7 @@ func TestTransformEscapedChars(t *testing.T) {
 
 	objectCount := len(directoryObject.Objects)
 	assert.Equal(t, objectCount, 2)
+
 	relationCount := len(directoryObject.Relations)
 	assert.Equal(t, relationCount, 2)
 
