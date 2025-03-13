@@ -98,7 +98,7 @@ auth0:
   domain: "domain.auth0.com"
   client-id: "clientid"
   client-secret: "clientsupersecret"
-  template-file: "/path/to/transform.file"
+  template: "/path/to/transform.file"
 ```
 
 ### Plugin config
@@ -111,7 +111,7 @@ auth0:
   domain: "domain.auth0.com"
   client-id: "clientid"
   client-secret: "clientsupersecret"
-  template-file: "/path/to/transform.file"
+  template: "/path/to/transform.file"
 ```
 
 ## Transform
@@ -119,13 +119,63 @@ The data received from the fetcher is transformed into objects and relations usi
 
 The default transformation template can be exported using `ds-load <plugin-name> export-transform`.
 
-A custom transformation file can be provided when running the plugin in `exec` or `transform` mode via the `--template-file` parameter.
+A custom transformation file can be provided when running the plugin in `exec` or `transform` mode via the `--template` parameter.
 
 More information on the transformation template language can be found in the [tranform template docs](./docs/templates.md).
 
 ## Logs
 
 Logs are printed to `stdout`. You can increase detail using the verbosity flag (e.g. `-vvv`).
+
+## Fetching source data
+
+Most plugins fetch entire objects that are available in the transform template. `azuread` and `azureadb2c` use the msgraph api to query the data and by default only query only properties that are needed in the default transform template.
+
+### AzureAD and AzureADB2C
+
+To use a custom porperty list in the query, you can use the CLI parameters or configure them in your config:
+
+```
+azuread:
+  tenant: "tenant-id"
+  client-id: "client-id"
+  client-secret: "secret"
+  groups: true
+  user-properties: ["id", "displayName"]
+  group-properties: ["id", "displayName"]
+```
+
+AzureAD Groups:
+
+- displayName
+- id
+- mail
+- createdDateTime
+- mailNickname
+
+AzureADB2C Users:
+
+- displayName
+- id
+- mail
+- createdDateTime
+- mobilePhone
+- userPrincipalName
+- accountEnabled
+- identities
+- creationType
+
+AzureADB2C Groups:
+
+- displayName
+- id
+- mail
+- createdDateTime
+- mailNickname
+- members
+- transitiveMembers
+
+A list of all available properties is available on the Microsoft website for [user object type](https://learn.microsoft.com/en-us/graph/api/resources/user?view=graph-rest-1.0#properties) and [group object type](https://learn.microsoft.com/en-us/graph/api/resources/group?view=graph-rest-1.0#properties)
 
 ## Usage examples
 
@@ -136,7 +186,7 @@ ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenan
 
 ### Import data with a custom transformation file
 ```
-ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template-file=<template-path>
+ds-load --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id> auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-secret=<auth0-client-secret> --template=<template-path>
 ```
 
 ### Fetch data from auth0 without importing it
@@ -187,3 +237,4 @@ ds-load -p auth0 --domain=<auth0-domain> --client-id=<auth0-client-id> --client-
 
 cat auth0.json | ds-load publish --host=<directory-host> --api-key=<directory-api-key> --tenant-id=<tenant-id>
 ```
+

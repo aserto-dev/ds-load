@@ -8,11 +8,13 @@ import (
 )
 
 type FetchCmd struct {
-	Tenant       string `short:"a" help:"AzureAD B2C tenant" env:"AZUREADB2C_TENANT" required:""`
-	ClientID     string `short:"i" help:"AzureAD B2C Client ID" env:"AZUREADB2C_CLIENT_ID" required:""`
-	ClientSecret string `short:"s" help:"AzureAD B2C Client Secret" env:"AZUREADB2C_CLIENT_SECRET" required:""`
-	RefreshToken string `short:"r" help:"AzureAD B2C Refresh Token" env:"AZUREADB2C_REFRESH_TOKEN" optional:""`
-	Groups       bool   `short:"g" help:"Include groups" env:"AZUREADB2C_INCLUDE_GROUPS" optional:""`
+	Tenant          string   `short:"a" help:"AzureAD B2C tenant" env:"AZUREADB2C_TENANT" required:""`
+	ClientID        string   `short:"i" help:"AzureAD B2C Client ID" env:"AZUREADB2C_CLIENT_ID" required:""`
+	ClientSecret    string   `short:"s" help:"AzureAD B2C Client Secret" env:"AZUREADB2C_CLIENT_SECRET" required:""`
+	RefreshToken    string   `short:"r" help:"AzureAD B2C Refresh Token" env:"AZUREADB2C_REFRESH_TOKEN" optional:""`
+	Groups          bool     `short:"g" help:"Include groups" env:"AZUREADB2C_INCLUDE_GROUPS" optional:""`
+	UserProperties  []string `help:"User properties to query" env:"AZUREADB2C_USER_PROPERTIES" optional:"" default:"displayName,id,mail,createdDateTime,mobilePhone,userPrincipalName,accountEnabled,identities,creationType"`
+	GroupProperties []string `help:"Group properties to query" env:"AZUREADB2C_GROUP_PROPERTIES" optional:"" default:"displayName,id,mail,createdDateTime,mailNickname,members,transitiveMembers"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
@@ -21,7 +23,7 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	fetcher, err := fetch.New(ctx.Context, azureClient)
+	fetcher, err := fetch.New(ctx.Context, azureClient, cmd.UserProperties, cmd.GroupProperties)
 	if err != nil {
 		return err
 	}

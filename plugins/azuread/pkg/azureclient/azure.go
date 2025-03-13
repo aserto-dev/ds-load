@@ -57,39 +57,39 @@ func NewAzureADClientWithRefreshToken(ctx context.Context, tenant, clientID, cli
 	return c, nil
 }
 
-func (c *AzureADClient) ListUsers(ctx context.Context, groups bool) ([]models.Userable, error) {
-	return c.listUsers(ctx, "", groups)
+func (c *AzureADClient) ListUsers(ctx context.Context, groups bool, props []string) ([]models.Userable, error) {
+	return c.listUsers(ctx, "", groups, props)
 }
 
-func (c *AzureADClient) GetUserByID(ctx context.Context, id string, groups bool) ([]models.Userable, error) {
+func (c *AzureADClient) GetUserByID(ctx context.Context, id string, groups bool, props []string) ([]models.Userable, error) {
 	filter := fmt.Sprintf("id eq '%s'", id)
-	return c.listUsers(ctx, filter, groups)
+	return c.listUsers(ctx, filter, groups, props)
 }
 
-func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string, groups bool) ([]models.Userable, error) {
+func (c *AzureADClient) GetUserByEmail(ctx context.Context, email string, groups bool, props []string) ([]models.Userable, error) {
 	filter := fmt.Sprintf("mail eq '%s'", email)
 
-	azureadUsers, err := c.listUsers(ctx, filter, groups)
+	azureadUsers, err := c.listUsers(ctx, filter, groups, props)
 	if err != nil {
 		return azureadUsers, err
 	}
 
 	if len(azureadUsers) < 1 {
 		filter := fmt.Sprintf("userPrincipalName eq '%s'", email)
-		return c.listUsers(ctx, filter, groups)
+		return c.listUsers(ctx, filter, groups, props)
 	}
 
 	return azureadUsers, err
 }
 
-func (c *AzureADClient) ListGroups(ctx context.Context) ([]models.Groupable, error) {
+func (c *AzureADClient) ListGroups(ctx context.Context, props []string) ([]models.Groupable, error) {
 	result := make([]models.Groupable, 0)
 
 	groupsResp, err := c.appClient.Groups().
 		Get(ctx,
 			&adgroups.GroupsRequestBuilderGetRequestConfiguration{
 				QueryParameters: &adgroups.GroupsRequestBuilderGetQueryParameters{
-					Select: []string{"displayName", "id", "mail", "createdDateTime", "mailNickname"},
+					Select: props,
 					Expand: []string{"memberOf"},
 				},
 			})
@@ -119,9 +119,9 @@ func (c *AzureADClient) ListGroups(ctx context.Context) ([]models.Groupable, err
 	return result, nil
 }
 
-func (c *AzureADClient) listUsers(ctx context.Context, filter string, groups bool) ([]models.Userable, error) {
+func (c *AzureADClient) listUsers(ctx context.Context, filter string, groups bool, props []string) ([]models.Userable, error) {
 	query := adusers.UsersRequestBuilderGetQueryParameters{
-		Select: []string{"displayName", "id", "mail", "createdDateTime", "mobilePhone", "userPrincipalName", "accountEnabled"},
+		Select: props,
 		Filter: &filter,
 	}
 
