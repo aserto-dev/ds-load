@@ -18,7 +18,7 @@ func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	fetcher, err := fetch.New(ctx.Context, azureClient)
+	fetcher, err := fetch.New(ctx.Context, azureClient, cmd.UserProperties, cmd.GroupProperties)
 	if err != nil {
 		return err
 	}
