@@ -19,7 +19,9 @@ func Execute(ctx context.Context, log *zerolog.Logger, transformer plugin.Transf
 			log.Printf("Could not fetch data %s", err.Error())
 		}
 
-		pipeWriter.Close()
+		if err := pipeWriter.Close(); err != nil {
+			log.Err(err).Msg("failed to close pipe writer")
+		}
 	}()
 
 	return transformer.Transform(ctx, pipeReader, os.Stdout, os.Stderr)

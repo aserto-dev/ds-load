@@ -19,6 +19,8 @@ func NewYAMLResolver(yamlKey string) *YAMLResolver {
 }
 
 // Loader is a Kong configuration loader for YAML.
+//
+//nolint:ireturn // loader returns a kong resolver interface
 func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 	decoder := yaml.NewDecoder(r)
 	config := map[string]interface{}{}
@@ -59,10 +61,10 @@ func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 	}), nil
 }
 
-func find(config map[string]interface{}, path []string) interface{} {
-	for i := 0; i < len(path); i++ {
+func find(config map[string]any, path []string) any {
+	for i := range path {
 		prefix := strings.Join(path[:i+1], "-")
-		if child, ok := config[prefix].(map[string]interface{}); ok {
+		if child, ok := config[prefix].(map[string]any); ok {
 			return find(child, path[i+1:])
 		}
 	}

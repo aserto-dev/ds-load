@@ -13,17 +13,18 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/transform"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTransform(t *testing.T) {
 	// Arrange
 	content, err := sdk.Assets().ReadFile("assets/peoplefinder.json")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	contentReader := strings.NewReader(string(content))
 
 	template, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var transformBuffer bytes.Buffer
 	writer := bufio.NewWriter(&transformBuffer)
@@ -33,8 +34,9 @@ func TestTransform(t *testing.T) {
 
 	// Act
 	err = transformer.Transform(ctx, contentReader, writer, nil)
-	assert.NoError(t, err)
-	writer.Flush()
+	require.NoError(t, err)
+	err = writer.Flush()
+	require.NoError(t, err)
 
 	// Assert
 	bufLen := transformBuffer.Len()
@@ -42,24 +44,25 @@ func TestTransform(t *testing.T) {
 
 	reader := bufio.NewReader(&transformBuffer)
 	_, err = reader.Read(transformOutput)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	arrayReader, err := js.NewJSONArrayReader(bytes.NewReader(transformOutput))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var directoryObj msg.Transform
 	err = arrayReader.ReadProtoMessage(&directoryObj)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	objectCount := len(directoryObj.Objects)
-	assert.Equal(t, objectCount, 5)
+	objectCount := len(directoryObj.GetObjects())
+	assert.Equal(t, 5, objectCount)
 
-	relationCount := len(directoryObj.Relations)
-	assert.Equal(t, relationCount, 2)
+	relationCount := len(directoryObj.GetRelations())
+	assert.Equal(t, 2, relationCount)
 }
 
 func TestTransformEscapedChars(t *testing.T) {
 	// Arrange
+	//nolint:lll
 	const auth0user string = `
 	[
 	  {
@@ -76,7 +79,7 @@ func TestTransformEscapedChars(t *testing.T) {
 		],
 		"name": "oana+test666@aserto.com",
 		"nickname": "oana+test666",
-		"picture": "https://s.gravatar.com/avatar/de191b7ce00efcc0cd07690f793c5186?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Foa.png",
+		"picture": "https://s.gravatar.com/avatar/de191b7ce00efcc0cd07690f793c5186?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2Foa.png", 
 		"updated_at": "2023-06-30T12:47:52.762Z",
 		"user_id": "auth0|64902b655c2e91cb3dee85a4",
 		"user_metadata": {
@@ -94,7 +97,7 @@ func TestTransformEscapedChars(t *testing.T) {
 
 	content := []byte(auth0user)
 	transformTemplate, err := sdk.Assets().ReadFile("assets/test_template.tmpl")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	contentReader := strings.NewReader(string(content))
 
@@ -107,36 +110,37 @@ func TestTransformEscapedChars(t *testing.T) {
 
 	// Act
 	err = transformer.Transform(ctx, contentReader, writer, nil)
-	assert.NoError(t, err)
-	writer.Flush()
+	require.NoError(t, err)
+	err = writer.Flush()
+	require.NoError(t, err)
 
 	// Assert
 	bufLen := transformBuffer.Len()
 	transformOutput := make([]byte, bufLen)
 	reader := bufio.NewReader(&transformBuffer)
 	_, err = reader.Read(transformOutput)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	t.Log(transformOutput)
 
 	arrayReader, err := js.NewJSONArrayReader(bytes.NewReader(transformOutput))
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	var directoryObject msg.Transform
 	err = arrayReader.ReadProtoMessage(&directoryObject)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	objectCount := len(directoryObject.Objects)
-	assert.Equal(t, objectCount, 2)
+	objectCount := len(directoryObject.GetObjects())
+	assert.Equal(t, 2, objectCount)
 
-	relationCount := len(directoryObject.Relations)
-	assert.Equal(t, relationCount, 2)
+	relationCount := len(directoryObject.GetRelations())
+	assert.Equal(t, 2, relationCount)
 
-	userObject := directoryObject.Objects[0]
-	assert.Equal(t, userObject.Type, "user")
-	assert.Equal(t, userObject.DisplayName, "oana+test666")
+	userObject := directoryObject.GetObjects()[0]
+	assert.Equal(t, "user", userObject.GetType())
+	assert.Equal(t, "oana+test666", userObject.GetDisplayName())
 
-	userEmail, ok := userObject.Properties.Fields["email"]
+	userEmail, ok := userObject.GetProperties().GetFields()["email"]
 	assert.True(t, ok)
-	assert.Equal(t, userEmail.GetStringValue(), "oana+test666@aserto.com")
+	assert.Equal(t, "oana+test666@aserto.com", userEmail.GetStringValue())
 }
