@@ -271,7 +271,8 @@ builds:
 
 archives:
   # https://goreleaser.com/customization/archive/
-  - format: zip
+  - formats:
+    - zip
     files:
       - LICENSE
       - README.md

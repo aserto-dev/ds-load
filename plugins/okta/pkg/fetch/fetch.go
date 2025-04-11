@@ -1,3 +1,4 @@
+//nolint: dupl // similar code in getting group details
 package fetch
 
 import (

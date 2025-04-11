@@ -17,9 +17,10 @@ import (
 )
 
 const (
-	baseURL      string = "https://console.jumpcloud.com/api"
-	apiKeyHeader string = "x-api-key"
-	batchSize    int    = 50
+	baseURL                  string = "https://console.jumpcloud.com/api"
+	apiKeyHeader             string = "x-api-key"
+	batchSize                int    = 50
+	defaultConnectionTimeout        = 30 * time.Second
 )
 
 type JumpCloudClient struct {
@@ -40,7 +41,7 @@ func NewJumpCloudClient(ctx context.Context, apiKey string) (*JumpCloudClient, e
 			"Accept":       "application/json",
 			apiKeyHeader:   apiKey,
 		},
-		timeout: 30 * time.Second,
+		timeout: defaultConnectionTimeout,
 	}
 
 	return c, nil
@@ -229,7 +230,13 @@ var (
 	ErrStatusNotOK   = errors.New("status not OK")
 )
 
-func makeHTTPRequest[T any](ctx context.Context, reqURL, method string, headers map[string]string, queryParams url.Values, body io.Reader, resp T) error {
+func makeHTTPRequest[T any](
+	ctx context.Context,
+	reqURL, method string,
+	headers map[string]string,
+	queryParams url.Values,
+	body io.Reader,
+	resp T) error {
 	client := http.Client{}
 
 	u, err := url.Parse(reqURL)

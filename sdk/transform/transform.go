@@ -34,7 +34,12 @@ func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
 	return nil
 }
 
-func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
+func (t *GoTemplateTransform) Transform(
+	ctx context.Context,
+	ioReader io.Reader,
+	outputWriter,
+	errorWriter io.Writer,
+) error {
 	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 
@@ -47,7 +52,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 		var idpData map[string]interface{}
 
 		err := reader.Read(&idpData)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 
@@ -83,7 +88,9 @@ func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*
 	}
 
 	if os.Getenv("DEBUG") != "" {
-		os.Stdout.WriteString(output)
+		if _, err := os.Stdout.WriteString(output); err != nil {
+			return nil, errors.Wrap(err, "failed to write to stdout")
+		}
 	}
 
 	var dirV3msg msg.Transform
