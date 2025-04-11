@@ -4,6 +4,7 @@ import "time"
 
 const TypeUser string = "user"
 
+//nolint:tagliatelle // maintain json user formatting
 type BaseUser struct {
 	IID         string `json:"_id"`
 	ID          string `json:"id"`
@@ -13,6 +14,7 @@ type BaseUser struct {
 	Username    string `json:"username"`
 }
 
+//nolint:tagliatelle // maintain json user formatting
 type User struct {
 	BaseUser
 	SystemUsername                string        `json:"systemUsername"`

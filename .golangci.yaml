@@ -28,6 +28,10 @@ linters:
     - wrapcheck
 
   settings:
+    gomoddirectives:
+      replace-local: true
+    lll:
+      line-length: 140 # a lot of parameter lines over 130 characters
     dupl:
       threshold: 100
     funlen:

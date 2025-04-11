@@ -62,7 +62,6 @@ func TestTransform(t *testing.T) {
 
 func TestTransformEscapedChars(t *testing.T) {
 	// Arrange
-	//nolint:lll
 	const auth0user string = `
 	[
 	  {
