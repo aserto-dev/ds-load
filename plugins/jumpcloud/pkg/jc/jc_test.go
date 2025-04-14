@@ -1,3 +1,4 @@
+//nolint:dupl // duplicate for testing
 package jc_test
 
 import (

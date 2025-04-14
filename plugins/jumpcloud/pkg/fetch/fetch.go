@@ -60,45 +60,56 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	if f.Groups {
-		groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		if err := f.fetchGroups(ctx, writer, errorWriter, idLookup); err != nil {
 			return err
 		}
+	}
 
-		for _, group := range groups {
-			groupBytes, err := json.Marshal(group)
-			if err != nil {
+	return nil
+}
+
+func (f *Fetcher) fetchGroups(ctx context.Context,
+	writer *js.JSONArrayWriter,
+	errorWriter io.Writer,
+	idLookup map[string]*jc.BaseUser) error {
+	groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
+	if err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		return err
+	}
+
+	for _, group := range groups {
+		groupBytes, err := json.Marshal(group)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			continue
+		}
+
+		var obj map[string]interface{}
+		if err := json.Unmarshal(groupBytes, &obj); err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			continue
+		}
+
+		usersInGroup, err := f.jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		}
+
+		usersInGroupBytes, err := json.Marshal(usersInGroup)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		} else {
+			var users []map[string]interface{}
+			if err := json.Unmarshal(usersInGroupBytes, &users); err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				continue
 			}
 
-			var obj map[string]interface{}
-			if err := json.Unmarshal(groupBytes, &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				continue
-			}
+			obj["users"] = users
+		}
 
-			usersInGroup, err := f.jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			} else {
-				usersInGroupBytes, err := json.Marshal(usersInGroup)
-				if err != nil {
-					common.WriteErrorWithExitCode(errorWriter, err, 1)
-				} else {
-					var users []map[string]interface{}
-					if err := json.Unmarshal(usersInGroupBytes, &users); err != nil {
-						common.WriteErrorWithExitCode(errorWriter, err, 1)
-					}
-
-					obj["users"] = users
-				}
-			}
-
-			if err := writer.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+		if err := writer.Write(obj); err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}
 

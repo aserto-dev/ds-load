@@ -19,6 +19,10 @@ type GoogleClient struct {
 	customer     string
 }
 
+const (
+	defaultReaderTimeout = 5 * time.Second
+)
+
 func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port int) (string, error) {
 	redirectURL := fmt.Sprintf("http://localhost:%d", port)
 	config := &oauth2.Config{
@@ -41,7 +45,7 @@ func GetRefreshToken(ctx context.Context, clientID, clientSecret string, port in
 	fmt.Println("Waiting for authorization code...")
 
 	// Create an HTTP server for handling the OAuth 2.0 callback
-	server := &http.Server{Addr: fmt.Sprintf(":%d", port), ReadHeaderTimeout: 5 * time.Second}
+	server := &http.Server{Addr: fmt.Sprintf(":%d", port), ReadHeaderTimeout: defaultReaderTimeout}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
