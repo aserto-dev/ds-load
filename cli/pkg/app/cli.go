@@ -51,7 +51,9 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	for _, p := range plugins {
-		os.Stdout.WriteString(p.Name + " " + p.Path + "\n")
+		if _, err := os.Stdout.WriteString(p.Name + " " + p.Path + "\n"); err != nil {
+			return err
+		}
 	}
 
 	return nil

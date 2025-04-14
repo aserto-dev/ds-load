@@ -26,6 +26,8 @@ type Fetcher struct {
 	client         *auth0client.Auth0Client
 }
 
+const defaultMaxUsers = 100
+
 func New(ctx context.Context, client *auth0client.Auth0Client) (*Fetcher, error) {
 	return &Fetcher{
 		client: client,
@@ -87,37 +89,9 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 		}
 
 		for _, user := range users {
-			res, err := user.MarshalJSON()
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
+			obj, skip := f.buildOutputObjects(ctx, user, errorWriter)
+			if skip {
 				continue
-			}
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal(res, &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				continue
-			}
-
-			obj["email_verified"] = user.GetEmailVerified()
-			obj["object_type"] = "user"
-
-			if f.Roles {
-				roles, err := f.getUserRoles(ctx, *user.ID)
-				if err != nil {
-					common.WriteErrorWithExitCode(errorWriter, err, 1)
-				} else {
-					obj["roles"] = roles
-				}
-			}
-
-			if f.Orgs {
-				orgs, err := f.getOrgs(ctx, *user.ID)
-				if err != nil {
-					common.WriteErrorWithExitCode(errorWriter, err, 1)
-				} else {
-					obj["orgs"] = orgs
-				}
 			}
 
 			err = outputWriter.Write(obj)
@@ -134,6 +108,45 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 	}
 
 	return nil
+}
+
+// return a object map to output or a boolean to skip current user.
+func (f *Fetcher) buildOutputObjects(ctx context.Context, user *management.User, errorWriter io.Writer) (map[string]any, bool) {
+	var obj map[string]any
+
+	res, err := user.MarshalJSON()
+	if err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		return obj, true
+	}
+
+	if err := json.Unmarshal(res, &obj); err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		return obj, true
+	}
+
+	obj["email_verified"] = user.GetEmailVerified()
+	obj["object_type"] = "user"
+
+	if f.Roles {
+		roles, err := f.getUserRoles(ctx, *user.ID)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		} else {
+			obj["roles"] = roles
+		}
+	}
+
+	if f.Orgs {
+		orgs, err := f.getOrgs(ctx, *user.ID)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		} else {
+			obj["orgs"] = orgs
+		}
+	}
+
+	return obj, false
 }
 
 func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
@@ -239,17 +252,13 @@ func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption)
 	return roles.Roles, roles.HasNext(), nil
 }
 
-func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]interface{}, error) {
+func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
 	finished := false
 
-	var results []map[string]interface{}
+	var results []map[string]any
 
-	for {
-		if finished {
-			break
-		}
-
+	for !finished {
 		reqOpts := management.Page(page)
 
 		roles, err := f.client.Mgmt.User.Roles(ctx, uID, reqOpts)
@@ -263,7 +272,7 @@ func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]in
 				return nil, err
 			}
 
-			var obj map[string]interface{}
+			var obj map[string]any
 			if err := json.Unmarshal(res, &obj); err != nil {
 				return nil, err
 			}
@@ -281,17 +290,13 @@ func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]in
 	return results, nil
 }
 
-func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interface{}, error) {
+func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
 	finished := false
 
-	var results []map[string]interface{}
+	var results []map[string]any
 
-	for {
-		if finished {
-			break
-		}
-
+	for !finished {
 		reqOpts := management.Page(page)
 
 		orgs, err := f.client.Mgmt.User.Organizations(ctx, uID, reqOpts)
@@ -300,13 +305,8 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 		}
 
 		for _, org := range orgs.Organizations {
-			res, err := json.Marshal(org)
+			obj, err := formatObject(org)
 			if err != nil {
-				return nil, err
-			}
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal(res, &obj); err != nil {
 				return nil, err
 			}
 
@@ -321,6 +321,20 @@ func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]interfa
 	}
 
 	return results, nil
+}
+
+func formatObject(org any) (map[string]any, error) {
+	res, err := json.Marshal(org)
+	if err != nil {
+		return nil, err
+	}
+
+	var obj map[string]any
+	if err := json.Unmarshal(res, &obj); err != nil {
+		return nil, err
+	}
+
+	return obj, nil
 }
 
 func (f *Fetcher) getConnectionQuery() string {
@@ -340,7 +354,8 @@ func (f *Fetcher) getConnectionQuery() string {
 // "emailVerified":"true",
 // "email_verified":"user@domain.com"
 //
-// Which results in an unmarshal error when calling `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
+// Which results in an unmarshal error when calling
+// `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
 // resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
 //
 // The implementation below works around the issues by using custom JSON marshaling to map the values into the management.User instances.
@@ -358,15 +373,15 @@ func (ul UserList) UserList() []*management.User {
 }
 
 func (u *User) UnmarshalJSON(b []byte) error {
-	var raw map[string]interface{}
+	var raw map[string]any
 
 	if err := json.Unmarshal(b, &raw); err != nil {
 		return err
 	}
 
 	verified := false
-	if emailVerified, ok := raw["emailVerified"]; ok {
-		verified, _ = strconv.ParseBool(emailVerified.(string))
+	if emailVerified, ok := raw["emailVerified"].(string); ok {
+		verified, _ = strconv.ParseBool(emailVerified)
 	}
 
 	delete(raw, "emailVerified")
@@ -394,7 +409,7 @@ func (u *User) UnmarshalJSON(b []byte) error {
 
 func ListUsers(ctx context.Context, m *management.Management, payload interface{}, options ...management.RequestOption) error {
 	options = append(options,
-		management.PerPage(100),
+		management.PerPage(defaultMaxUsers),
 		management.IncludeTotals(true),
 	)
 

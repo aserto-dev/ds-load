@@ -28,6 +28,15 @@ linters:
     - wrapcheck
 
   settings:
+    ireturn:
+      allow:
+        - error
+        - empty
+        - generic
+        - proto.Message
+        - plugins.Plugin
+        - stdlib
+        - v3.ImporterClient
     gomoddirectives:
       replace-local: true
     lll:

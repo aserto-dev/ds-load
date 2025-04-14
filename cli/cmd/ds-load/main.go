@@ -13,18 +13,26 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
+const errWritingToStdErr = 2
+
 func main() {
 	pluginEnum := ""
 
 	pluginFinder, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		if _, err := os.Stderr.WriteString(err.Error()); err != nil {
+			os.Exit(errWritingToStdErr)
+		}
+
 		os.Exit(1)
 	}
 
 	plugins, err := pluginFinder.Find()
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		if _, err := os.Stderr.WriteString(err.Error()); err != nil {
+			os.Exit(errWritingToStdErr)
+		}
+
 		os.Exit(1)
 	}
 
