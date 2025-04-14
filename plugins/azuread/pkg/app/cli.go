@@ -31,7 +31,8 @@ func (cmd *VersionCmd) Run() error {
 	return nil
 }
 
-func createAzureAdClient(ctx context.Context, tenant, clientID, clientSecret, refreshToken string) (azureClient *azureclient.AzureADClient, err error) {
+func createAzureAdClient(ctx context.Context,
+	tenant, clientID, clientSecret, refreshToken string) (*azureclient.AzureADClient, error) {
 	if refreshToken != "" {
 		return azureclient.NewAzureADClientWithRefreshToken(
 			ctx,

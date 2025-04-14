@@ -31,26 +31,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer writer.Close()
 
 	if f.groups {
-		groups, err := f.cognitoClient.ListGroups()
-		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
-
-		for _, group := range groups {
-			groupBytes, err := json.Marshal(group)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal(groupBytes, &obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
-
-			if err := writer.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+		if err := f.fetchGroups(writer, errorWriter); err != nil {
+			return err
 		}
 	}
 
@@ -97,6 +79,32 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			}
 
 			obj["Groups"] = grps
+		}
+
+		if err := writer.Write(obj); err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
+		}
+	}
+
+	return nil
+}
+
+func (f *Fetcher) fetchGroups(writer *js.JSONArrayWriter, errorWriter io.Writer) error {
+	groups, err := f.cognitoClient.ListGroups()
+	if err != nil {
+		_, _ = errorWriter.Write([]byte(err.Error()))
+	}
+
+	for _, group := range groups {
+		groupBytes, err := json.Marshal(group)
+		if err != nil {
+			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			return err
+		}
+
+		var obj map[string]interface{}
+		if err := json.Unmarshal(groupBytes, &obj); err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 
 		if err := writer.Write(obj); err != nil {

@@ -36,37 +36,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer jsonWriter.Close()
 
 	if f.Groups {
-		aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-		}
-
-		for _, group := range aadGroups {
-			writer := kiota.NewJsonSerializationWriter()
-
-			err := group.Serialize(writer)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			groupBytes, err := writer.GetSerializedContent()
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			groupString := "{" + string(groupBytes) + "}"
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal([]byte(groupString), &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			if err := jsonWriter.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+		if err := f.fetchGroups(ctx, jsonWriter, errorWriter); err != nil {
+			return err
 		}
 	}
 
@@ -84,23 +55,54 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			return err
 		}
 
-		userBytes, err := writer.GetSerializedContent()
+		if err := writeObject(jsonWriter, writer, errorWriter); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (f *Fetcher) fetchGroups(ctx context.Context, jsonWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+	aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
+	if err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+	}
+
+	for _, group := range aadGroups {
+		writer := kiota.NewJsonSerializationWriter()
+
+		err := group.Serialize(writer)
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}
 
-		userString := "{" + string(userBytes) + "}"
-
-		var obj map[string]interface{}
-		if err := json.Unmarshal([]byte(userString), &obj); err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		if err := writeObject(jsonWriter, writer, errorWriter); err != nil {
 			return err
 		}
+	}
 
-		if err := jsonWriter.Write(obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+	return nil
+}
+
+func writeObject(jsonWriter *js.JSONArrayWriter, writer *kiota.JsonSerializationWriter, errorWriter io.Writer) error {
+	objBytes, err := writer.GetSerializedContent()
+	if err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		return err
+	}
+
+	objString := "{" + string(objBytes) + "}"
+
+	var obj map[string]any
+	if err := json.Unmarshal([]byte(objString), &obj); err != nil {
+		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		return err
+	}
+
+	if err := jsonWriter.Write(obj); err != nil {
+		_, _ = errorWriter.Write([]byte(err.Error()))
 	}
 
 	return nil
