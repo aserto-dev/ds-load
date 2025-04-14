@@ -37,7 +37,12 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	fetcher = fetcher.WithUserPID(f.UserPID).WithEmail(f.UserEmail).WithRoles(f.Roles).WithOrgs(f.Orgs).WithSAML(f.SAML)
+	fetcher = fetcher.
+		WithUserPID(f.UserPID).
+		WithEmail(f.UserEmail).
+		WithRoles(f.Roles).
+		WithOrgs(f.Orgs).
+		WithSAML(f.SAML)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }
