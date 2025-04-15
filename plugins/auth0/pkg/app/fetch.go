@@ -42,7 +42,8 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		WithEmail(f.UserEmail).
 		WithRoles(f.Roles).
 		WithOrgs(f.Orgs).
-		WithSAML(f.SAML)
+		WithSAML(f.SAML).
+		WithConnectionName(f.ConnectionName)
 
 	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
 }

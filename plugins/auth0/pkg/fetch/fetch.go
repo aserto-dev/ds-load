@@ -59,6 +59,11 @@ func (f *Fetcher) WithSAML(saml bool) *Fetcher {
 	return f
 }
 
+func (f *Fetcher) WithConnectionName(connectionName string) *Fetcher {
+	f.ConnectionName = connectionName
+	return f
+}
+
 func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
