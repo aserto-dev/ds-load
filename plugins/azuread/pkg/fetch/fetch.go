@@ -72,8 +72,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, jsonWriter *js.JSONArrayWrite
 	for _, group := range aadGroups {
 		writer := kiota.NewJsonSerializationWriter()
 
-		err := group.Serialize(writer)
-		if err != nil {
+		if err := group.Serialize(writer); err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
 		}

@@ -82,14 +82,14 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	// retrieve the access token and expiration
 	token, ok := responseData["access_token"].(string)
 	if !ok {
-		return accessToken, status.Error(codes.InvalidArgument, "failed to cast access token to string")
+		return accessToken, status.Error(codes.InvalidArgument, "'access_token' must be a string")
 	}
 
 	accessToken.Token = token
 
 	expiresIn, ok := responseData["expires_in"].(float64)
 	if !ok {
-		return accessToken, status.Error(codes.InvalidArgument, "failed to convert token expiration time")
+		return accessToken, status.Error(codes.InvalidArgument, "'exprires_in' must be a float")
 	}
 
 	accessToken.ExpiresOn = time.Now().Add(time.Second * time.Duration(int(expiresIn)))

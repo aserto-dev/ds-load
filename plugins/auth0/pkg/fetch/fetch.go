@@ -89,8 +89,12 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 		}
 
 		for _, user := range users {
-			obj, skip := f.buildOutputObjects(ctx, user, errorWriter)
-			if skip {
+			obj, err := f.buildOutputObjects(ctx, user)
+			if err != nil {
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
+			}
+
+			if obj == nil {
 				continue
 			}
 
@@ -111,42 +115,40 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 }
 
 // return a object map to output or a boolean to skip current user.
-func (f *Fetcher) buildOutputObjects(ctx context.Context, user *management.User, errorWriter io.Writer) (map[string]any, bool) {
+func (f *Fetcher) buildOutputObjects(ctx context.Context, user *management.User) (map[string]any, error) {
 	var obj map[string]any
 
 	res, err := user.MarshalJSON()
 	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-		return obj, true
+		return nil, err
 	}
 
 	if err := json.Unmarshal(res, &obj); err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-		return obj, true
+		return nil, err
 	}
 
 	obj["email_verified"] = user.GetEmailVerified()
 	obj["object_type"] = "user"
 
 	if f.Roles {
-		roles, err := f.getUserRoles(ctx, *user.ID)
+		roles, err := f.fetchUserRoles(ctx, *user.ID)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			return nil, err
 		} else {
 			obj["roles"] = roles
 		}
 	}
 
 	if f.Orgs {
-		orgs, err := f.getOrgs(ctx, *user.ID)
+		orgs, err := f.fetchOrgs(ctx, *user.ID)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			return nil, err
 		} else {
 			obj["orgs"] = orgs
 		}
 	}
 
-	return obj, false
+	return obj, nil
 }
 
 func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
@@ -159,7 +161,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 			opts = append(opts, management.Query(f.getConnectionQuery()))
 		}
 
-		roles, more, err := f.getRoles(ctx, opts)
+		roles, more, err := f.fetchRoles(ctx, opts)
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
@@ -239,7 +241,7 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 	return ul.UserList(), ul.HasNext(), nil
 }
 
-func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption) ([]*management.Role, bool, error) {
+func (f *Fetcher) fetchRoles(ctx context.Context, opts []management.RequestOption) ([]*management.Role, bool, error) {
 	roles, err := f.client.Mgmt.Role.List(ctx, opts...)
 	if err != nil {
 		return nil, false, err
@@ -252,7 +254,7 @@ func (f *Fetcher) getRoles(ctx context.Context, opts []management.RequestOption)
 	return roles.Roles, roles.HasNext(), nil
 }
 
-func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]any, error) {
+func (f *Fetcher) fetchUserRoles(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
 	finished := false
 
@@ -290,7 +292,7 @@ func (f *Fetcher) getUserRoles(ctx context.Context, uID string) ([]map[string]an
 	return results, nil
 }
 
-func (f *Fetcher) getOrgs(ctx context.Context, uID string) ([]map[string]any, error) {
+func (f *Fetcher) fetchOrgs(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
 	finished := false
 

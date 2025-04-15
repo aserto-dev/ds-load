@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -13,26 +14,18 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common/kongyaml"
 )
 
-const errWritingToStdErr = 2
-
 func main() {
 	pluginEnum := ""
 
 	pluginFinder, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
-		if _, err := os.Stderr.WriteString(err.Error()); err != nil {
-			os.Exit(errWritingToStdErr)
-		}
-
+		_, _ = fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	plugins, err := pluginFinder.Find()
 	if err != nil {
-		if _, err := os.Stderr.WriteString(err.Error()); err != nil {
-			os.Exit(errWritingToStdErr)
-		}
-
+		_, _ = fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 
