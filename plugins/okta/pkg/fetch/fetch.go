@@ -1,4 +1,4 @@
-//nolint: dupl // similar code in getting group details
+//nolint:dupl // similar code in getting group details
 package fetch
 
 import (

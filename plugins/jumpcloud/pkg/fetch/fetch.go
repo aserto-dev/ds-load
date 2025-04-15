@@ -71,7 +71,8 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 func (f *Fetcher) fetchGroups(ctx context.Context,
 	writer *js.JSONArrayWriter,
 	errorWriter io.Writer,
-	idLookup map[string]*jc.BaseUser) error {
+	idLookup map[string]*jc.BaseUser,
+) error {
 	groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
 	if err != nil {
 		common.WriteErrorWithExitCode(errorWriter, err, 1)

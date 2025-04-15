@@ -23,7 +23,8 @@ type RefreshTokenCredential struct {
 }
 
 func NewRefreshTokenCredential(ctx context.Context,
-	tenantID, clientID, clientSecret, refreshToken string) (*RefreshTokenCredential, error) {
+	tenantID, clientID, clientSecret, refreshToken string,
+) (*RefreshTokenCredential, error) {
 	c := &RefreshTokenCredential{
 		clientID:     clientID,
 		clientSecret: clientSecret,

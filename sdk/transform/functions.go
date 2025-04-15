@@ -74,8 +74,8 @@ func marshal(v any) string {
 
 func fromEnv(key, envName string) string {
 	value := os.Getenv(envName)
-	strValue, err := json.Marshal(value)
 
+	strValue, err := json.Marshal(value)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to marshal value")
 	}

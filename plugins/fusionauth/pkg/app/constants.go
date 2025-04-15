@@ -1,4 +1,6 @@
 package app
 
-const AppName = "ds-load-fusionauth"
-const AppDescription = "FusionAuth directory loader"
+const (
+	AppName        = "ds-load-fusionauth"
+	AppDescription = "FusionAuth directory loader"
+)

@@ -64,7 +64,7 @@ func (c *JumpCloudClient) ListUsers(ctx context.Context) ([]*User, error) {
 
 	users := struct {
 		Results    []*User `json:"results"`
-		TotalCount int     `json:"totalCount"`
+		TotalCount int     `json:"totalCount"` //nolint:tagliatelle // keep jc format
 	}{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodPost, c.headers, nil, nil, &users); err != nil {
@@ -236,7 +236,8 @@ func makeHTTPRequest[T any](
 	headers map[string]string,
 	queryParams url.Values,
 	body io.Reader,
-	resp T) error {
+	resp T,
+) error {
 	client := http.Client{}
 
 	u, err := url.Parse(reqURL)

@@ -26,14 +26,14 @@ type API struct {
 	Service     string `json:"service"`
 	Method      string `json:"method"`
 	Path        string `json:"path"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName"` //nolint:tagliatelle // keep open api format
 	ID          string `json:"id"`
 	ServiceID   string `json:"serviceID"` //nolint:tagliatelle // keep open api format
 }
 
 type Service struct {
 	Type        string `json:"type"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName"` //nolint:tagliatelle // keep open api format
 	ID          string `json:"id"`
 }
 
