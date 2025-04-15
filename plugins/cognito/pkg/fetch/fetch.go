@@ -109,13 +109,11 @@ func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {
 	return func(yield func(map[string]any, error) bool) {
 		for _, group := range groups {
 			groupBytes, err := json.Marshal(group)
-			if err != nil {
-				if !yield(nil, err) {
-					return
-				}
+			if err != nil && !yield(nil, err) {
+				return
 			}
 
-			var obj map[string]interface{}
+			var obj map[string]any
 			err = json.Unmarshal(groupBytes, &obj)
 
 			if !(yield(obj, err)) {
