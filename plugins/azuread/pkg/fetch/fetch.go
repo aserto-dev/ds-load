@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"iter"
 
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
@@ -36,73 +37,105 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer jsonWriter.Close()
 
 	if f.Groups {
-		if err := f.fetchGroups(ctx, jsonWriter, errorWriter); err != nil {
-			return err
+		for obj, err := range f.fetchGroups(ctx) {
+			if err != nil {
+				common.WriteErrorWithExitCode(errorWriter, err, 1)
+			}
+
+			if err := jsonWriter.Write(obj); err != nil {
+				_, _ = errorWriter.Write([]byte(err.Error()))
+			}
 		}
 	}
 
-	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
-	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-	}
-
-	for _, user := range aadUsers {
-		writer := kiota.NewJsonSerializationWriter()
-
-		err := user.Serialize(writer)
+	for user, err := range f.fetchUsers(ctx) {
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
-			return err
 		}
 
-		if err := writeObject(jsonWriter, writer, errorWriter); err != nil {
-			return err
+		if err := jsonWriter.Write(user); err != nil {
+			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}
 
 	return nil
 }
 
-func (f *Fetcher) fetchGroups(ctx context.Context, jsonWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, error] {
+	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
+	if err != nil {
+		return func(yield func(map[string]any, error) bool) {
+			if !yield(nil, err) {
+				return
+			}
+		}
+	}
+
+	return func(yield func(map[string]any, error) bool) {
+		for _, user := range aadUsers {
+			writer := kiota.NewJsonSerializationWriter()
+
+			err := user.Serialize(writer)
+			if err != nil {
+				if !yield(nil, err) {
+					return
+				}
+			}
+
+			objBytes, err := writer.GetSerializedContent()
+			if err != nil {
+				if !(yield(nil, err)) {
+					return
+				}
+			}
+
+			objString := "{" + string(objBytes) + "}"
+
+			var obj map[string]any
+			if err := json.Unmarshal([]byte(objString), &obj); err != nil {
+				if !(yield(obj, err)) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, error] {
 	aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
 	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-	}
-
-	for _, group := range aadGroups {
-		writer := kiota.NewJsonSerializationWriter()
-
-		if err := group.Serialize(writer); err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-			return err
-		}
-
-		if err := writeObject(jsonWriter, writer, errorWriter); err != nil {
-			return err
+		return func(yield func(map[string]any, error) bool) {
+			if !(yield(nil, err)) {
+				return
+			}
 		}
 	}
 
-	return nil
-}
+	return func(yield func(map[string]any, error) bool) {
+		for _, group := range aadGroups {
+			writer := kiota.NewJsonSerializationWriter()
 
-func writeObject(jsonWriter *js.JSONArrayWriter, writer *kiota.JsonSerializationWriter, errorWriter io.Writer) error {
-	objBytes, err := writer.GetSerializedContent()
-	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-		return err
+			if err := group.Serialize(writer); err != nil {
+				if !yield(nil, err) {
+					return
+				}
+			}
+
+			objBytes, err := writer.GetSerializedContent()
+			if err != nil {
+				if !(yield(nil, err)) {
+					return
+				}
+			}
+
+			objString := "{" + string(objBytes) + "}"
+
+			var obj map[string]any
+			if err := json.Unmarshal([]byte(objString), &obj); err != nil {
+				if !(yield(obj, err)) {
+					return
+				}
+			}
+		}
 	}
-
-	objString := "{" + string(objBytes) + "}"
-
-	var obj map[string]any
-	if err := json.Unmarshal([]byte(objString), &obj); err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-		return err
-	}
-
-	if err := jsonWriter.Write(obj); err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-	}
-
-	return nil
 }
