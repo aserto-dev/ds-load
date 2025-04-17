@@ -92,10 +92,10 @@ func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, erro
 			objString := "{" + string(objBytes) + "}"
 
 			var obj map[string]any
-			if err := json.Unmarshal([]byte(objString), &obj); err != nil {
-				if !(yield(obj, err)) {
-					return
-				}
+			err = json.Unmarshal([]byte(objString), &obj)
+
+			if !(yield(obj, err)) {
+				return
 			}
 		}
 	}
@@ -131,10 +131,10 @@ func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, err
 			objString := "{" + string(objBytes) + "}"
 
 			var obj map[string]any
-			if err := json.Unmarshal([]byte(objString), &obj); err != nil {
-				if !(yield(obj, err)) {
-					return
-				}
+			err = json.Unmarshal([]byte(objString), &obj)
+
+			if !(yield(obj, err)) {
+				return
 			}
 		}
 	}
