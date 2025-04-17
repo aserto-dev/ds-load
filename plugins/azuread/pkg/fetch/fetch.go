@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"iter"
 
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
@@ -36,32 +37,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer jsonWriter.Close()
 
 	if f.Groups {
-		aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-		}
-
-		for _, group := range aadGroups {
-			writer := kiota.NewJsonSerializationWriter()
-
-			err := group.Serialize(writer)
+		for obj, err := range f.fetchGroups(ctx) {
 			if err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			groupBytes, err := writer.GetSerializedContent()
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			groupString := "{" + string(groupBytes) + "}"
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal([]byte(groupString), &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
 			}
 
 			if err := jsonWriter.Write(obj); err != nil {
@@ -70,38 +48,94 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 		}
 	}
 
-	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
-	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
-	}
-
-	for _, user := range aadUsers {
-		writer := kiota.NewJsonSerializationWriter()
-
-		err := user.Serialize(writer)
+	for user, err := range f.fetchUsers(ctx) {
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
-			return err
 		}
 
-		userBytes, err := writer.GetSerializedContent()
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-			return err
-		}
-
-		userString := "{" + string(userBytes) + "}"
-
-		var obj map[string]interface{}
-		if err := json.Unmarshal([]byte(userString), &obj); err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-			return err
-		}
-
-		if err := jsonWriter.Write(obj); err != nil {
+		if err := jsonWriter.Write(user); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
 	}
 
 	return nil
+}
+
+func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, error] {
+	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
+	if err != nil {
+		return func(yield func(map[string]any, error) bool) {
+			if !yield(nil, err) {
+				return
+			}
+		}
+	}
+
+	return func(yield func(map[string]any, error) bool) {
+		for _, user := range aadUsers {
+			writer := kiota.NewJsonSerializationWriter()
+
+			err := user.Serialize(writer)
+			if err != nil {
+				if !yield(nil, err) {
+					return
+				}
+			}
+
+			objBytes, err := writer.GetSerializedContent()
+			if err != nil {
+				if !(yield(nil, err)) {
+					return
+				}
+			}
+
+			objString := "{" + string(objBytes) + "}"
+
+			var obj map[string]any
+			err = json.Unmarshal([]byte(objString), &obj)
+
+			if !(yield(obj, err)) {
+				return
+			}
+		}
+	}
+}
+
+func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, error] {
+	aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
+	if err != nil {
+		return func(yield func(map[string]any, error) bool) {
+			if !(yield(nil, err)) {
+				return
+			}
+		}
+	}
+
+	return func(yield func(map[string]any, error) bool) {
+		for _, group := range aadGroups {
+			writer := kiota.NewJsonSerializationWriter()
+
+			if err := group.Serialize(writer); err != nil {
+				if !yield(nil, err) {
+					return
+				}
+			}
+
+			objBytes, err := writer.GetSerializedContent()
+			if err != nil {
+				if !(yield(nil, err)) {
+					return
+				}
+			}
+
+			objString := "{" + string(objBytes) + "}"
+
+			var obj map[string]any
+			err = json.Unmarshal([]byte(objString), &obj)
+
+			if !(yield(obj, err)) {
+				return
+			}
+		}
+	}
 }

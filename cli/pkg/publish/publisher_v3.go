@@ -49,7 +49,7 @@ func (p *DirectoryPublisher) Publish(ctx context.Context, reader io.Reader) erro
 		var message msg.Transform
 
 		err := jsonReader.ReadProtoMessage(&message)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 
@@ -91,23 +91,23 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 
 	errGroup.Go(p.doneHandler(stream.Context()))
 
-	opCode := message.OpCode
+	opCode := message.GetOpCode()
 	if opCode == dsi3.Opcode_OPCODE_UNKNOWN {
 		opCode = dsi3.Opcode_OPCODE_SET
 	}
 
 	// import objects
-	for _, object := range message.Objects {
+	for _, object := range message.GetObjects() {
 		if err := validator.Object(object); err != nil {
-			fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.Id, object.Type)
+			fmt.Fprintf(os.Stderr, "validation failed, object: [%s] type [%s]\n", object.GetId(), object.GetType())
 			continue
 		}
 
-		if (opCode == dsi3.Opcode_OPCODE_DELETE || opCode == dsi3.Opcode_OPCODE_DELETE_WITH_RELATIONS) && object.Type == "group" {
+		if (opCode == dsi3.Opcode_OPCODE_DELETE || opCode == dsi3.Opcode_OPCODE_DELETE_WITH_RELATIONS) && object.GetType() == "group" {
 			continue
 		}
 
-		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.Id, object.Type)
+		fmt.Fprintf(os.Stdout, "object: [%s] type [%s]\n", object.GetId(), object.GetType())
 		sErr := stream.Send(&dsi3.ImportRequest{
 			Msg: &dsi3.ImportRequest_Object{
 				Object: object,
@@ -119,13 +119,14 @@ func (p *DirectoryPublisher) publishMessages(ctx context.Context, message *msg.T
 	}
 
 	// import relations
-	for _, relation := range message.Relations {
+	for _, relation := range message.GetRelations() {
 		if err := validator.Relation(relation); err != nil {
-			fmt.Fprintf(os.Stderr, "validation failed, relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
+			fmt.Fprintf(os.Stderr, "validation failed, relation: [%s] obj: [%s] subj [%s]\n",
+				relation.GetRelation(), relation.GetObjectId(), relation.GetSubjectId())
 			continue
 		}
 
-		fmt.Fprintf(os.Stdout, "relation: [%s] obj: [%s] subj [%s]\n", relation.Relation, relation.ObjectId, relation.SubjectId)
+		fmt.Fprintf(os.Stdout, "relation: [%s] obj: [%s] subj [%s]\n", relation.GetRelation(), relation.GetObjectId(), relation.GetSubjectId())
 		sErr := stream.Send(&dsi3.ImportRequest{
 			Msg: &dsi3.ImportRequest_Relation{
 				Relation: relation,
@@ -154,7 +155,7 @@ func (p *DirectoryPublisher) handleStreamError(err error) {
 		return
 	}
 
-	p.Log.Err(err)
+	p.Log.Err(err).Msg("stream error")
 	common.SetExitCode(1)
 }
 
@@ -162,7 +163,7 @@ func (p *DirectoryPublisher) receiver(stream dsi3.Importer_ImportClient) func() 
 	return func() error {
 		for {
 			result, err := stream.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 
@@ -171,13 +172,13 @@ func (p *DirectoryPublisher) receiver(stream dsi3.Importer_ImportClient) func() 
 			}
 
 			if result != nil {
-				switch m := result.Msg.(type) {
+				switch m := result.GetMsg().(type) {
 				case *dsi3.ImportResponse_Status:
 					p.errs = true
 
 					printStatus(os.Stderr, m.Status)
 				case *dsi3.ImportResponse_Counter:
-					switch m.Counter.Type {
+					switch m.Counter.GetType() {
 					case objectsCounter:
 						p.objCounter = m.Counter
 					case relationsCounter:
@@ -206,17 +207,17 @@ func (p *DirectoryPublisher) doneHandler(ctx context.Context) func() error {
 func printStatus(w io.Writer, status *dsi3.ImportStatus) {
 	fmt.Fprintf(w, "%-9s : %s - %s (%d)\n",
 		"error",
-		status.Msg,
-		codes.Code(status.Code).String(),
-		status.Code)
+		status.GetMsg(),
+		codes.Code(status.GetCode()).String(),
+		status.GetCode())
 }
 
 func printCounter(w io.Writer, ctr *dsi3.ImportCounter) {
 	fmt.Fprintf(w, "%-9s : %d (set:%d delete:%d error:%d)\n",
-		ctr.Type,
-		ctr.Recv,
-		ctr.Set,
-		ctr.Delete,
-		ctr.Error,
+		ctr.GetType(),
+		ctr.GetRecv(),
+		ctr.GetSet(),
+		ctr.GetDelete(),
+		ctr.GetError(),
 	)
 }

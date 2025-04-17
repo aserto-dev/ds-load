@@ -9,6 +9,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/dongri/phonenumber"
+	"github.com/rs/zerolog/log"
 )
 
 func customFunctions() template.FuncMap {
@@ -25,7 +26,12 @@ func customFunctions() template.FuncMap {
 		"phoneIso3166": phoneIso3166,
 		"array_contains": func(a []interface{}, b string) bool {
 			for _, x := range a {
-				if x.(string) == b {
+				stringX, ok := x.(string)
+				if !ok {
+					return false
+				}
+
+				if stringX == b {
 					return true
 				}
 			}
@@ -57,14 +63,22 @@ func separator(s string) func() string {
 	}
 }
 
-func marshal(v interface{}) string {
-	a, _ := json.Marshal(v)
+func marshal(v any) string {
+	a, err := json.Marshal(v)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to marshal any")
+	}
+
 	return string(a)
 }
 
 func fromEnv(key, envName string) string {
 	value := os.Getenv(envName)
-	strValue, _ := json.Marshal(value)
+
+	strValue, err := json.Marshal(value)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to marshal value")
+	}
 
 	return fmt.Sprintf("%q:%s", key, string(strValue))
 }

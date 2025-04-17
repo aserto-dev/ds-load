@@ -15,6 +15,8 @@ type CognitoClient struct {
 	userPoolID    string
 }
 
+const maximumNumberOfUsers = 60
+
 func NewCognitoClient(accessKey, secretKey, userPoolID, region string) (*CognitoClient, error) {
 	c := &CognitoClient{}
 
@@ -45,7 +47,7 @@ func (c *CognitoClient) ListUsers(ctx context.Context) ([]*cognitoidentityprovid
 		listUsersInput := &cognitoidentityprovider.ListUsersInput{
 			UserPoolId:      aws.String(c.userPoolID),
 			PaginationToken: paginationToken,
-			Limit:           aws.Int64(60),
+			Limit:           aws.Int64(maximumNumberOfUsers),
 		}
 
 		listUsersOutput, err := c.cognitoClient.ListUsersWithContext(ctx, listUsersInput)

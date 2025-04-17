@@ -1,4 +1,6 @@
 package app
 
-const AppName = "ds-load-ldap"
-const AppDescription = "ldap directory loader"
+const (
+	AppName        = "ds-load-ldap"
+	AppDescription = "ldap directory loader"
+)

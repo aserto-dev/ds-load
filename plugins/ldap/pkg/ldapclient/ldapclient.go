@@ -30,6 +30,11 @@ type ConnectionOptions struct {
 	IDField     string
 }
 
+const (
+	defaultConnectionTimeout = 10 * time.Second
+	defaultPageSize          = 1000
+)
+
 func NewLDAPClient(credentials *Credentials, conOptions *ConnectionOptions, logger *zerolog.Logger) (*LDAPClient, error) {
 	ldapClient := &LDAPClient{}
 
@@ -50,7 +55,7 @@ func (l *LDAPClient) initLDAPConnection(username, password, host string, insecur
 	var dialOptions []ldap.DialOpt
 
 	// Set default timeout for init connection
-	ldap.DefaultTimeout = 10 * time.Second
+	ldap.DefaultTimeout = defaultConnectionTimeout
 
 	// Disable the security check if insecure is true
 	if insecure { // #nosec G402
@@ -73,7 +78,7 @@ func (l *LDAPClient) initLDAPConnection(username, password, host string, insecur
 func (l *LDAPClient) Close() {
 	err := l.ldapConn.Close()
 	if err != nil {
-		l.logger.Error().Err(err)
+		l.logger.Error().Err(err).Msg("failed to close ldap connection")
 	}
 }
 
@@ -96,7 +101,7 @@ func (l *LDAPClient) search(filter string) []*ldap.Entry {
 		nil,
 	)
 
-	sr, err := l.ldapConn.SearchWithPaging(searchRequest, 1000)
+	sr, err := l.ldapConn.SearchWithPaging(searchRequest, defaultPageSize)
 	if err != nil {
 		log.Fatal(err)
 	}

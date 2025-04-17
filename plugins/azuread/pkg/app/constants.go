@@ -1,4 +1,6 @@
 package app
 
-const AppName = "ds-load-azuread"
-const AppDescription = "AzureAD directory loader"
+const (
+	AppName        = "ds-load-azuread"
+	AppDescription = "AzureAD directory loader"
+)

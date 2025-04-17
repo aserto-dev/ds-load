@@ -1,6 +1,9 @@
 package template
 
-import "os"
+import (
+	"os"
+	"path/filepath"
+)
 
 type Loader struct {
 	defaultTemplateContent []byte
@@ -17,5 +20,5 @@ func (t *Loader) Load(path string) ([]byte, error) {
 		return t.defaultTemplateContent, nil
 	}
 
-	return os.ReadFile(path)
+	return os.ReadFile(filepath.Clean(path))
 }

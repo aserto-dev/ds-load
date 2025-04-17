@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -18,13 +19,13 @@ func main() {
 
 	pluginFinder, err := plugin.NewHomeDirFinder(true)
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		_, _ = fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 
 	plugins, err := pluginFinder.Find()
 	if err != nil {
-		os.Stderr.WriteString(err.Error())
+		_, _ = fmt.Fprint(os.Stderr, err)
 		os.Exit(1)
 	}
 

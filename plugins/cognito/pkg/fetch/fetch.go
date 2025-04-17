@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"iter"
 
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
@@ -31,21 +32,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	defer writer.Close()
 
 	if f.groups {
-		groups, err := f.cognitoClient.ListGroups()
-		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
-
-		for _, group := range groups {
-			groupBytes, err := json.Marshal(group)
+		for obj, err := range f.fetchGroups() {
 			if err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				return err
-			}
-
-			var obj map[string]interface{}
-			if err := json.Unmarshal(groupBytes, &obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
 			}
 
 			if err := writer.Write(obj); err != nil {
@@ -105,4 +94,31 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	}
 
 	return nil
+}
+
+func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {
+	groups, err := f.cognitoClient.ListGroups()
+	if err != nil {
+		return func(yield func(map[string]any, error) bool) {
+			if !(yield(nil, err)) {
+				return
+			}
+		}
+	}
+
+	return func(yield func(map[string]any, error) bool) {
+		for _, group := range groups {
+			groupBytes, err := json.Marshal(group)
+			if err != nil && !yield(nil, err) {
+				return
+			}
+
+			var obj map[string]any
+			err = json.Unmarshal(groupBytes, &obj)
+
+			if !(yield(obj, err)) {
+				return
+			}
+		}
+	}
 }
