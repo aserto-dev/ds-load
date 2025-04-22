@@ -87,7 +87,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 			opts = append(opts, management.Query(f.getConnectionQuery()))
 		}
 
-		users, more, err := f.getUsers(ctx, opts)
+		users, more, err := f.fetchUsersList(ctx, opts)
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			return err
@@ -198,7 +198,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 	return nil
 }
 
-func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption) ([]*management.User, bool, error) {
+func (f *Fetcher) fetchUsersList(ctx context.Context, opts []management.RequestOption) ([]*management.User, bool, error) {
 	if f.UserPID != "" && f.UserEmail != "" {
 		return nil, false, errors.New("only one of user-pid or user-email can be specified")
 	}
@@ -239,7 +239,7 @@ func (f *Fetcher) getUsers(ctx context.Context, opts []management.RequestOption)
 
 	// Use special SAML user list, to avoid known unmarshal errors, see notes below.
 	ul := &UserList{}
-	if err := ListUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
+	if err := FetchUsers(ctx, f.client.Mgmt, &ul, opts...); err != nil {
 		return nil, false, err
 	}
 
@@ -414,7 +414,7 @@ func (u *User) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func ListUsers(ctx context.Context, m *management.Management, payload interface{}, options ...management.RequestOption) error {
+func FetchUsers(ctx context.Context, m *management.Management, payload any, options ...management.RequestOption) error {
 	options = append(options,
 		management.PerPage(defaultMaxUsers),
 		management.IncludeTotals(true),
