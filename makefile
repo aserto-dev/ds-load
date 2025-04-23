@@ -12,10 +12,9 @@ GOPRIVATE          := "github.com/aserto-dev"
 DOCKER_BUILDKIT    := 1
 
 BIN_DIR            := ./bin
-BASE_DIR           := ${PWD}
-EXT_DIR            := ./.ext
-EXT_BIN_DIR        := ${BASE_DIR}/${EXT_DIR}/bin
-EXT_TMP_DIR        := ${BASE_DIR}/${EXT_DIR}/tmp
+EXT_DIR            := ${PWD}/.ext
+EXT_BIN_DIR        := ${EXT_DIR}/bin
+EXT_TMP_DIR        := ${EXT_DIR}/tmp
 
 GO_VER             := 1.24
 VAULT_VER	         := 1.8.12
@@ -64,7 +63,7 @@ lint:
 	@echo -e "$(ATTN_COLOR)==> $@ $(NO_COLOR)"
 	@${EXT_BIN_DIR}/golangci-lint config path
 	@${EXT_BIN_DIR}/golangci-lint config verify
-	@go list -f '{{.Dir}}' -m | xargs -I{} bash -c 'cd {} && ${EXT_BIN_DIR}/golangci-lint run --config ${BASE_DIR}/.golangci.yaml'
+	@go list -f '{{.Dir}}' -m | xargs -I{} bash -c 'cd {} && ${EXT_BIN_DIR}/golangci-lint run --config ${PWD}/.golangci.yaml'
 
 PHONY: go-mod-tidy
 go-mod-tidy:
