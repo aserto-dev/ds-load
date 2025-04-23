@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/plugins/google/pkg/googleclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/fetcher"
 )
 
 type Fetcher struct {
@@ -61,40 +62,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 func (f *Fetcher) fetchUsers() iter.Seq2[map[string]any, error] {
 	users, err := f.gClient.ListUsers()
 	if err != nil {
-		return func(yield func(map[string]any, error) bool) {
-			if !yield(nil, err) {
-				return
-			}
-		}
+		return fetcher.YieldError(err)
 	}
 
-	return func(yield func(map[string]any, error) bool) {
-		for _, user := range users {
-			userBytes, err := json.Marshal(user)
-			if err != nil {
-				if !yield(nil, err) {
-					return
-				}
-			}
-
-			var obj map[string]any
-			err = json.Unmarshal(userBytes, &obj)
-
-			if !yield(obj, err) {
-				return
-			}
-		}
-	}
+	return fetcher.YieldMap(json.Marshal, users)
 }
 
 func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {
 	groups, err := f.gClient.ListGroups()
 	if err != nil {
-		return func(yield func(map[string]any, error) bool) {
-			if !yield(nil, err) {
-				return
-			}
-		}
+		return fetcher.YieldError(err)
 	}
 
 	return func(yield func(map[string]any, error) bool) {

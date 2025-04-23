@@ -2,13 +2,15 @@ package fetch
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"io"
 	"iter"
 
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/azureclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
+	"github.com/aserto-dev/ds-load/sdk/fetcher"
+	"github.com/aserto-dev/msgraph-sdk-go/models"
 	kiota "github.com/microsoft/kiota-serialization-json-go"
 )
 
@@ -64,78 +66,58 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, error] {
 	aadUsers, err := f.azureClient.ListUsers(ctx, f.Groups, f.userProps)
 	if err != nil {
-		return func(yield func(map[string]any, error) bool) {
-			if !yield(nil, err) {
-				return
-			}
-		}
+		return fetcher.YieldError(err)
 	}
 
-	return func(yield func(map[string]any, error) bool) {
-		for _, user := range aadUsers {
-			writer := kiota.NewJsonSerializationWriter()
-
-			err := user.Serialize(writer)
-			if err != nil {
-				if !yield(nil, err) {
-					return
-				}
-			}
-
-			objBytes, err := writer.GetSerializedContent()
-			if err != nil {
-				if !(yield(nil, err)) {
-					return
-				}
-			}
-
-			objString := "{" + string(objBytes) + "}"
-
-			var obj map[string]any
-			err = json.Unmarshal([]byte(objString), &obj)
-
-			if !(yield(obj, err)) {
-				return
-			}
+	return fetcher.YieldMap(func(object any) ([]byte, error) {
+		user, ok := object.(models.Userable)
+		if !ok {
+			return nil, errors.ErrUnsupported
 		}
-	}
+
+		writer := kiota.NewJsonSerializationWriter()
+
+		err := user.Serialize(writer)
+		if err != nil {
+			return nil, err
+		}
+
+		objBytes, err := writer.GetSerializedContent()
+		if err != nil {
+			return nil, err
+		}
+
+		objString := "{" + string(objBytes) + "}"
+
+		return []byte(objString), nil
+	}, aadUsers)
 }
 
 func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, error] {
 	aadGroups, err := f.azureClient.ListGroups(ctx, f.groupProps)
 	if err != nil {
-		return func(yield func(map[string]any, error) bool) {
-			if !(yield(nil, err)) {
-				return
-			}
-		}
+		return fetcher.YieldError(err)
 	}
 
-	return func(yield func(map[string]any, error) bool) {
-		for _, group := range aadGroups {
-			writer := kiota.NewJsonSerializationWriter()
-
-			if err := group.Serialize(writer); err != nil {
-				if !yield(nil, err) {
-					return
-				}
-			}
-
-			objBytes, err := writer.GetSerializedContent()
-			if err != nil {
-				if !(yield(nil, err)) {
-					return
-				}
-			}
-
-			objString := "{" + string(objBytes) + "}"
-
-			var obj map[string]any
-			err = json.Unmarshal([]byte(objString), &obj)
-
-			if !(yield(obj, err)) {
-				return
-			}
+	return fetcher.YieldMap(func(object any) ([]byte, error) {
+		group, ok := object.(models.Groupable)
+		if !ok {
+			return nil, errors.ErrUnsupported
 		}
-	}
+
+		writer := kiota.NewJsonSerializationWriter()
+
+		if err := group.Serialize(writer); err != nil {
+			return nil, err
+		}
+
+		objBytes, err := writer.GetSerializedContent()
+		if err != nil {
+			return nil, err
+		}
+
+		objString := "{" + string(objBytes) + "}"
+
+		return []byte(objString), nil
+	}, aadGroups)
 }
