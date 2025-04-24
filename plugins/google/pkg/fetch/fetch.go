@@ -10,6 +10,8 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/fetcher"
+
+	admin "google.golang.org/api/admin/directory/v1"
 )
 
 type Fetcher struct {
@@ -65,7 +67,9 @@ func (f *Fetcher) fetchUsers() iter.Seq2[map[string]any, error] {
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(users, json.Marshal)
+	return fetcher.YieldMap(users, func(user *admin.User) ([]byte, error) {
+		return json.Marshal(user)
+	})
 }
 
 func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {

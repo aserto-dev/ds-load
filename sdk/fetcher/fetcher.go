@@ -11,7 +11,7 @@ func YieldError(err error) iter.Seq2[map[string]any, error] {
 	}
 }
 
-func YieldMap[T any](objects []T, marshaller func(any) ([]byte, error)) iter.Seq2[map[string]any, error] {
+func YieldMap[T any](objects []T, marshaller func(T) ([]byte, error)) iter.Seq2[map[string]any, error] {
 	return func(yield func(map[string]any, error) bool) {
 		for _, object := range objects {
 			objectBytes, err := marshaller(object)

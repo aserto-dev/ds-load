@@ -2,7 +2,6 @@ package fetch
 
 import (
 	"context"
-	"errors"
 	"io"
 	"iter"
 
@@ -69,12 +68,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, erro
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(aadUsers, func(object any) ([]byte, error) {
-		user, ok := object.(models.Userable)
-		if !ok {
-			return nil, errors.ErrUnsupported
-		}
-
+	return fetcher.YieldMap(aadUsers, func(user models.Userable) ([]byte, error) {
 		writer := kiota.NewJsonSerializationWriter()
 
 		err := user.Serialize(writer)
@@ -99,12 +93,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, err
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(aadGroups, func(object any) ([]byte, error) {
-		group, ok := object.(models.Groupable)
-		if !ok {
-			return nil, errors.ErrUnsupported
-		}
-
+	return fetcher.YieldMap(aadGroups, func(group models.Groupable) ([]byte, error) {
 		writer := kiota.NewJsonSerializationWriter()
 
 		if err := group.Serialize(writer); err != nil {

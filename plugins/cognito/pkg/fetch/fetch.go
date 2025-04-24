@@ -10,6 +10,7 @@ import (
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/aserto-dev/ds-load/sdk/fetcher"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 )
 
 type Fetcher struct {
@@ -103,5 +104,7 @@ func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(groups, json.Marshal)
+	return fetcher.YieldMap(groups, func(group *cognitoidentityprovider.GroupType) ([]byte, error) {
+		return json.Marshal(group)
+	})
 }
