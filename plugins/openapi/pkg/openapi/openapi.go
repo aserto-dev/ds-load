@@ -58,7 +58,7 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 
 	if serviceName != "" {
 		if doc.Info.Extensions == nil {
-			doc.Info.Extensions = make(map[string]interface{}, 0)
+			doc.Info.Extensions = make(map[string]any, 0)
 		}
 
 		doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)

@@ -69,7 +69,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, erro
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(func(object any) ([]byte, error) {
+	return fetcher.YieldMap(aadUsers, func(object any) ([]byte, error) {
 		user, ok := object.(models.Userable)
 		if !ok {
 			return nil, errors.ErrUnsupported
@@ -90,7 +90,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context) iter.Seq2[map[string]any, erro
 		objString := "{" + string(objBytes) + "}"
 
 		return []byte(objString), nil
-	}, aadUsers)
+	})
 }
 
 func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, error] {
@@ -99,7 +99,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, err
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(func(object any) ([]byte, error) {
+	return fetcher.YieldMap(aadGroups, func(object any) ([]byte, error) {
 		group, ok := object.(models.Groupable)
 		if !ok {
 			return nil, errors.ErrUnsupported
@@ -119,5 +119,5 @@ func (f *Fetcher) fetchGroups(ctx context.Context) iter.Seq2[map[string]any, err
 		objString := "{" + string(objBytes) + "}"
 
 		return []byte(objString), nil
-	}, aadGroups)
+	})
 }

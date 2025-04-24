@@ -61,7 +61,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			return err
 		}
 
-		var obj map[string]interface{}
+		var obj map[string]any
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 		}
@@ -103,5 +103,5 @@ func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(json.Marshal, groups)
+	return fetcher.YieldMap(groups, json.Marshal)
 }

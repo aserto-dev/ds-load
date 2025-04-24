@@ -65,7 +65,7 @@ func (f *Fetcher) fetchUsers() iter.Seq2[map[string]any, error] {
 		return fetcher.YieldError(err)
 	}
 
-	return fetcher.YieldMap(json.Marshal, users)
+	return fetcher.YieldMap(users, json.Marshal)
 }
 
 func (f *Fetcher) fetchGroups() iter.Seq2[map[string]any, error] {

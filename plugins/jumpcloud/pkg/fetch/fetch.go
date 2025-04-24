@@ -45,7 +45,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			continue
 		}
 
-		var obj map[string]interface{}
+		var obj map[string]any
 
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
@@ -86,7 +86,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context,
 			continue
 		}
 
-		var obj map[string]interface{}
+		var obj map[string]any
 		if err := json.Unmarshal(groupBytes, &obj); err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 			continue
@@ -101,7 +101,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context,
 		if err != nil {
 			common.WriteErrorWithExitCode(errorWriter, err, 1)
 		} else {
-			var users []map[string]interface{}
+			var users []map[string]any
 			if err := json.Unmarshal(usersInGroupBytes, &users); err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
 			}

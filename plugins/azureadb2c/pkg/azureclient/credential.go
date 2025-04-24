@@ -59,7 +59,7 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	// process the response
 	defer res.Body.Close()
 
-	var responseData map[string]interface{}
+	var responseData map[string]any
 
 	body, _ := io.ReadAll(res.Body)
 

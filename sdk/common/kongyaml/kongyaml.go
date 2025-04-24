@@ -23,7 +23,7 @@ func NewYAMLResolver(yamlKey string) *YAMLResolver {
 //nolint:ireturn // loader returns a kong resolver interface
 func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 	decoder := yaml.NewDecoder(r)
-	config := map[string]interface{}{}
+	config := map[string]any{}
 
 	if err := decoder.Decode(config); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (y *YAMLResolver) Loader(r io.Reader) (kong.Resolver, error) {
 
 	if y.yamlKey != "" {
 		var ok bool
-		config, ok = config[y.yamlKey].(map[string]interface{})
+		config, ok = config[y.yamlKey].(map[string]any)
 
 		if !ok {
 			return kong.ResolverFunc(func(context *kong.Context, parent *kong.Path, flag *kong.Flag) (interface{}, error) {

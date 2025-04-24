@@ -94,7 +94,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 		}
 
 		for _, user := range users {
-			obj, err := f.buildOutputObjects(ctx, user)
+			obj, err := f.userToMap(ctx, user)
 			if err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
 			}
@@ -120,7 +120,7 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 }
 
 // return a object map to output or a boolean to skip current user.
-func (f *Fetcher) buildOutputObjects(ctx context.Context, user *management.User) (map[string]any, error) {
+func (f *Fetcher) userToMap(ctx context.Context, user *management.User) (map[string]any, error) {
 	var obj map[string]any
 
 	res, err := user.MarshalJSON()
@@ -175,7 +175,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 		for _, role := range roles {
 			res := role.String()
 
-			var obj map[string]interface{}
+			var obj map[string]any
 
 			if err := json.Unmarshal([]byte(res), &obj); err != nil {
 				common.WriteErrorWithExitCode(errorWriter, err, 1)
@@ -261,11 +261,11 @@ func (f *Fetcher) fetchRoles(ctx context.Context, opts []management.RequestOptio
 
 func (f *Fetcher) fetchUserRoles(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
-	finished := false
+	hasNext := true
 
 	var results []map[string]any
 
-	for !finished {
+	for hasNext {
 		reqOpts := management.Page(page)
 
 		roles, err := f.client.Mgmt.User.Roles(ctx, uID, reqOpts)
@@ -287,9 +287,7 @@ func (f *Fetcher) fetchUserRoles(ctx context.Context, uID string) ([]map[string]
 			results = append(results, obj)
 		}
 
-		if !roles.HasNext() {
-			finished = true
-		}
+		hasNext = roles.HasNext()
 
 		page++
 	}
@@ -299,11 +297,11 @@ func (f *Fetcher) fetchUserRoles(ctx context.Context, uID string) ([]map[string]
 
 func (f *Fetcher) fetchOrgs(ctx context.Context, uID string) ([]map[string]any, error) {
 	page := 0
-	finished := false
+	hasNext := true
 
 	var results []map[string]any
 
-	for !finished {
+	for hasNext {
 		reqOpts := management.Page(page)
 
 		orgs, err := f.client.Mgmt.User.Organizations(ctx, uID, reqOpts)
@@ -312,7 +310,7 @@ func (f *Fetcher) fetchOrgs(ctx context.Context, uID string) ([]map[string]any, 
 		}
 
 		for _, org := range orgs.Organizations {
-			obj, err := formatObject(org)
+			obj, err := toJSONMap(org)
 			if err != nil {
 				return nil, err
 			}
@@ -320,9 +318,7 @@ func (f *Fetcher) fetchOrgs(ctx context.Context, uID string) ([]map[string]any, 
 			results = append(results, obj)
 		}
 
-		if !orgs.HasNext() {
-			finished = true
-		}
+		hasNext = orgs.HasNext()
 
 		page++
 	}
@@ -330,7 +326,7 @@ func (f *Fetcher) fetchOrgs(ctx context.Context, uID string) ([]map[string]any, 
 	return results, nil
 }
 
-func formatObject(org any) (map[string]any, error) {
+func toJSONMap(org any) (map[string]any, error) {
 	res, err := json.Marshal(org)
 	if err != nil {
 		return nil, err
@@ -352,20 +348,6 @@ func (f *Fetcher) getConnectionQuery() string {
 	return `identities.connection:"` + f.ConnectionName + `"`
 }
 
-// Specialized SAML user list function
-//
-// The Auth0 golang SDK does not properly handle the unmarshal of the returned payload into a management.UserList.
-//
-// The returned payload contains:
-// "email":"user@domain.com",
-// "emailVerified":"true",
-// "email_verified":"user@domain.com"
-//
-// Which results in an unmarshal error when calling
-// `func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)`
-// resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
-//
-// The implementation below works around the issues by using custom JSON marshaling to map the values into the management.User instances.
 type User struct {
 	management.User
 }
@@ -375,6 +357,22 @@ type UserList struct {
 	Users []*User `json:"users"`
 }
 
+// UserList is a specialized SAML user list function
+//
+// The Auth0 golang SDK does not properly handle the unmarshal of the returned payload into a management.UserList.
+//
+// The returned payload contains:
+// "email":"user@domain.com",
+// "emailVerified":"true",
+// "email_verified":"user@domain.com"
+//
+// Which results in an unmarshal error when calling
+//
+//	func (m *UserManager) List(ctx context.Context, opts ...RequestOption) (ul *UserList, err error)
+//
+// resulting in an error `strconv.ParseBool: parsing "user@domain.com": invalid syntax`
+//
+// The implementation below works around the issues by using custom JSON marshaling to map the values into the management.User instances.
 func (ul UserList) UserList() []*management.User {
 	return lo.Map(ul.Users, func(v *User, i int) *management.User { return &v.User })
 }

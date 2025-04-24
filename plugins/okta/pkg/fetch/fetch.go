@@ -121,14 +121,14 @@ func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWri
 	return nil
 }
 
-func (fetcher *Fetcher) processUser(ctx context.Context, user *okta.User, errorWriter io.Writer) (map[string]interface{}, error) {
+func (fetcher *Fetcher) processUser(ctx context.Context, user *okta.User, errorWriter io.Writer) (map[string]any, error) {
 	userBytes, err := json.Marshal(user)
 	if err != nil {
 		common.SetExitCode(1)
 		return nil, err
 	}
 
-	var userResult map[string]interface{}
+	var userResult map[string]any
 
 	if err := json.Unmarshal(userBytes, &userResult); err != nil {
 		common.SetExitCode(1)
@@ -160,14 +160,14 @@ func (fetcher *Fetcher) processUser(ctx context.Context, user *okta.User, errorW
 	return userResult, nil
 }
 
-func (fetcher *Fetcher) processGroup(ctx context.Context, group *okta.Group, errorWriter io.Writer) (map[string]interface{}, error) {
+func (fetcher *Fetcher) processGroup(ctx context.Context, group *okta.Group, errorWriter io.Writer) (map[string]any, error) {
 	userBytes, err := json.Marshal(group)
 	if err != nil {
 		common.SetExitCode(1)
 		return nil, err
 	}
 
-	var groupResult map[string]interface{}
+	var groupResult map[string]any
 
 	if err := json.Unmarshal(userBytes, &groupResult); err != nil {
 		common.SetExitCode(1)
@@ -188,10 +188,10 @@ func (fetcher *Fetcher) processGroup(ctx context.Context, group *okta.Group, err
 	return groupResult, nil
 }
 
-func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
+func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]any, error) {
 	var (
 		response *okta.APIResponse
-		result   []map[string]interface{}
+		result   []map[string]any
 		groups   []okta.Group
 		err      error
 	)
@@ -210,7 +210,7 @@ func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWrite
 				return nil, err
 			}
 
-			var obj map[string]interface{}
+			var obj map[string]any
 			if err := json.Unmarshal(groupBytes, &obj); err != nil {
 				return nil, err
 			}
@@ -231,10 +231,10 @@ func (fetcher *Fetcher) getGroups(ctx context.Context, userID string, errorWrite
 	return result, nil
 }
 
-func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
+func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWriter io.Writer) ([]map[string]any, error) {
 	var (
 		response *okta.APIResponse
-		result   []map[string]interface{}
+		result   []map[string]any
 		roles    []okta.Role
 		err      error
 	)
@@ -253,7 +253,7 @@ func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWr
 				return nil, err
 			}
 
-			var obj map[string]interface{}
+			var obj map[string]any
 
 			if err := json.Unmarshal(roleBytes, &obj); err != nil {
 				return nil, err
@@ -275,10 +275,10 @@ func (fetcher *Fetcher) getUserRoles(ctx context.Context, userID string, errorWr
 	return result, nil
 }
 
-func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, errorWriter io.Writer) ([]map[string]interface{}, error) {
+func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, errorWriter io.Writer) ([]map[string]any, error) {
 	var (
 		response *okta.APIResponse
-		result   []map[string]interface{}
+		result   []map[string]any
 		roles    []okta.Role
 		err      error
 	)
@@ -297,7 +297,7 @@ func (fetcher *Fetcher) getGroupRoles(ctx context.Context, groupID string, error
 				return nil, err
 			}
 
-			var obj map[string]interface{}
+			var obj map[string]any
 			if err := json.Unmarshal(roleBytes, &obj); err != nil {
 				return nil, err
 			}

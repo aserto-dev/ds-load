@@ -56,7 +56,7 @@ func NewDSPlugin(options ...PluginOption) *DSPlugin {
 }
 
 // json encodes results and prints to plugin writer.
-func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error) error {
+func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]any, errCh chan error) error {
 	var wg sync.WaitGroup
 
 	wg.Add(1)

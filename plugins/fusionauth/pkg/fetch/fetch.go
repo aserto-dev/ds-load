@@ -50,7 +50,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			return err
 		}
 
-		var obj map[string]interface{}
+		var obj map[string]any
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
 			_, _ = errorWriter.Write([]byte(err.Error()))
 			return err
