@@ -64,7 +64,7 @@ func (f *Fetcher) WithConnectionName(connectionName string) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
@@ -78,7 +78,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	return f.fetchUsers(ctx, writer, errorWriter)
 }
 
-func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter common.ErrorWriter) error {
 	page := 0
 
 	for {
@@ -89,15 +89,13 @@ func (f *Fetcher) fetchUsers(ctx context.Context, outputWriter *js.JSONArrayWrit
 
 		users, more, err := f.fetchUsersList(ctx, opts)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			return err
 		}
 
 		for _, user := range users {
 			obj, err := f.userToMap(ctx, user)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			errorWriter.Error(err)
 
 			if obj == nil {
 				continue
@@ -156,7 +154,7 @@ func (f *Fetcher) userToMap(ctx context.Context, user *management.User) (map[str
 	return obj, nil
 }
 
-func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter io.Writer) error {
+func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWriter, errorWriter common.ErrorWriter) error {
 	page := 0
 
 	for f.Roles {
@@ -168,7 +166,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 
 		roles, more, err := f.fetchRoles(ctx, opts)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			return err
 		}
 
@@ -178,7 +176,7 @@ func (f *Fetcher) fetchGroups(ctx context.Context, outputWriter *js.JSONArrayWri
 			var obj map[string]any
 
 			if err := json.Unmarshal([]byte(res), &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
+				errorWriter.Error(err)
 				continue
 			}
 

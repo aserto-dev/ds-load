@@ -35,7 +35,7 @@ func (fetcher *Fetcher) WithRoles(roles bool) *Fetcher {
 	return fetcher
 }
 
-func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
@@ -49,35 +49,29 @@ func (fetcher *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.
 	return fetcher.fetchUsers(ctx, writer, errorWriter)
 }
 
-func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWriter, errorWriter io.Writer) error {
+func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWriter, errorWriter common.ErrorWriter) error {
 	users, response, err := fetcher.oktaClient.User.ListUsers(ctx).Execute()
 	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		errorWriter.Error(err)
 		return err
 	}
 
 	for {
-		logIfRateLimitExceeded(response, errorWriter)
+		logIfRateLimitExceeded(response, errorWriter.Writer)
 
 		for i := range users {
 			user := &users[i]
 
-			userResult, err := fetcher.processUser(ctx, user, errorWriter)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			userResult, err := fetcher.processUser(ctx, user, errorWriter.Writer)
+			errorWriter.Error(err)
 
 			err = writer.Write(userResult)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			errorWriter.ErrorNoExitCode(err)
 		}
 
 		if response != nil && response.HasNextPage() {
 			response, err = response.Next(&users)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			errorWriter.Error(err)
 		} else {
 			break
 		}
@@ -86,33 +80,27 @@ func (fetcher *Fetcher) fetchUsers(ctx context.Context, writer *js.JSONArrayWrit
 	return nil
 }
 
-func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWriter, errorWriter io.Writer) error {
+func (fetcher *Fetcher) fetchGroups(ctx context.Context, writer *js.JSONArrayWriter, errorWriter common.ErrorWriter) error {
 	groups, response, err := fetcher.oktaClient.Group.ListGroups(ctx).Execute()
 	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		errorWriter.Error(err)
 		return err
 	}
 
 	for {
-		logIfRateLimitExceeded(response, errorWriter)
+		logIfRateLimitExceeded(response, errorWriter.Writer)
 
 		for _, group := range groups {
-			groupResult, err := fetcher.processGroup(ctx, &group, errorWriter)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			groupResult, err := fetcher.processGroup(ctx, &group, errorWriter.Writer)
+			errorWriter.Error(err)
 
 			err = writer.Write(groupResult)
-			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			errorWriter.ErrorNoExitCode(err)
 		}
 
 		if response != nil && response.HasNextPage() {
 			response, err = response.Next(&groups)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			errorWriter.Error(err)
 		} else {
 			break
 		}

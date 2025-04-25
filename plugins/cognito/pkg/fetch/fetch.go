@@ -29,26 +29,21 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	if f.groups {
 		for obj, err := range f.fetchGroups() {
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			errorWriter.Error(err)
 
-			if err := writer.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			err := writer.Write(obj)
+			errorWriter.ErrorNoExitCode(err)
 		}
 	}
 
 	users, err := f.cognitoClient.ListUsers(ctx)
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-	}
+	errorWriter.ErrorNoExitCode(err)
 
 	for _, user := range users {
 		attributes := make(map[string]string)
@@ -58,41 +53,38 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			return err
 		}
 
 		var obj map[string]any
-		if err := json.Unmarshal(userBytes, &obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err = json.Unmarshal(userBytes, &obj)
+		errorWriter.ErrorNoExitCode(err)
 
 		obj["Attributes"] = attributes
 
 		if f.groups {
 			groups, err := f.cognitoClient.GetGroupsForUser(*user.Username)
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
+				errorWriter.ErrorNoExitCode(err)
 				continue
 			}
 
 			groupBytes, err := json.Marshal(groups.Groups)
 			if err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
+				errorWriter.ErrorNoExitCode(err)
 				return err
 			}
 
 			var grps []map[string]string
-			if err := json.Unmarshal(groupBytes, &grps); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			err = json.Unmarshal(groupBytes, &grps)
+			errorWriter.ErrorNoExitCode(err)
 
 			obj["Groups"] = grps
 		}
 
-		if err := writer.Write(obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err = writer.Write(obj)
+		errorWriter.ErrorNoExitCode(err)
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -28,5 +29,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 
 	fetcher = fetcher.WithDirectory(cmd.Directory).WithURL(cmd.URL).WithIDFormat(cmd.IDFormat).WithServiceName(cmd.ServiceName)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
 }

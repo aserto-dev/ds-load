@@ -33,30 +33,24 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 
 	if f.Groups {
 		for obj, err := range f.fetchGroups(ctx) {
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			}
+			errorWriter.Error(err)
 
-			if err := jsonWriter.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			err := jsonWriter.Write(obj)
+			errorWriter.ErrorNoExitCode(err)
 		}
 	}
 
 	for user, err := range f.fetchUsers(ctx) {
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
-		}
+		errorWriter.Error(err)
 
-		if err := jsonWriter.Write(user); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err := jsonWriter.Write(user)
+		errorWriter.ErrorNoExitCode(err)
 	}
 
 	return nil

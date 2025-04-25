@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/cognitoclient"
 	"github.com/aserto-dev/ds-load/plugins/cognito/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -29,5 +30,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 
 	fetcher = fetcher.WithGroups(cmd.Groups)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
 }

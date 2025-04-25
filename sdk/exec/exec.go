@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/plugin"
 	"github.com/rs/zerolog"
 )
@@ -14,7 +15,7 @@ func Execute(ctx context.Context, log *zerolog.Logger, transformer plugin.Transf
 	defer pipeReader.Close()
 
 	go func() {
-		err := fetcher.Fetch(ctx, pipeWriter, os.Stderr)
+		err := fetcher.Fetch(ctx, pipeWriter, common.ErrorWriter{Writer: os.Stderr})
 		if err != nil {
 			log.Printf("Could not fetch data %s", err.Error())
 		}

@@ -30,31 +30,29 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	for user, err := range f.fetchUsers() {
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			continue
 		}
 
-		if err := writer.Write(user); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err := writer.Write(user)
+		errorWriter.ErrorNoExitCode(err)
 	}
 
 	if f.Groups {
 		for group, err := range f.fetchGroups() {
 			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
+				errorWriter.Error(err)
 				continue
 			}
 
-			if err := writer.Write(group); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			err := writer.Write(group)
+			errorWriter.ErrorNoExitCode(err)
 		}
 	}
 

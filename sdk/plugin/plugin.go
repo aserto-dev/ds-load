@@ -7,11 +7,12 @@ import (
 	"os"
 	"sync"
 
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher interface {
-	Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error
+	Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error
 }
 
 type Verifier interface {

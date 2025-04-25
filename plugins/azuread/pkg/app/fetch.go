@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -29,5 +30,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
 }

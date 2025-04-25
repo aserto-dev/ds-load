@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
@@ -32,27 +33,25 @@ func (f *Fetcher) WithHost(host string) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	users, err := f.fusionauthClient.ListUsers(ctx)
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-	}
+	errorWriter.ErrorNoExitCode(err)
 
 	for i := range users {
 		user := &users[i]
 
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			errorWriter.ErrorNoExitCode(err)
 			return err
 		}
 
 		var obj map[string]any
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			errorWriter.ErrorNoExitCode(err)
 			return err
 		}
 
@@ -60,22 +59,18 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 			obj["picture"] = fmt.Sprintf("%s%s", f.host, user.ImageUrl)
 		}
 
-		if err := writer.Write(obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err = writer.Write(obj)
+		errorWriter.ErrorNoExitCode(err)
 	}
 
 	if f.groups {
 		groups, err := f.fusionauthClient.ListGroups(ctx)
-		if err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		errorWriter.ErrorNoExitCode(err)
 
 		for i := range groups {
 			group := &groups[i]
-			if err := writer.Write(group); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+			err := writer.Write(group)
+			errorWriter.ErrorNoExitCode(err)
 		}
 	}
 
