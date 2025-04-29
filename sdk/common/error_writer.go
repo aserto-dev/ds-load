@@ -1,25 +1,44 @@
 package common
 
-import "os"
+import (
+	"os"
+)
 
 type ErrorWriter struct {
-	Writer *os.File
+	os.File
 }
 
-func (e *ErrorWriter) ErrorNoExitCode(err error) {
+type ErrorOptions struct {
+	SetExitCode bool
+}
+
+type ErrorOption func(*ErrorOptions)
+
+func NewErrorWriter(f *os.File) ErrorWriter {
+	if f == nil {
+		return ErrorWriter{*os.Stderr}
+	}
+
+	return ErrorWriter{*f}
+}
+
+func (e *ErrorWriter) Error(err error, opts ...ErrorOption) {
 	if err == nil {
 		return
 	}
 
-	_, _ = e.Writer.Write([]byte(err.Error()))
-}
+	_, _ = e.Write([]byte(err.Error()))
 
-func (e *ErrorWriter) Error(err error) {
-	if err == nil {
-		return
+	options := ErrorOptions{}
+	for _, opt := range opts {
+		opt(&options)
 	}
 
-	_, _ = e.Writer.Write([]byte(err.Error()))
+	if options.SetExitCode {
+		SetExitCode(1)
+	}
+}
 
-	SetExitCode(1)
+func WithExitCode(eo *ErrorOptions) {
+	eo.SetExitCode = true
 }

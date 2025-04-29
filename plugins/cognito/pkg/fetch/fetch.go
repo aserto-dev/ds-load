@@ -35,15 +35,15 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 
 	if f.groups {
 		for obj, err := range f.fetchGroups() {
-			errorWriter.Error(err)
+			errorWriter.Error(err, common.WithExitCode)
 
 			err := writer.Write(obj)
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 		}
 	}
 
 	users, err := f.cognitoClient.ListUsers(ctx)
-	errorWriter.ErrorNoExitCode(err)
+	errorWriter.Error(err, common.WithExitCode)
 
 	for _, user := range users {
 		attributes := make(map[string]string)
@@ -53,38 +53,38 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			errorWriter.Error(err)
+			errorWriter.Error(err, common.WithExitCode)
 			return err
 		}
 
 		var obj map[string]any
 		err = json.Unmarshal(userBytes, &obj)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 
 		obj["Attributes"] = attributes
 
 		if f.groups {
 			groups, err := f.cognitoClient.GetGroupsForUser(*user.Username)
 			if err != nil {
-				errorWriter.ErrorNoExitCode(err)
+				errorWriter.Error(err)
 				continue
 			}
 
 			groupBytes, err := json.Marshal(groups.Groups)
 			if err != nil {
-				errorWriter.ErrorNoExitCode(err)
+				errorWriter.Error(err)
 				return err
 			}
 
 			var grps []map[string]string
 			err = json.Unmarshal(groupBytes, &grps)
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 
 			obj["Groups"] = grps
 		}
 
 		err = writer.Write(obj)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	return nil

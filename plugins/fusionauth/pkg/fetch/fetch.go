@@ -38,20 +38,20 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 	defer writer.Close()
 
 	users, err := f.fusionauthClient.ListUsers(ctx)
-	errorWriter.ErrorNoExitCode(err)
+	errorWriter.Error(err)
 
 	for i := range users {
 		user := &users[i]
 
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 			return err
 		}
 
 		var obj map[string]any
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 			return err
 		}
 
@@ -60,17 +60,17 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		}
 
 		err = writer.Write(obj)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	if f.groups {
 		groups, err := f.fusionauthClient.ListGroups(ctx)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 
 		for i := range groups {
 			group := &groups[i]
 			err := writer.Write(group)
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 		}
 	}
 

@@ -53,7 +53,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		}
 
 		err = writer.Write(obj)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err, func(eo *common.ErrorOptions) {
+			eo.SetExitCode = false
+		})
 
 		idLookup[user.ID] = &user.BaseUser
 	}

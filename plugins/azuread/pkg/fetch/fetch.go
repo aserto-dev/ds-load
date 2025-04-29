@@ -39,18 +39,18 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 
 	if f.Groups {
 		for obj, err := range f.fetchGroups(ctx) {
-			errorWriter.Error(err)
+			errorWriter.Error(err, common.WithExitCode)
 
 			err := jsonWriter.Write(obj)
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 		}
 	}
 
 	for user, err := range f.fetchUsers(ctx) {
-		errorWriter.Error(err)
+		errorWriter.Error(err, common.WithExitCode)
 
 		err := jsonWriter.Write(user)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	return nil

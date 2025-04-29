@@ -36,23 +36,23 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 
 	for user, err := range f.fetchUsers() {
 		if err != nil {
-			errorWriter.Error(err)
+			errorWriter.Error(err, common.WithExitCode)
 			continue
 		}
 
 		err := writer.Write(user)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	if f.Groups {
 		for group, err := range f.fetchGroups() {
 			if err != nil {
-				errorWriter.Error(err)
+				errorWriter.Error(err, common.WithExitCode)
 				continue
 			}
 
 			err := writer.Write(group)
-			errorWriter.ErrorNoExitCode(err)
+			errorWriter.Error(err)
 		}
 	}
 

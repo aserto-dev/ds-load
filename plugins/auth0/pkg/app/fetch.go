@@ -46,5 +46,5 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		WithSAML(f.SAML).
 		WithConnectionName(f.ConnectionName)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

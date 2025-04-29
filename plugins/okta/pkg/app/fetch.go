@@ -28,5 +28,5 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.WithGroups(f.Groups).WithRoles(f.Roles).Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
+	return fetcher.WithGroups(f.Groups).WithRoles(f.Roles).Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

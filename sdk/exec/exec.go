@@ -15,7 +15,7 @@ func Execute(ctx context.Context, log *zerolog.Logger, transformer plugin.Transf
 	defer pipeReader.Close()
 
 	go func() {
-		err := fetcher.Fetch(ctx, pipeWriter, common.ErrorWriter{Writer: os.Stderr})
+		err := fetcher.Fetch(ctx, pipeWriter, common.NewErrorWriter(os.Stderr))
 		if err != nil {
 			log.Printf("Could not fetch data %s", err.Error())
 		}

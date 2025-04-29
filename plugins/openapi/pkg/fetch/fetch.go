@@ -48,11 +48,11 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 	defer writer.Close()
 
 	services, err := f.client.ListServices()
-	errorWriter.ErrorNoExitCode(err)
+	errorWriter.Error(err)
 
 	for _, service := range services {
 		err := writer.Write(service)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	apis, err := f.client.ListAPIs()
@@ -60,7 +60,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 
 	for _, api := range apis {
 		err := writer.Write(api)
-		errorWriter.ErrorNoExitCode(err)
+		errorWriter.Error(err)
 	}
 
 	return nil

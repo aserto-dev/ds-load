@@ -43,5 +43,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 
 	fetcher := fetch.New(ldapClient, cmd.IDField)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, common.ErrorWriter{Writer: os.Stderr})
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }
