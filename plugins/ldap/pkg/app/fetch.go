@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/ldapclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -42,5 +43,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 
 	fetcher := fetch.New(ldapClient, cmd.IDField)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

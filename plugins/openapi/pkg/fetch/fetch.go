@@ -5,6 +5,7 @@ import (
 	"io"
 
 	"github.com/aserto-dev/ds-load/plugins/openapi/pkg/openapi"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
@@ -42,30 +43,24 @@ func (f *Fetcher) WithServiceName(serviceName string) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	services, err := f.client.ListServices()
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-	}
+	errorWriter.Error(err)
 
 	for _, service := range services {
-		if err := writer.Write(service); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err := writer.Write(service)
+		errorWriter.Error(err)
 	}
 
 	apis, err := f.client.ListAPIs()
-	if err != nil {
-		_, _ = errorWriter.Write([]byte(err.Error()))
-	}
+	errorWriter.Error(err)
 
 	for _, api := range apis {
-		if err := writer.Write(api); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
-		}
+		err := writer.Write(api)
+		errorWriter.Error(err)
 	}
 
 	return nil

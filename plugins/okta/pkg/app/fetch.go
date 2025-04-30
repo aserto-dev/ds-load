@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/okta/pkg/oktaclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -27,5 +28,5 @@ func (f *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.WithGroups(f.Groups).WithRoles(f.Roles).Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.WithGroups(f.Groups).WithRoles(f.Roles).Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

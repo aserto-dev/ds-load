@@ -22,7 +22,9 @@ type RefreshTokenCredential struct {
 	tenantID     string
 }
 
-func NewRefreshTokenCredential(ctx context.Context, tenantID, clientID, clientSecret, refreshToken string) (*RefreshTokenCredential, error) {
+func NewRefreshTokenCredential(ctx context.Context,
+	tenantID, clientID, clientSecret, refreshToken string,
+) (*RefreshTokenCredential, error) {
 	c := &RefreshTokenCredential{
 		clientID:     clientID,
 		clientSecret: clientSecret,
@@ -42,12 +44,12 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	payload := strings.NewReader(data)
 
 	// create the request and execute it
-	req, err := http.NewRequestWithContext(ctx, "POST", url, payload)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, payload)
 	if err != nil {
 		return accessToken, err
 	}
 
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -57,7 +59,7 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 	// process the response
 	defer res.Body.Close()
 
-	var responseData map[string]interface{}
+	var responseData map[string]any
 
 	body, _ := io.ReadAll(res.Body)
 
@@ -68,14 +70,28 @@ func (c *RefreshTokenCredential) GetToken(ctx context.Context, options policy.To
 
 	// check for error
 	if responseData["error_description"] != nil {
-		errorMessage := responseData["error_description"].(string)
+		errorMessage, ok := responseData["error_description"].(string)
+		if !ok {
+			return accessToken, status.Error(codes.InvalidArgument, "failed to get error description")
+		}
+
 		return accessToken, status.Error(codes.InvalidArgument, errorMessage)
 	}
 
 	// retrieve the access token and expiration
-	accessToken.Token = responseData["access_token"].(string)
-	expiresIn := int(responseData["expires_in"].(float64))
-	accessToken.ExpiresOn = time.Now().Add(time.Second * time.Duration(expiresIn))
+	token, ok := responseData["access_token"].(string)
+	if !ok {
+		return accessToken, status.Error(codes.InvalidArgument, "'access_token' must be a string")
+	}
+
+	accessToken.Token = token
+
+	expiresIn, ok := responseData["expires_in"].(float64)
+	if !ok {
+		return accessToken, status.Error(codes.InvalidArgument, "'exprires_in' must be a float")
+	}
+
+	accessToken.ExpiresOn = time.Now().Add(time.Second * time.Duration(int(expiresIn)))
 
 	return accessToken, nil
 }

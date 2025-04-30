@@ -15,11 +15,13 @@ type FusionAuthClient struct {
 	host             string
 }
 
+const defaultTimeout = 10 * time.Second
+
 func NewFusionAuthClient(host, apiKey string) (*FusionAuthClient, error) {
 	c := &FusionAuthClient{}
 
 	httpClient := &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: defaultTimeout,
 	}
 
 	baseURL, _ := url.Parse(host)

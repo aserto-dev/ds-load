@@ -4,9 +4,11 @@ import (
 	"os"
 
 	"github.com/aserto-dev/ds-load/plugins/azureadb2c/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
+//nolint:lll // user and group properties include complex defaults.
 type FetchCmd struct {
 	Tenant          string   `short:"a" help:"AzureAD B2C tenant" env:"AZUREADB2C_TENANT" required:""`
 	ClientID        string   `short:"i" help:"AzureAD B2C Client ID" env:"AZUREADB2C_CLIENT_ID" required:""`
@@ -28,5 +30,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

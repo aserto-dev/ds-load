@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const JcAPIKey string = "JC_API_KEY" // nolint: gosec // no hardcoded credentials.
+const JcAPIKey string = "JC_API_KEY" //nolint:gosec // no hardcoded credentials.
 
 func TestMain(m *testing.M) {
 	if os.Getenv(JcAPIKey) == "" {

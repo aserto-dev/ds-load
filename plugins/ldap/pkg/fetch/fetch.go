@@ -6,6 +6,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/attribute"
 	"github.com/aserto-dev/ds-load/plugins/ldap/pkg/ldapclient"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 	"github.com/go-ldap/ldap/v3"
 )
@@ -28,7 +29,7 @@ func New(ldapClient *ldapclient.LDAPClient, idField string) *Fetcher {
 	}
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 

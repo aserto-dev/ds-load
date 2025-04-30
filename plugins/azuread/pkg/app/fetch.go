@@ -4,9 +4,11 @@ import (
 	"os"
 
 	"github.com/aserto-dev/ds-load/plugins/azuread/pkg/fetch"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
+//nolint:lll // user and group properties include complex defaults.
 type FetchCmd struct {
 	Tenant          string   `short:"a" help:"AzureAD tenant" env:"AZUREAD_TENANT" required:""`
 	ClientID        string   `short:"i" help:"AzureAD Client ID" env:"AZUREAD_CLIENT_ID" required:""`
@@ -28,5 +30,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 		return err
 	}
 
-	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.WithGroups(cmd.Groups).Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

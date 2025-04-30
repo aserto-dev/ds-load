@@ -155,7 +155,13 @@ func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 
 	for {
 		line, err := scanner.ReadBytes('\n')
-		os.Stderr.Write(line)
+		if err != nil {
+			c.Log.Fatal().Err(err).Send()
+		}
+
+		if _, err := os.Stderr.Write(line); err != nil {
+			c.Log.Fatal().Err(err).Send()
+		}
 
 		if len(line) > 0 {
 			gotError = true
@@ -169,7 +175,7 @@ func listenOnStderr(c *cc.CommonCtx, wg *sync.WaitGroup, stderr io.ReadCloser) {
 
 			break
 		} else if err != nil {
-			c.Log.Fatal().Err(err)
+			c.Log.Fatal().Err(err).Send()
 		}
 	}
 

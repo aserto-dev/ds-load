@@ -9,6 +9,7 @@ import (
 	"github.com/aserto-dev/ds-load/cli/pkg/plugin"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/common/version"
+	"github.com/pkg/errors"
 )
 
 type CLI struct {
@@ -51,7 +52,9 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	for _, p := range plugins {
-		os.Stdout.WriteString(p.Name + " " + p.Path + "\n")
+		if _, err := fmt.Fprint(os.Stdout, p.Name, p.Path); err != nil {
+			return errors.Wrapf(err, "failed to write plugin info for %q", p.Name)
+		}
 	}
 
 	return nil

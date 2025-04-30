@@ -5,6 +5,7 @@ import (
 
 	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/fetch"
 	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
 
@@ -26,5 +27,5 @@ func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
 
 	fetcher = fetcher.WithGroups(cmd.Groups)
 
-	return fetcher.Fetch(ctx.Context, os.Stdout, os.Stderr)
+	return fetcher.Fetch(ctx.Context, os.Stdout, common.NewErrorWriter(os.Stderr))
 }

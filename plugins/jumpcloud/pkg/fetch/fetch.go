@@ -26,13 +26,13 @@ func (f *Fetcher) WithGroups(groups bool) *Fetcher {
 	return f
 }
 
-func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error {
+func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error {
 	writer := js.NewJSONArrayWriter(outputWriter)
 	defer writer.Close()
 
 	users, err := f.jcc.ListUsers(ctx)
 	if err != nil {
-		common.WriteErrorWithExitCode(errorWriter, err, 1)
+		errorWriter.Error(err)
 		return err
 	}
 
@@ -41,65 +41,70 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter, errorWriter io.Writer
 	for _, user := range users {
 		userBytes, err := json.Marshal(user)
 		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			continue
 		}
 
-		var obj map[string]interface{}
+		var obj map[string]any
 
 		if err := json.Unmarshal(userBytes, &obj); err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+			errorWriter.Error(err)
 			continue
 		}
 
 		if err := writer.Write(obj); err != nil {
-			_, _ = errorWriter.Write([]byte(err.Error()))
+			errorWriter.Error(err)
 		}
 
 		idLookup[user.ID] = &user.BaseUser
 	}
 
 	if f.Groups {
-		groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
-		if err != nil {
-			common.WriteErrorWithExitCode(errorWriter, err, 1)
+		if err := f.fetchGroups(ctx, writer, errorWriter, idLookup); err != nil {
 			return err
 		}
+	}
 
-		for _, group := range groups {
-			groupBytes, err := json.Marshal(group)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				continue
-			}
+	return nil
+}
 
-			var obj map[string]interface{}
-			if err := json.Unmarshal(groupBytes, &obj); err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-				continue
-			}
+func (f *Fetcher) fetchGroups(ctx context.Context,
+	writer *js.JSONArrayWriter,
+	errorWriter common.ErrorWriter,
+	idLookup map[string]*jc.BaseUser,
+) error {
+	groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
+	if err != nil {
+		errorWriter.Error(err)
+		return err
+	}
 
-			usersInGroup, err := f.jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
-			if err != nil {
-				common.WriteErrorWithExitCode(errorWriter, err, 1)
-			} else {
-				usersInGroupBytes, err := json.Marshal(usersInGroup)
-				if err != nil {
-					common.WriteErrorWithExitCode(errorWriter, err, 1)
-				} else {
-					var users []map[string]interface{}
-					if err := json.Unmarshal(usersInGroupBytes, &users); err != nil {
-						common.WriteErrorWithExitCode(errorWriter, err, 1)
-					}
+	for _, group := range groups {
+		groupBytes, err := json.Marshal(group)
+		errorWriter.Error(err)
 
-					obj["users"] = users
-				}
-			}
-
-			if err := writer.Write(obj); err != nil {
-				_, _ = errorWriter.Write([]byte(err.Error()))
-			}
+		var obj map[string]any
+		if err := json.Unmarshal(groupBytes, &obj); err != nil {
+			errorWriter.Error(err)
+			continue
 		}
+
+		usersInGroup, err := f.jcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
+		errorWriter.Error(err)
+
+		usersInGroupBytes, err := json.Marshal(usersInGroup)
+
+		errorWriter.Error(err)
+
+		var users []map[string]any
+		if err := json.Unmarshal(usersInGroupBytes, &users); err != nil {
+			errorWriter.Error(err)
+		}
+
+		obj["users"] = users
+
+		err = writer.Write(obj)
+		errorWriter.Error(err)
 	}
 
 	return nil

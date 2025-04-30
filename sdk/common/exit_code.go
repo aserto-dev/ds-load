@@ -1,7 +1,6 @@
 package common
 
 import (
-	"io"
 	"sync/atomic"
 )
 
@@ -13,10 +12,4 @@ func GetExitCode() int {
 
 func SetExitCode(code int) {
 	atomic.StoreInt32(&exitCode, int32(code)) //nolint:gosec
-}
-
-func WriteErrorWithExitCode(w io.Writer, err error, code int) {
-	_, _ = w.Write([]byte(err.Error()))
-
-	SetExitCode(code)
 }

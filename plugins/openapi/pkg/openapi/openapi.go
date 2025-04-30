@@ -26,14 +26,14 @@ type API struct {
 	Service     string `json:"service"`
 	Method      string `json:"method"`
 	Path        string `json:"path"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName"` //nolint:tagliatelle // keep open api format
 	ID          string `json:"id"`
-	ServiceID   string `json:"serviceID"`
+	ServiceID   string `json:"serviceID"` //nolint:tagliatelle // keep open api format
 }
 
 type Service struct {
 	Type        string `json:"type"`
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName"` //nolint:tagliatelle // keep open api format
 	ID          string `json:"id"`
 }
 
@@ -42,49 +42,53 @@ func New(directory, specURL, idFormat, serviceName string) (*Client, error) {
 	c.idFormat = idFormat
 	c.docs = make([]*openapi3.T, 0)
 
-	if specURL != "" {
-		parsedURL, err := url.Parse(specURL)
-		if err != nil {
-			return nil, errors.Wrapf(err, "url not parsed: %s", specURL)
-		}
-
-		doc, err := openapi3.NewLoader().LoadFromURI(parsedURL)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specURL)
-		}
-
-		if serviceName != "" {
-			if doc.Info.Extensions == nil {
-				doc.Info.Extensions = make(map[string]interface{}, 0)
-			}
-
-			doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)
-		}
-
-		c.docs = append(c.docs, doc)
+	if specURL == "" {
+		return nil, errors.Errorf("spec URL must be set")
 	}
 
-	if directory != "" {
-		if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
-			return nil, errors.Wrapf(err, "directory not found: %s", directory)
+	parsedURL, err := url.Parse(specURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "url not parsed: %s", specURL)
+	}
+
+	doc, err := openapi3.NewLoader().LoadFromURI(parsedURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot load OpenAPI spec from URL : %s", specURL)
+	}
+
+	if serviceName != "" {
+		if doc.Info.Extensions == nil {
+			doc.Info.Extensions = make(map[string]any, 0)
 		}
 
-		files, err := os.ReadDir(directory)
-		if err != nil {
-			return nil, errors.Wrapf(err, "cannot read directory: %s", directory)
-		}
+		doc.Info.Extensions["ServiceName"] = canonicalizeServiceName(serviceName, Canonical)
+	}
 
-		for _, file := range files {
-			if !file.IsDir() {
-				filename := fmt.Sprintf("%s/%s", directory, file.Name())
+	c.docs = append(c.docs, doc)
 
-				doc, err := openapi3.NewLoader().LoadFromFile(filename)
-				if err != nil {
-					return nil, errors.Wrapf(err, "cannot open file: %s", file.Name())
-				}
+	if directory == "" {
+		return nil, errors.Errorf("directory must be set")
+	}
 
-				c.docs = append(c.docs, doc)
+	if _, err := os.Stat(directory); errors.Is(err, os.ErrNotExist) {
+		return nil, errors.Wrapf(err, "directory not found: %s", directory)
+	}
+
+	files, err := os.ReadDir(directory)
+	if err != nil {
+		return nil, errors.Wrapf(err, "cannot read directory: %s", directory)
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			filename := fmt.Sprintf("%s/%s", directory, file.Name())
+
+			doc, err := openapi3.NewLoader().LoadFromFile(filename)
+			if err != nil {
+				return nil, errors.Wrapf(err, "cannot open file: %s", file.Name())
 			}
+
+			c.docs = append(c.docs, doc)
 		}
 	}
 
@@ -96,8 +100,15 @@ func (c *Client) ListServices() ([]Service, error) {
 
 	for _, service := range c.docs {
 		id := ""
+
 		if service.Info.Extensions["ServiceName"] != "" {
-			id = service.Info.Extensions["ServiceName"].(string)
+			serviceName, ok := service.Info.Extensions["ServiceName"].(string)
+
+			if !ok {
+				return services, errors.Errorf("service name cannot be cast to string")
+			}
+
+			id = serviceName
 		}
 
 		svc := newService(service.Info.Title, id, c.idFormat)
@@ -121,8 +132,8 @@ func (c *Client) ListAPIs() ([]API, error) {
 func (c *Client) ListAPIsInService(service *openapi3.T, idFormat string) []API {
 	apis := make([]API, 0)
 
-	serviceID := service.Info.Extensions["ServiceName"].(string)
-	if serviceID == "" {
+	serviceID, ok := service.Info.Extensions["ServiceName"].(string)
+	if serviceID == "" || !ok {
 		serviceID = service.Info.Title
 	}
 
@@ -213,8 +224,8 @@ func canonicalizeServiceName(serviceName, idFormat string) string {
 	case Base64:
 		return base64.StdEncoding.EncodeToString([]byte(serviceName))
 	case Canonical:
-		return strings.Replace(serviceName, " ", "_", -1)
+		return strings.ReplaceAll(serviceName, " ", "_")
 	default:
-		return strings.Replace(serviceName, " ", "_", -1)
+		return strings.ReplaceAll(serviceName, " ", "_")
 	}
 }

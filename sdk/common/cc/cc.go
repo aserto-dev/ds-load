@@ -16,6 +16,13 @@ type CommonCtx struct {
 	ConfigPath string
 }
 
+const (
+	errLogLevel   = 1
+	infoLogLevel  = 2
+	debugLogLevel = 3
+	traceLogLevel = 4
+)
+
 func NewCommonContext(verbosity int, config string) *CommonCtx {
 	logLevelParsed := GetLogLevel(verbosity)
 	logCfg := &logger.Config{
@@ -40,13 +47,13 @@ func GetLogLevel(intLevel int) zerolog.Level {
 	logLevel := zerolog.FatalLevel
 
 	switch intLevel {
-	case 1:
+	case errLogLevel:
 		logLevel = zerolog.ErrorLevel
-	case 2:
+	case infoLogLevel:
 		logLevel = zerolog.InfoLevel
-	case 3:
+	case debugLogLevel:
 		logLevel = zerolog.DebugLevel
-	case 4:
+	case traceLogLevel:
 		logLevel = zerolog.TraceLevel
 	}
 

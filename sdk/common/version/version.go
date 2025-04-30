@@ -7,10 +7,12 @@ import (
 )
 
 // values set by linker using ldflag -X.
+//
+//nolint:gochecknoglobals // set by linker
 var (
-	ver    string // nolint:gochecknoglobals // set by linker
-	date   string // nolint:gochecknoglobals // set by linker
-	commit string // nolint:gochecknoglobals // set by linker
+	ver    string
+	date   string
+	commit string
 )
 
 // Info - version info.
@@ -56,8 +58,8 @@ func (vi *Info) String() string {
 	)
 }
 
-func (vi *Info) AsMap() map[string]interface{} {
-	return map[string]interface{}{
+func (vi *Info) AsMap() map[string]any {
+	return map[string]any{
 		"version": vi.Version,
 		"date":    vi.Date,
 		"commit":  vi.Commit,

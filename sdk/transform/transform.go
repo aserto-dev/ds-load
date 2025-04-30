@@ -34,7 +34,12 @@ func (t *GoTemplateTransform) ExportTransform(outputWriter io.Writer) error {
 	return nil
 }
 
-func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader, outputWriter, errorWriter io.Writer) error {
+func (t *GoTemplateTransform) Transform(
+	ctx context.Context,
+	ioReader io.Reader,
+	outputWriter,
+	errorWriter io.Writer,
+) error {
 	jsonWriter := js.NewJSONArrayWriter(outputWriter)
 	defer jsonWriter.Close()
 
@@ -44,15 +49,15 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 	}
 
 	for {
-		var idpData map[string]interface{}
+		var idpData map[string]any
 
 		err := reader.Read(&idpData)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 
 		if err != nil {
-			return errors.Wrap(err, "failed to read idpData into map[string]interface{}")
+			return errors.Wrap(err, "failed to read idpData into map[string]any")
 		}
 
 		if err := t.doTransform(idpData, jsonWriter); err != nil {
@@ -63,7 +68,7 @@ func (t *GoTemplateTransform) Transform(ctx context.Context, ioReader io.Reader,
 	return nil
 }
 
-func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWriter *js.JSONArrayWriter) error {
+func (t *GoTemplateTransform) doTransform(idpData map[string]any, jsonWriter *js.JSONArrayWriter) error {
 	dirV3msg, err := t.TransformObject(idpData)
 	if err != nil {
 		return errors.Wrap(err, "failed to transform idpData into directory objects and relations")
@@ -76,14 +81,16 @@ func (t *GoTemplateTransform) doTransform(idpData map[string]interface{}, jsonWr
 	return nil
 }
 
-func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*msg.Transform, error) {
+func (t *GoTemplateTransform) TransformObject(idpData map[string]any) (*msg.Transform, error) {
 	output, err := t.transformToTemplate(idpData, string(t.template))
 	if err != nil {
 		return nil, errors.Wrap(err, "GoTemplateTransform transformTemplate execute failed")
 	}
 
 	if os.Getenv("DEBUG") != "" {
-		os.Stdout.WriteString(output)
+		if _, err := os.Stdout.WriteString(output); err != nil {
+			return nil, errors.Wrap(err, "failed to write to stdout")
+		}
 	}
 
 	var dirV3msg msg.Transform
@@ -100,7 +107,7 @@ func (t *GoTemplateTransform) TransformObject(idpData map[string]interface{}) (*
 	return &dirV3msg, nil
 }
 
-func (t *GoTemplateTransform) transformToTemplate(input map[string]interface{}, templateString string) (string, error) {
+func (t *GoTemplateTransform) transformToTemplate(input map[string]any, templateString string) (string, error) {
 	temp := template.New("GoTemplateTransform")
 
 	parsed, err := temp.Funcs(customFunctions()).Parse(templateString)

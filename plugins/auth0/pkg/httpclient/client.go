@@ -13,6 +13,11 @@ type RateLimit struct {
 	ResetTime time.Time
 }
 
+const (
+	RateLimitRemaining = "X-Ratelimit-Remaining"
+	RateLimitReset     = "X-Ratelimit-Reset"
+)
+
 func (rl RateLimit) Wait() {
 	if rl.Remaining < 1 {
 		if rl.ResetTime.Before(time.Now()) {
@@ -58,11 +63,11 @@ func NewTransport(transportWrap http.RoundTripper) http.RoundTripper {
 func parseRateLimit(resp *http.Response) (*RateLimit, error) {
 	var rl RateLimit
 
-	if remaining := resp.Header.Get("X-Ratelimit-Remaining"); remaining != "" {
+	if remaining := resp.Header.Get(RateLimitRemaining); remaining != "" {
 		rl.Remaining, _ = strconv.Atoi(remaining)
 	}
 
-	reset, err := strconv.Atoi(resp.Header.Get("X-Ratelimit-Reset"))
+	reset, err := strconv.Atoi(resp.Header.Get(RateLimitReset))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to parse X-RateLimit-Reset header")
 	}

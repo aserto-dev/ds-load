@@ -15,13 +15,17 @@ type TransformCmd struct {
 	Template string `name:"template" short:"t" env:"DS_TEMPLATE_FILE" help:"transformation template file path" type:"path" optional:""`
 }
 
+const (
+	defaultTimeout = 1500 * time.Millisecond
+)
+
 func (t *TransformCmd) Run(kongContext *kong.Context) error {
 	template, err := t.getTemplateContent()
 	if err != nil {
 		return err
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(context.Background(), 1500*time.Millisecond)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
 	goTemplateTransformer := transform.NewGoTemplateTransform(template)

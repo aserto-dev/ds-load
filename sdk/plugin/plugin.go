@@ -7,11 +7,12 @@ import (
 	"os"
 	"sync"
 
+	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher interface {
-	Fetch(ctx context.Context, outputWriter, errorWriter io.Writer) error
+	Fetch(ctx context.Context, outputWriter io.Writer, errorWriter common.ErrorWriter) error
 }
 
 type Verifier interface {
@@ -56,7 +57,7 @@ func NewDSPlugin(options ...PluginOption) *DSPlugin {
 }
 
 // json encodes results and prints to plugin writer.
-func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]interface{}, errCh chan error) error {
+func (plugin *DSPlugin) WriteFetchOutput(results chan map[string]any, errCh chan error) error {
 	var wg sync.WaitGroup
 
 	wg.Add(1)
