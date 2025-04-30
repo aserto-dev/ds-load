@@ -1,35 +1,35 @@
 package common
 
 import (
-	"os"
+	"io"
 )
 
-type ErrorWriter struct {
-	os.File
-}
-
-type ErrorOptions struct {
+type errorOptions struct {
 	SetExitCode bool
 }
 
-type ErrorOption func(*ErrorOptions)
+type ErrorOption func(*errorOptions)
 
-func NewErrorWriter(f *os.File) ErrorWriter {
-	if f == nil {
-		return ErrorWriter{*os.Stderr}
-	}
-
-	return ErrorWriter{*f}
+func WithExitCode(eo *errorOptions) {
+	eo.SetExitCode = true
 }
 
-func (e *ErrorWriter) Error(err error, opts ...ErrorOption) {
+type ErrorWriter struct {
+	io.Writer
+}
+
+func NewErrorWriter(f io.Writer) ErrorWriter {
+	return ErrorWriter{f}
+}
+
+func (e ErrorWriter) Error(err error, opts ...ErrorOption) {
 	if err == nil {
 		return
 	}
 
 	_, _ = e.Write([]byte(err.Error()))
 
-	options := ErrorOptions{}
+	options := errorOptions{}
 	for _, opt := range opts {
 		opt(&options)
 	}
@@ -37,8 +37,4 @@ func (e *ErrorWriter) Error(err error, opts ...ErrorOption) {
 	if options.SetExitCode {
 		SetExitCode(1)
 	}
-}
-
-func WithExitCode(eo *ErrorOptions) {
-	eo.SetExitCode = true
 }
