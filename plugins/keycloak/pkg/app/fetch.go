@@ -10,12 +10,12 @@ import (
 )
 
 type FetchCmd struct {
-	APIKey string `short:"k" help:"keycloak API Key" env:"KC_API_KEY" required:""`
-	Groups bool   `short:"g" help:"Retrieve keycloak groups" env:"KC_GROUPS" default:"false"`
+	kc.KeycloakClientConfig
+	Groups bool `short:"g" help:"Retrieve keycloak groups" env:"KEYCLOAK_GROUPS" default:"false"`
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	kcClient, err := kc.NewKeyCloudClient(ctx.Context, cmd.APIKey)
+	kcClient, err := kc.NewKeycloakClient(ctx.Context, &cmd.KeycloakClientConfig)
 	if err != nil {
 		return err
 	}

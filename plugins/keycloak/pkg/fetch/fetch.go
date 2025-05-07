@@ -11,11 +11,11 @@ import (
 )
 
 type Fetcher struct {
-	kcc    *kc.KeyCloudClient
+	kcc    *kc.KeycloakClient
 	Groups bool
 }
 
-func New(client *kc.KeyCloudClient) (*Fetcher, error) {
+func New(client *kc.KeycloakClient) (*Fetcher, error) {
 	return &Fetcher{
 		kcc: client,
 	}, nil
@@ -36,9 +36,10 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		return err
 	}
 
-	idLookup := map[string]*kc.BaseUser{}
+	idLookup := map[string]*kc.User{}
 
 	for _, user := range users {
+		user.Type = "user"
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			errorWriter.Error(err)
@@ -56,7 +57,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 			errorWriter.Error(err)
 		}
 
-		idLookup[user.ID] = &user.BaseUser
+		idLookup[user.ID] = user
 	}
 
 	if f.Groups {
@@ -71,15 +72,16 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 func (f *Fetcher) fetchGroups(ctx context.Context,
 	writer *js.JSONArrayWriter,
 	errorWriter common.ErrorWriter,
-	idLookup map[string]*kc.BaseUser,
+	idLookup map[string]*kc.User,
 ) error {
-	groups, err := f.kcc.ListGroups(ctx, kc.UserGroups)
+	groups, err := f.kcc.ListGroups(ctx)
 	if err != nil {
 		errorWriter.Error(err)
 		return err
 	}
 
 	for _, group := range groups {
+		group.Type = "group"
 		groupBytes, err := json.Marshal(group)
 		errorWriter.Error(err)
 
@@ -89,11 +91,10 @@ func (f *Fetcher) fetchGroups(ctx context.Context,
 			continue
 		}
 
-		usersInGroup, err := f.kcc.ExpandUsersInGroup(ctx, group.ID, idLookup)
+		usersInGroup, err := f.kcc.GetUsersOfGroup(ctx, group.ID)
 		errorWriter.Error(err)
 
 		usersInGroupBytes, err := json.Marshal(usersInGroup)
-
 		errorWriter.Error(err)
 
 		var users []map[string]any

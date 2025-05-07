@@ -8,10 +8,10 @@ import (
 )
 
 type Verifier struct {
-	client *kc.KeyCloudClient
+	client *kc.KeycloakClient
 }
 
-func New(ctx context.Context, client *kc.KeyCloudClient) (*Verifier, error) {
+func New(ctx context.Context, client *kc.KeycloakClient) (*Verifier, error) {
 	return &Verifier{
 		client: client,
 	}, nil

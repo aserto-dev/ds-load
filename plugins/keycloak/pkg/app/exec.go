@@ -14,7 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	gClient, err := kc.NewKeyCloudClient(ctx.Context, cmd.APIKey)
+	gClient, err := kc.NewKeycloakClient(ctx.Context, &cmd.KeycloakClientConfig)
 	if err != nil {
 		return err
 	}

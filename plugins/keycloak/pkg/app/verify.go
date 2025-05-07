@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	gClient, err := kc.NewKeyCloudClient(ctx.Context, v.APIKey)
+	gClient, err := kc.NewKeycloakClient(ctx.Context, &v.KeycloakClientConfig)
 	if err != nil {
 		return err
 	}

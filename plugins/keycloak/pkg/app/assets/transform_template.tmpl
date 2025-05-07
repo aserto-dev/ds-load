@@ -9,75 +9,55 @@
     {
       "id": "{{ $.id }}",
       "type": "user",
-      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }}",
+      "display_name": "{{ $.firstName }} {{ $.lastName }}",
       "properties": {
-        "enabled": "{{ not $.account_locked }}",
+        "enabled": "{{ $.enabled }}",
         "email": "{{ $.email }}",
         "user_id": "{{ $.id }}",
         "username": "{{ $.username }}",
-        "manager": "{{ $.manager }}",
-        "organization": "{{ $.company }}",
-        "department": "{{ $.department }}",
-        "title": "{{ $.jobTitle }}",
-        {{ range $i, $attr := $.attributes }}
-        {{ if eq $attr.name "roles" }}
-        "{{ $attr.name }}": {{ splitList "," $attr.value | marshal }},
-        {{ else }}
-        "{{ $attr.name }}": "{{ $attr.value }}",
-        {{ end }}
-        {{ end }}
-        "status": "{{ $status }}"
-      },
-      "created_at": "{{ $.created }}"
+        "totp": "{{ $.totp }}"
+      }
     },
     {
       "id": "{{ $.email }}",
       "type": "identity",
-      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (email)"
+      "display_name": "{{ $.firstName }} {{ $.lastName }} (email)"
     },
     {
       "id": "{{ $.username }}",
       "type": "identity",
-      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (username)"
+      "display_name": "{{ $.firstName }} {{ $.lastName }} (username)"
     }
   {{ end }}
-  
-  {{ if eq $.type "user_group" }}
+  {{ if eq $.type "group" }}
     {
-      "id": "{{ $.name }}",
+      "id": "{{ $.id }}",
       "type": "group",
-      "display_name": "{{ $.name }}"
+      "display_name": "{{ $.name }}",
+      "properties": {
+        "path": "{{ $.path }}"
+      }
     }
   {{ end }}
   ],
   "relations": [
   {{ if eq $.type "user" }}
     {
-      "object_type": "user",
-      "object_id": "{{ $.id }}",
+      "object_type": "identity",
+      "object_id": "{{ $.email }}",
       "relation": "identifier",
-      "subject_type": "identity",
-      "subject_id": "{{ $.email }}"
+      "subject_type": "user",
+      "subject_id": "{{ $.id }}"
     },
     {
-      "object_type": "user",
-      "object_id": "{{ $.id }}",
+      "object_type": "identity",
+      "object_id": "{{ $.username }}",
       "relation": "identifier",
-      "subject_type": "identity",
-      "subject_id": "{{ $.username }}"
-    }
-    {{ if $.manager }}
-    ,{
-      "object_type": "user",
-      "object_id": "{{ $.id }}",
-      "relation": "manager",
       "subject_type": "user",
-      "subject_id": "{{ $.manager }}"
+      "subject_id": "{{ $.id }}"
     }
-    {{ end }}
   {{ end }}
-
-  {{ if eq $.type "user_group" }}
+  {{ if eq $.type "group" }}
   {{ range $i, $user := $.users }}
     {{ if $i }},{{ end }}
     {
