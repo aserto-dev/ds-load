@@ -1,5 +1,6 @@
 package kc
 
+//nolint:tagliatelle // maintain json user formatting
 type Role struct {
 	Type        string `json:"type"`
 	ID          string `json:"id"`
@@ -10,6 +11,7 @@ type Role struct {
 	ContainerID string `json:"containerId"`
 }
 
+//nolint:tagliatelle // maintain json user formatting
 type RoleMapping struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`

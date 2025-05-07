@@ -1,5 +1,6 @@
 package kc
 
+//nolint:tagliatelle // maintain json user formatting
 type Group struct {
 	Type          string `json:"type"`
 	ID            string `json:"id"`

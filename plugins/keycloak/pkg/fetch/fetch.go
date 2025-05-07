@@ -36,10 +36,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		return err
 	}
 
-	idLookup := map[string]*kc.User{}
-
 	for _, user := range users {
 		user.Type = "user"
+
 		userBytes, err := json.Marshal(user)
 		if err != nil {
 			errorWriter.Error(err)
@@ -56,12 +55,10 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		if err := writer.Write(obj); err != nil {
 			errorWriter.Error(err)
 		}
-
-		idLookup[user.ID] = user
 	}
 
 	if f.Groups {
-		if err := f.fetchGroups(ctx, writer, errorWriter, idLookup); err != nil {
+		if err := f.fetchGroups(ctx, writer, errorWriter); err != nil {
 			return err
 		}
 	}
@@ -72,7 +69,6 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 func (f *Fetcher) fetchGroups(ctx context.Context,
 	writer *js.JSONArrayWriter,
 	errorWriter common.ErrorWriter,
-	idLookup map[string]*kc.User,
 ) error {
 	groups, err := f.kcc.ListGroups(ctx)
 	if err != nil {

@@ -3,7 +3,6 @@ package kc
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -77,6 +76,7 @@ func accessToken(ctx context.Context, cfg *KeycloakClientConfig) (*oauth2.Token,
 		ClientSecret: cfg.ClientSecret,
 		TokenURL:     cfg.TokenURL,
 	}
+
 	return cc.Token(ctx)
 }
 
@@ -89,12 +89,12 @@ func extractIssuerFromToken(token *oauth2.Token) (string, error) {
 
 	_, _, err := parser.ParseUnverified(accessToken, claims)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse token: %w", err)
+		return "", errors.Wrapf(err, "failed to parse token")
 	}
 
 	iss, ok := claims["iss"].(string)
 	if !ok {
-		return "", fmt.Errorf("issuer not found or not a string")
+		return "", errors.Errorf("issuer not found or not a string")
 	}
 
 	return iss, nil
@@ -106,7 +106,7 @@ func (c *KeycloakClient) ListUsers(ctx context.Context) ([]*User, error) {
 	users := []*User{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &users); err != nil {
-		return []*User{}, nil
+		return []*User{}, err
 	}
 
 	return users, nil
@@ -118,85 +118,85 @@ func (c *KeycloakClient) ListGroups(ctx context.Context) ([]*Group, error) {
 	groups := []*Group{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
-		return []*Group{}, nil
+		return []*Group{}, err
 	}
 
 	return groups, nil
 }
 
-// realm roles
+// realm roles.
 func (c *KeycloakClient) ListRoles(ctx context.Context) ([]*Role, error) {
 	url := c.adminURL + "/roles"
 
 	roles := []*Role{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &roles); err != nil {
-		return []*Role{}, nil
+		return []*Role{}, err
 	}
 
 	return roles, nil
 }
 
-// get roles of user
+// get roles of user.
 func (c *KeycloakClient) GetRolesOfUser(ctx context.Context, id string) ([]*RoleMapping, error) {
 	url := c.adminURL + "/users/" + id + "/role-mappings"
 
 	roleMappings := []*RoleMapping{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &roleMappings); err != nil {
-		return []*RoleMapping{}, nil
+		return []*RoleMapping{}, err
 	}
 
 	return roleMappings, nil
 }
 
-// get roles of group
+// get roles of group.
 func (c *KeycloakClient) GetRolesOfGroup(ctx context.Context, id string) ([]*RoleMapping, error) {
 	url := c.adminURL + "/groups/" + id + "/role-mappings"
 
 	roleMappings := []*RoleMapping{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &roleMappings); err != nil {
-		return []*RoleMapping{}, nil
+		return []*RoleMapping{}, err
 	}
 
 	return roleMappings, nil
 }
 
-// get users of role
+// get users of role.
 func (c *KeycloakClient) GetUsersOfRole(ctx context.Context, role string) ([]*User, error) {
 	url := c.adminURL + "/roles/" + role + "/users"
 
 	users := []*User{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &users); err != nil {
-		return []*User{}, nil
+		return []*User{}, err
 	}
 
 	return users, nil
 }
 
-// get users of group
+// get users of group.
 func (c *KeycloakClient) GetUsersOfGroup(ctx context.Context, id string) ([]*User, error) {
 	url := c.adminURL + "/groups/" + id + "/members"
 
 	users := []*User{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &users); err != nil {
-		return []*User{}, nil
+		return []*User{}, err
 	}
 
 	return users, nil
 }
 
-// get groups of user
+// get groups of user.
 func (c *KeycloakClient) GetGroupsOfUser(ctx context.Context, id string) ([]*Group, error) {
 	url := c.adminURL + "/users/" + id + "/groups"
 
 	groups := []*Group{}
 
 	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &groups); err != nil {
-		return []*Group{}, nil
+		return []*Group{}, err
 	}
 
 	return groups, nil
