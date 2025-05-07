@@ -1,0 +1,93 @@
+{{$status := "USER_STATUS_ACTIVE"}}
+{{ if $.account_locked}}
+  {{$status = "USER_STATUS_SUSPENDED"}}
+{{end}}
+
+{
+  "objects": [
+  {{ if eq $.type "user" }}
+    {
+      "id": "{{ $.id }}",
+      "type": "user",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }}",
+      "properties": {
+        "enabled": "{{ not $.account_locked }}",
+        "email": "{{ $.email }}",
+        "user_id": "{{ $.id }}",
+        "username": "{{ $.username }}",
+        "manager": "{{ $.manager }}",
+        "organization": "{{ $.company }}",
+        "department": "{{ $.department }}",
+        "title": "{{ $.jobTitle }}",
+        {{ range $i, $attr := $.attributes }}
+        {{ if eq $attr.name "roles" }}
+        "{{ $attr.name }}": {{ splitList "," $attr.value | marshal }},
+        {{ else }}
+        "{{ $attr.name }}": "{{ $attr.value }}",
+        {{ end }}
+        {{ end }}
+        "status": "{{ $status }}"
+      },
+      "created_at": "{{ $.created }}"
+    },
+    {
+      "id": "{{ $.email }}",
+      "type": "identity",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (email)"
+    },
+    {
+      "id": "{{ $.username }}",
+      "type": "identity",
+      "display_name": "{{ $.firstname }} {{ $.middlename -}} {{ $.lastname }} (username)"
+    }
+  {{ end }}
+  
+  {{ if eq $.type "user_group" }}
+    {
+      "id": "{{ $.name }}",
+      "type": "group",
+      "display_name": "{{ $.name }}"
+    }
+  {{ end }}
+  ],
+  "relations": [
+  {{ if eq $.type "user" }}
+    {
+      "object_type": "user",
+      "object_id": "{{ $.id }}",
+      "relation": "identifier",
+      "subject_type": "identity",
+      "subject_id": "{{ $.email }}"
+    },
+    {
+      "object_type": "user",
+      "object_id": "{{ $.id }}",
+      "relation": "identifier",
+      "subject_type": "identity",
+      "subject_id": "{{ $.username }}"
+    }
+    {{ if $.manager }}
+    ,{
+      "object_type": "user",
+      "object_id": "{{ $.id }}",
+      "relation": "manager",
+      "subject_type": "user",
+      "subject_id": "{{ $.manager }}"
+    }
+    {{ end }}
+  {{ end }}
+
+  {{ if eq $.type "user_group" }}
+  {{ range $i, $user := $.users }}
+    {{ if $i }},{{ end }}
+    {
+      "object_type": "group",
+      "object_id": "{{ $.name }}",
+      "relation": "member",
+      "subject_type": "user",
+      "subject_id": "{{ $user.id }}"
+    }
+  {{ end }}
+  {{ end }}
+  ]
+}
