@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
 	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"google.golang.org/grpc/codes"
@@ -37,9 +38,9 @@ func NewJumpCloudClient(ctx context.Context, apiKey string) (*JumpCloudClient, e
 		apiKey:  apiKey,
 		baseURL: base,
 		headers: map[string]string{
-			"Content-Type": "application/json",
-			"Accept":       "application/json",
-			apiKeyHeader:   apiKey,
+			headers.ContentType: "application/json",
+			headers.Accept:      "application/json",
+			apiKeyHeader:        apiKey,
 		},
 		timeout: defaultConnectionTimeout,
 	}

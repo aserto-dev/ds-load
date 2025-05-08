@@ -1,4 +1,6 @@
-go 1.23.7
+go 1.23.8
+
+toolchain go1.24.3
 
 use (
 	./cli
@@ -9,6 +11,7 @@ use (
 	./plugins/fusionauth
 	./plugins/google
 	./plugins/jumpcloud
+	./plugins/keycloak
 	./plugins/ldap
 	./plugins/okta
 	./plugins/openapi
