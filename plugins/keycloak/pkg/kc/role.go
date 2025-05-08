@@ -12,11 +12,13 @@ type Role struct {
 }
 
 //nolint:tagliatelle // maintain json user formatting
-type RoleMapping struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Composite   bool   `json:"composite"`
-	ClientRole  bool   `json:"clientRole"`
-	ContainerID string `json:"containerId"`
+type RealmMappings struct {
+	RealmMappings []struct {
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Composite   bool   `json:"composite"`
+		ClientRole  bool   `json:"clientRole"`
+		ContainerID string `json:"containerId"`
+	} `json:"realmMappings"`
 }

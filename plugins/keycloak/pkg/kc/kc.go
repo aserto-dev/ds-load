@@ -138,29 +138,29 @@ func (c *KeycloakClient) ListRoles(ctx context.Context) ([]*Role, error) {
 }
 
 // get roles of user.
-func (c *KeycloakClient) GetRolesOfUser(ctx context.Context, id string) ([]*RoleMapping, error) {
+func (c *KeycloakClient) GetRolesOfUser(ctx context.Context, id string) (*RealmMappings, error) {
 	url := c.adminURL + "/users/" + id + "/role-mappings"
 
-	roleMappings := []*RoleMapping{}
+	realmMappings := &RealmMappings{}
 
-	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &roleMappings); err != nil {
-		return []*RoleMapping{}, err
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &realmMappings); err != nil {
+		return &RealmMappings{}, err
 	}
 
-	return roleMappings, nil
+	return realmMappings, nil
 }
 
 // get roles of group.
-func (c *KeycloakClient) GetRolesOfGroup(ctx context.Context, id string) ([]*RoleMapping, error) {
+func (c *KeycloakClient) GetRolesOfGroup(ctx context.Context, id string) (*RealmMappings, error) {
 	url := c.adminURL + "/groups/" + id + "/role-mappings"
 
-	roleMappings := []*RoleMapping{}
+	realmMappings := &RealmMappings{}
 
-	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &roleMappings); err != nil {
-		return []*RoleMapping{}, err
+	if err := makeHTTPRequest(ctx, url, http.MethodGet, c.headers, nil, nil, &realmMappings); err != nil {
+		return &RealmMappings{}, err
 	}
 
-	return roleMappings, nil
+	return realmMappings, nil
 }
 
 // get users of role.
