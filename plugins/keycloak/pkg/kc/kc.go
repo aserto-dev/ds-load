@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-http-utils/headers"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2"
@@ -56,9 +57,9 @@ func NewKeycloakClient(ctx context.Context, cfg *KeycloakClientConfig) (*Keycloa
 	}
 
 	headers := map[string]string{
-		"Content-Type":  "application/json",
-		"Accept":        "application/json",
-		"Authorization": "Bearer " + token.AccessToken,
+		headers.ContentType:   "application/json",
+		headers.Accept:        "application/json",
+		headers.Authorization: "Bearer " + token.AccessToken,
 	}
 
 	return &KeycloakClient{

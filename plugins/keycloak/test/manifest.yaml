@@ -28,3 +28,9 @@ types:
     relations:
       ### display_name: group#member ###
       member: user | group#member
+
+  ### display_name: Role ###
+  role:
+    relations:
+      ### display_name: role#member ###
+      member: user | role#member

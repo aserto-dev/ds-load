@@ -39,6 +39,18 @@
       }
     }
   {{ end }}
+  {{ if eq $.type "role" }}
+    {
+      "id": "{{ $.id }}",
+      "type": "role",
+      "display_name": "{{ $.name }}",
+      "properties": {
+        {{ if .description }}
+        "description": "{{ $.description }}"
+        {{ end }}
+      }
+    }
+  {{ end }}
   ],
   "relations": [
   {{ if eq $.type "user" }}
@@ -62,6 +74,18 @@
     {{ if $i }},{{ end }}
     {
       "object_type": "group",
+      "object_id": "{{ $.id }}",
+      "relation": "member",
+      "subject_type": "user",
+      "subject_id": "{{ $user.id }}"
+    }
+  {{ end }}
+  {{ end }}
+  {{ if eq $.type "role" }}
+  {{ range $i, $user := $.users }}
+    {{ if $i }},{{ end }}
+    {
+      "object_type": "role",
       "object_id": "{{ $.id }}",
       "relation": "member",
       "subject_type": "user",
