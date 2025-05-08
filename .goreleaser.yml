@@ -372,6 +372,7 @@ brews:
       bin.install "ds-load-fusionauth"
       bin.install "ds-load-google"
       bin.install "ds-load-jumpcloud"
+      bin.install "ds-load-keycloak"
       bin.install "ds-load-ldap"
       bin.install "ds-load-okta"
       bin.install "ds-load-openapi"

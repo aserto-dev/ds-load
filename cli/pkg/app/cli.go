@@ -52,7 +52,7 @@ func (listPlugins *ListPluginsCmd) Run(c *cc.CommonCtx) error {
 	}
 
 	for _, p := range plugins {
-		if _, err := fmt.Fprint(os.Stdout, p.Name, p.Path); err != nil {
+		if _, err := fmt.Fprintf(os.Stdout, "%-15s (%s)\n", p.Name, p.Path); err != nil {
 			return errors.Wrapf(err, "failed to write plugin info for %q", p.Name)
 		}
 	}
