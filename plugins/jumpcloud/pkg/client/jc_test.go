@@ -1,4 +1,4 @@
-package jc_test
+package client_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
+	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +27,7 @@ func TestListDirectories(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
 	directories, err := jcc.ListDirectories(ctx)
@@ -46,7 +46,7 @@ func TestListUsers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
 	users, err := jcc.ListUsers(ctx)
@@ -65,10 +65,10 @@ func TestListGroups(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
-	groups, err := jcc.ListGroups(ctx, jc.AllGroups)
+	groups, err := jcc.ListGroups(ctx, client.AllGroups)
 	require.NoError(t, err)
 
 	enc := json.NewEncoder(os.Stderr)
@@ -84,10 +84,10 @@ func TestGetSystemGroups(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
-	groups, err := jcc.ListGroups(ctx, jc.SystemGroups)
+	groups, err := jcc.ListGroups(ctx, client.SystemGroups)
 	require.NoError(t, err)
 
 	enc := json.NewEncoder(os.Stderr)
@@ -103,10 +103,10 @@ func TestGetUserGroups(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
-	groups, err := jcc.ListGroups(ctx, jc.UserGroups)
+	groups, err := jcc.ListGroups(ctx, client.UserGroups)
 	require.NoError(t, err)
 
 	enc := json.NewEncoder(os.Stderr)
@@ -122,18 +122,18 @@ func TestExpandMembersOfGroup(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	jcc, err := jc.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
+	jcc, err := client.NewJumpCloudClient(ctx, os.Getenv("JC_API_KEY"))
 	require.NoError(t, err)
 
 	users, err := jcc.ListUsers(ctx)
 	require.NoError(t, err)
 
-	idLookup := map[string]*jc.BaseUser{}
+	idLookup := map[string]*client.BaseUser{}
 	for _, u := range users {
 		idLookup[u.ID] = &u.BaseUser
 	}
 
-	groups, err := jcc.ListGroups(ctx, jc.UserGroups)
+	groups, err := jcc.ListGroups(ctx, client.UserGroups)
 	require.NoError(t, err)
 
 	enc := json.NewEncoder(os.Stderr)

@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/kc"
+	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher struct {
-	kcc    *kc.KeycloakClient
+	kcc    *client.KeycloakClient
 	Groups bool
 	Roles  bool
 }
 
-func New(client *kc.KeycloakClient) (*Fetcher, error) {
+func New(client *client.KeycloakClient) (*Fetcher, error) {
 	return &Fetcher{
 		kcc: client,
 	}, nil

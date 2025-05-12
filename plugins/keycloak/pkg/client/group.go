@@ -1,4 +1,4 @@
-package kc
+package client
 
 //nolint:tagliatelle // maintain json user formatting
 type Group struct {

@@ -1,4 +1,4 @@
-package jc
+package client
 
 const TypeGroup string = "group"
 

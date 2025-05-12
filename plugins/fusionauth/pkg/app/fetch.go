@@ -3,8 +3,8 @@ package app
 import (
 	"os"
 
+	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/client"
 	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fetch"
-	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
@@ -16,7 +16,7 @@ type FetchCmd struct {
 }
 
 func (cmd *FetchCmd) Run(ctx *cc.CommonCtx) error {
-	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(cmd.HostURL, cmd.APIKey)
+	fusionauthClient, err := client.NewFusionAuthClient(cmd.HostURL, cmd.APIKey)
 	if err != nil {
 		return err
 	}

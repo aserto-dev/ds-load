@@ -1,4 +1,4 @@
-package fusionauthclient
+package client
 
 import (
 	"context"

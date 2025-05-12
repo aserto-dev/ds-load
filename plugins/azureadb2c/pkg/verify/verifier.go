@@ -33,7 +33,7 @@ func (v *Verifier) Verify(ctx context.Context) error {
 	_, errReq := v.client.ListUsers(ctx, v.Groups, []string{"id"})
 
 	if errReq != nil {
-		return errors.Wrap(errReq, "failed to retrieve users from AzureAD")
+		return errors.Wrap(errReq, "failed to retrieve users from AzureAD (B2C)")
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
+	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/client"
 	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/verify"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 )
@@ -11,7 +11,7 @@ type VerifyCmd struct {
 }
 
 func (v *VerifyCmd) Run(ctx *cc.CommonCtx) error {
-	fusionauthClient, err := fusionauthclient.NewFusionAuthClient(v.HostURL, v.APIKey)
+	fusionauthClient, err := client.NewFusionAuthClient(v.HostURL, v.APIKey)
 	if err != nil {
 		return err
 	}

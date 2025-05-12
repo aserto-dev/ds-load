@@ -1,5 +1,5 @@
 //molint:dupl
-package kc_test
+package client_test
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/kc"
+	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/client"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,8 +28,8 @@ func TestMain(m *testing.M) {
 	os.Exit(exitVal)
 }
 
-func keycloakClientConfig() *kc.KeycloakClientConfig {
-	return &kc.KeycloakClientConfig{
+func keycloakClientConfig() *client.KeycloakConfig {
+	return &client.KeycloakConfig{
 		ClientID:     os.Getenv(EnvKeyCloakClientID),
 		ClientSecret: os.Getenv(EnvKeycloakClientSecret),
 		TokenURL:     os.Getenv(EnvKeyCloakTokenURL),
@@ -40,7 +40,7 @@ func TestListUsers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	users, err := kcc.ListUsers(ctx)
@@ -59,7 +59,7 @@ func TestListGroups(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	groups, err := kcc.ListGroups(ctx)
@@ -78,7 +78,7 @@ func TestListRoles(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	roles, err := kcc.ListRoles(ctx)
@@ -97,7 +97,7 @@ func TestGetRolesOfUser(t *testing.T) { //nolint:dupl
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	users, err := kcc.ListUsers(ctx)
@@ -129,7 +129,7 @@ func TestGetRolesOfGroup(t *testing.T) { //nolint:dupl
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	groups, err := kcc.ListGroups(ctx)
@@ -161,7 +161,7 @@ func TestGetUsersOfRole(t *testing.T) { //nolint:dupl
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	roles, err := kcc.ListRoles(ctx)
@@ -193,7 +193,7 @@ func TestGetUsersOfGroup(t *testing.T) { //nolint:dupl
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	groups, err := kcc.ListGroups(ctx)
@@ -225,7 +225,7 @@ func TestGetGroupsOfUser(t *testing.T) { //nolint:dupl
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	kcc, err := kc.NewKeycloakClient(ctx, keycloakClientConfig())
+	kcc, err := client.NewKeycloakClient(ctx, keycloakClientConfig())
 	require.NoError(t, err)
 
 	users, err := kcc.ListUsers(ctx)
