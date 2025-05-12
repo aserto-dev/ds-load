@@ -1,8 +1,8 @@
 package app
 
 import (
+	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/client"
 	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/fetch"
-	"github.com/aserto-dev/ds-load/plugins/keycloak/pkg/kc"
 	"github.com/aserto-dev/ds-load/sdk/common/cc"
 	"github.com/aserto-dev/ds-load/sdk/exec"
 	"github.com/aserto-dev/ds-load/sdk/transform"
@@ -14,7 +14,7 @@ type ExecCmd struct {
 }
 
 func (cmd *ExecCmd) Run(ctx *cc.CommonCtx) error {
-	gClient, err := kc.NewKeycloakClient(ctx.Context, &cmd.KeycloakClientConfig)
+	gClient, err := client.NewKeycloakClient(ctx.Context, &cmd.KeycloakConfig)
 	if err != nil {
 		return err
 	}

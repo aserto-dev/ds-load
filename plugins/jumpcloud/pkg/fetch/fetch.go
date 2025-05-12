@@ -5,17 +5,17 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/jc"
+	"github.com/aserto-dev/ds-load/plugins/jumpcloud/pkg/client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher struct {
-	jcc    *jc.JumpCloudClient
+	jcc    *client.JumpCloudClient
 	Groups bool
 }
 
-func New(client *jc.JumpCloudClient) (*Fetcher, error) {
+func New(client *client.JumpCloudClient) (*Fetcher, error) {
 	return &Fetcher{
 		jcc: client,
 	}, nil
@@ -36,7 +36,7 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 		return err
 	}
 
-	idLookup := map[string]*jc.BaseUser{}
+	idLookup := map[string]*client.BaseUser{}
 
 	for _, user := range users {
 		userBytes, err := json.Marshal(user)
@@ -71,9 +71,9 @@ func (f *Fetcher) Fetch(ctx context.Context, outputWriter io.Writer, errorWriter
 func (f *Fetcher) fetchGroups(ctx context.Context,
 	writer *js.JSONArrayWriter,
 	errorWriter common.ErrorWriter,
-	idLookup map[string]*jc.BaseUser,
+	idLookup map[string]*client.BaseUser,
 ) error {
-	groups, err := f.jcc.ListGroups(ctx, jc.UserGroups)
+	groups, err := f.jcc.ListGroups(ctx, client.UserGroups)
 	if err != nil {
 		errorWriter.Error(err)
 		return err

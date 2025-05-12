@@ -1,4 +1,4 @@
-package kc
+package client
 
 import (
 	"context"
@@ -20,21 +20,21 @@ const (
 	defaultConnectionTimeout = 30 * time.Second
 )
 
-type KeycloakClientConfig struct {
+type KeycloakConfig struct {
 	TokenURL     string `name:"token-url" short:"u" env:"KEYCLOAK_TOKEN_URL" help:"keycloak token URL" required:""`
 	ClientID     string `name:"client-id" short:"i" env:"KEYCLOAK_CLIENT_ID" help:"keycloak client id" required:""`
 	ClientSecret string `name:"client-secret" short:"s" env:"KEYCLOAK_CLIENT_SECRET" help:"keycloak client secret" required:""`
 }
 
 type KeycloakClient struct {
-	config   *KeycloakClientConfig
+	config   *KeycloakConfig
 	token    *oauth2.Token
 	adminURL string
 	headers  map[string]string
 	timeout  time.Duration
 }
 
-func NewKeycloakClient(ctx context.Context, cfg *KeycloakClientConfig) (*KeycloakClient, error) {
+func NewKeycloakClient(ctx context.Context, cfg *KeycloakConfig) (*KeycloakClient, error) {
 	token, err := accessToken(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func NewKeycloakClient(ctx context.Context, cfg *KeycloakClientConfig) (*Keycloa
 	}, nil
 }
 
-func accessToken(ctx context.Context, cfg *KeycloakClientConfig) (*oauth2.Token, error) {
+func accessToken(ctx context.Context, cfg *KeycloakConfig) (*oauth2.Token, error) {
 	cc := clientcredentials.Config{
 		ClientID:     cfg.ClientID,
 		ClientSecret: cfg.ClientSecret,

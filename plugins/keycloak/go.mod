@@ -9,10 +9,11 @@ replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 require (
 	github.com/alecthomas/kong v1.10.0
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20250408143332-e8965667fcc0
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/pkg/errors v0.9.1
-	github.com/samber/lo v1.50.0
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.72.0
+	golang.org/x/oauth2 v0.27.0
 )
 
 require (
@@ -45,6 +46,7 @@ require (
 	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250505200425-f936aa4a68b2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2 // indirect
+	google.golang.org/grpc v1.72.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

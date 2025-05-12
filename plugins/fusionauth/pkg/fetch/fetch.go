@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
+	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/client"
 	"github.com/aserto-dev/ds-load/sdk/common"
 	"github.com/aserto-dev/ds-load/sdk/common/js"
 )
 
 type Fetcher struct {
-	fusionauthClient *fusionauthclient.FusionAuthClient
+	fusionauthClient *client.FusionAuthClient
 	groups           bool
 	host             string
 }
 
-func New(client *fusionauthclient.FusionAuthClient) (*Fetcher, error) {
+func New(client *client.FusionAuthClient) (*Fetcher, error) {
 	return &Fetcher{
 		fusionauthClient: client,
 	}, nil

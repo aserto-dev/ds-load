@@ -3,15 +3,15 @@ package verify
 import (
 	"context"
 
-	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/fusionauthclient"
+	"github.com/aserto-dev/ds-load/plugins/fusionauth/pkg/client"
 	"github.com/pkg/errors"
 )
 
 type Verifier struct {
-	client *fusionauthclient.FusionAuthClient
+	client *client.FusionAuthClient
 }
 
-func New(ctx context.Context, client *fusionauthclient.FusionAuthClient) (*Verifier, error) {
+func New(ctx context.Context, client *client.FusionAuthClient) (*Verifier, error) {
 	return &Verifier{
 		client: client,
 	}, nil

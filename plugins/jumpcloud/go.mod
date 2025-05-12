@@ -9,6 +9,7 @@ replace github.com/aserto-dev/ds-load/sdk => ../../sdk
 require (
 	github.com/alecthomas/kong v1.10.0
 	github.com/aserto-dev/ds-load/sdk v0.0.0-20250408143332-e8965667fcc0
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a
 	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.50.0
 	github.com/stretchr/testify v1.10.0
